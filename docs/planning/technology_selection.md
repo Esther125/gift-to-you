@@ -20,17 +20,13 @@
 
 - **工具：**
 
-  - **File System API**：檔案選取、預覽
+  - **Amazon EventBridge + Amazon Lambda**：過期檔案清除
 
-    透過 File System API 存取使用者不同作業系統中的檔案系統，以讓使用者選擇欲傳輸的檔案，並呈現檔案的預覽圖供使用者確認。
-
-  - **AWS EventBridge + Amazon Lambda**：過期檔案清除
-
-    透過 AWS EventBridge 排程定時觸發 Amazon Lambda，以自動化執行檢查檔案暫存期限、清除過期檔案的工作。
+    透過 Amazon EventBridge 排程定時觸發 Amazon Lambda，以自動化執行檢查檔案暫存期限、清除過期檔案的工作。
 
 ## 資料庫
 
-- **Amazon S3**：儲存用戶個人暫存區的檔案
+- **Amazon S3**：儲存個人暫存區與群組空間暫存區的檔案
 
   1. 考量此服務提供的功能是讓用戶暫存檔案，經過一定的時間期限後就會將檔案清除，Amazon S3 對於頻繁存取的物件高速存取的特性，十分符合此使用情境，且因為服務已經限制了存取的時間期限，可以不用擔心用戶不常存取的物件在 Amazon S3 的管理機制下存取速度變慢的問題。
 
