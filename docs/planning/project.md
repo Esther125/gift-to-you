@@ -67,10 +67,14 @@
 
 ## 系統架構
 
-### P2P 架構
+### P2P 架構（With WebRTC API）
 
-<img src="../assets/system design/P2P架構圖.jpg" width=40%>
+<img src="../assets/system design/P2P架構圖_with_WebRTC_API.jpg" width=50%>
 
 ### 其他服務架構
 
 <img src="../assets/system design/系統架構圖.jpg" width=65%>
+
+### 參考資料
+
+-   [媒體協商與 SDP](https://ithelp.ithome.com.tw/m/articles/10267342)
