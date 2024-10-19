@@ -1,4 +1,4 @@
-# Pre-commit 使用設定
+# Pre-commit 設定
 
 需要先執行以下指令啟動 pre-commit：
 
