@@ -11,5 +11,3 @@
 -   [團隊合作](docs/planning/teamwork.md)
 
 -   這次討論中遇到的問題：無
-
-CNS-2 Test
