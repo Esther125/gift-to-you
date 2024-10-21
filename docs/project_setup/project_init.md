@@ -2,17 +2,26 @@
 
 ## Backend
 
-```sh
-cd backend
+1. Run the command below
 
-# Download dependencies needed
-npm install
+    ```sh
+    cd backend
 
-# project start
-npm start
-```
+    # Download dependencies needed
+    npm install
+    ```
+
+2. create `.env` according to `.env.example` in backend folder
+
+3. Run the command below
+    ```sh
+    # project start
+    npm start
+    ```
 
 ## Frontend
+
+Run the command below
 
 ```sh
 cd frontend
