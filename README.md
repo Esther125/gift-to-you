@@ -12,7 +12,7 @@
 
 -   這次討論中遇到的問題：無
 
-
 ## 如何開始
 
-- [專案初始化](docs/project_setup/project_init.md)
+-   [Pre-commit 設定](docs/project_setup/pre-commit_setup.md)
+-   [專案初始化](docs/project_setup/project_init.md)
