@@ -14,4 +14,4 @@
 
 ## 如何開始
 
--   [Pre-commit 設定](docs/planning/pre-commit_setup.md)
+-   [Pre-commit 設定](docs/project_setup/pre-commit_setup.md)
