@@ -4,6 +4,7 @@ import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
 
 const isDarkTheme = ref(false);
 const icon = ref()
+const device = ref("Default")
 
 const themeChangeHandler = (event) => {
   isDarkTheme.value = event.matches;
@@ -36,46 +37,60 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <nav class="navbar navbar-expand-md fixed-top">
-      <div class="container-fluid">
-        <a class="navbar-brand" href="/">
-          <img :src= "icon" width="30" height="24" class="d-inline-block align-text-top">
-          CloudDrop
-        </a>
-        <div class="d-flex justify-content-end align-items-center">
-          <RouterLink to="/" class="link">
-            <i class="bi bi-people-fill h3 icon"></i>
-          </RouterLink>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" aria-expanded="false" data-bs-toggle="dropdown">
-              <i class="bi bi-person-lines-fill h3 icon"></i>
-            </a>
-            <ul 
-              :class="['dropdown-menu', { 'dropdown-menu-dark': isDarkTheme }]"
-              aria-labelledby="navbarDropdown"
-              style="position: absolute; top: 100%; left: auto; right: 0;">
-              <li>
-                <RouterLink to="/about" class="dropdown-item">
-                  <i class="bi bi-collection-fill h5 icon"></i> Temporary Storage
-                </RouterLink>
-              </li>
-              <li>
-                <RouterLink to="/history" class="dropdown-item">
-                  <i class="bi bi-clock-history h5 icon" ></i> History
-                </RouterLink>
-              </li>
-            </ul>
-          </li>
-        </div>
+  <nav class="navbar navbar-expand-md fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">
+        <img :src= "icon" width="30" height="24" class="d-inline-block align-text-top">
+        CloudDrop
+      </a>
+      <div class="d-flex justify-content-end align-items-center">
+        <RouterLink to="/" class="link">
+          <i class="bi bi-people-fill h3 icon"></i>
+        </RouterLink>
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" aria-expanded="false" data-bs-toggle="dropdown">
+            <i class="bi bi-person-lines-fill h3 icon"></i>
+          </a>
+          <ul 
+            :class="['dropdown-menu', { 'dropdown-menu-dark': isDarkTheme }]"
+            aria-labelledby="navbarDropdown"
+            style="position: absolute; top: 100%; left: auto; right: 0;">
+            <li>
+              <RouterLink to="/about" class="dropdown-item">
+                <i class="bi bi-collection-fill h5 icon"></i> Temporary Storage
+              </RouterLink>
+            </li>
+            <li>
+              <RouterLink to="/history" class="dropdown-item">
+                <i class="bi bi-clock-history h5 icon" ></i> History
+              </RouterLink>
+            </li>
+          </ul>
+        </li>
       </div>
-    </nav>
+    </div>
+  </nav>
+  
+  <div>
+    <RouterView />
+  </div>
 
-  <RouterView />
+  <nav class="navbar navbar-expand-md fixed-bottom d-flex justify-content-center navbar-bottom">
+    <div class="card">
+      <div class="card-body d-flex justify-content-center">
+        <p class="card-text">裝置名稱：{{ device }}</p>
+      </div>
+    </div>
+  </nav>
 </template>
 
 <style scoped>
 .navbar {
   background-color: var(--color-background-mute);
+}
+
+.navbar-bottom {
+  background-color: var(--color-background);
 }
 
 .navbar-brand:hover, .icon:hover, .link:hover {
@@ -114,5 +129,9 @@ onBeforeUnmount(() => {
 
 li {
   list-style-type: none;
+}
+
+.card {
+  background-color: var(--color-card-background);
 }
 </style>

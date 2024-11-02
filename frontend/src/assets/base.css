@@ -34,6 +34,8 @@
   --color-text: var(--vt-c-text-light-1);
 
   --section-gap: 160px;
+
+  --color-card-background: var(--vt-c-white-soft);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -47,6 +49,8 @@
 
     --color-heading: var(--vt-c-text-dark-1);
     --color-text: var(--vt-c-text-dark-2);
+
+    --color-card-background: var(--vt-c-white-soft);
   }
 }
 
