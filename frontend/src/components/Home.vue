@@ -1,14 +1,12 @@
 <template>
-    <div class="home">
-      <h1>This is an home page</h1>
+  <div class="row">
+    <div class="col-12 text-center">
+      等待裝置配對~ Σ Σ (」○ ω○ )／
     </div>
-  </template>
-  
-  <style scoped>
-  .home {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
-  </style>
+  </div>
+</template>
+
+<style scoped>
+
+</style>
   
