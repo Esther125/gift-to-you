@@ -10,6 +10,7 @@ const user = reactive({
     id: '0000',
 });
 const token = ref();
+const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
 
 const themeChangeHandler = (event) => {
     isDarkTheme.value = event.matches;
@@ -25,7 +26,7 @@ const iconChange = (isDarkTheme) => {
 
 const roomModalHandler = async () => {
     try {
-        const response = await axios.post('http://localhost:3000/api/v1/rooms', { user: user });
+        const response = await axios.post(apiUrl + '/rooms', { user: user });
         token.value = response.data.token;
     } catch (error) {
         console.error('Error creating room: ', error);
