@@ -1,4 +1,5 @@
 import InternetFileService from '../services/internetFileService.js';
+import path from 'path';
 
 class InternetFileController {
     constructor() {
@@ -11,8 +12,9 @@ class InternetFileController {
         console.log('----InternetFileController.upload');
         // 實現上傳檔案邏輯
         try {
-            const uploadPath = await this.fileService.upload(req, res);
-            res.json({ message: 'File successfully uploaded', path: uploadPath });
+            const filename = await this.fileService.upload(req, res);
+            const fileId = path.basename(filename, path.extname(filename));
+            res.json({ message: 'File successfully uploaded', fileId: fileId });
         } catch (error) {
             console.error(error);
             res.status(500).json({ message: 'Error uploading file', error: error.message });
