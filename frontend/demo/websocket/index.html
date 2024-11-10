@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>WebSocket Demo</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <h1>WebSocket Demo</h1>
+        <div class="chatroom">
+            <input id="chatroom-input" type="text" placeholder="Enter chatroom id" />
+            <button id="chatroom-join">Join</button>
+            <button id="chatroom-leave">Leave</button>
+        </div>
+        <pre id="message-box"></pre>
+        <div class="sendMessage">
+            <input type="text" id="message-input" placeholder="Enter message" />
+            <button id="message-send">Send</button>
+        </div>
+        <script type="module" src="client_demo.js"></script>
+    </body>
+</html>

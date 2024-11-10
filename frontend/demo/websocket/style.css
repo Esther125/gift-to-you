@@ -1,0 +1,35 @@
+div.chatroom {
+    display: flex;
+}
+
+#chatroom-input {
+    flex-grow: 1;
+    margin: 2px;
+}
+
+#chatroom-join,
+#chatroom-leave {
+    flex-basis: 5rem;
+    flex-grow: 0;
+    margin: 2px;
+}
+
+#message-box {
+    height: 50vh;
+    overflow: scroll;
+    border: 1px solid black;
+}
+
+div.sendMessage {
+    display: flex;
+}
+
+#message-input {
+    flex-grow: 1;
+    margin: 2px;
+}
+
+#send {
+    flex-basis: 5rem;
+    margin: 2px;
+}
