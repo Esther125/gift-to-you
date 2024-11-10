@@ -1,3 +1,4 @@
+import { createServer } from 'http';
 import express from 'express';
 import cors from 'cors';
 import pkg from 'body-parser';
@@ -7,8 +8,13 @@ import authRouters from './src/routes/authRoutes.js';
 import internetFileRouter from './src/routes/internetFileRoutes.js';
 import roomsRouter from './src/routes/roomsRouter.js';
 import profileRouter from './src/routes/ProfileRoutes.js';
+import wsServer from './src/socket/server.js';
 
+// create servers
 const app = express();
+const server = createServer(app);
+const wss = new wsServer({ server });
+
 app.use(cors());
 
 // Middleware: parse request body to json format
@@ -29,8 +35,13 @@ app.use('/api/v1', internetFileRouter);
 app.use('/api/v1', roomsRouter);
 app.use('/api/v1', profileRouter);
 
-// run server
+// run http server
 const PORT = process.env.PORT;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+});
+
+// run websocket server
+wss.on('connection', (ws, req) => {
+    wss.socket(ws, req);
 });
