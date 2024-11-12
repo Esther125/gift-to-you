@@ -1,5 +1,5 @@
 # API
-<img src="../assets/system_design/API 架構.jpg" width=80%>
+<img src="../assets/system_design/API 架構.jpg" width=100%>
 
 ## 說明
 ### 資料傳輸
