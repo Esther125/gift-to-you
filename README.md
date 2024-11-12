@@ -9,7 +9,7 @@
 -   [團隊合作](docs/planning/teamwork.md)
 -   這次討論中遇到的問題：無
 
-**W09 小組作業**
+**W07 小組作業**
 
 -   [API]()
 -   [Table Schema](docs/planning/table_schema.md)
