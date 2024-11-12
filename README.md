@@ -11,10 +11,11 @@
 
 **W07 小組作業**
 
--   [API]()
+-   [API](docs/planning/api.md)
 -   [Table Schema](docs/planning/table_schema.md)
 
 ## 如何開始
 
 -   [Pre-commit 設定](docs/project_setup/pre-commit_setup.md)
+
 -   [專案初始化](docs/project_setup/project_init.md)
