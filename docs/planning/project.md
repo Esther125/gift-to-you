@@ -2,7 +2,7 @@
 
 ## 核心功能
 
-<img src="../assets/system design/功能流程圖.jpg" width=50%>
+<img src="../assets/system_design/功能流程圖.jpg" width=50%>
 
 ### 功能一：檔案傳輸
 
@@ -69,11 +69,11 @@
 
 ### P2P 架構（With WebRTC API）
 
-<img src="../assets/system design/P2P架構圖_with_WebRTC_API.jpg" width=50%>
+<img src="../assets/system_design/P2P架構圖_with_WebRTC_API.jpg" width=50%>
 
 ### 其他服務架構
 
-<img src="../assets/system design/系統架構圖.jpg" width=65%>
+<img src="../assets/system_design/系統架構圖.jpg" width=65%>
 
 ### 參考資料
 
