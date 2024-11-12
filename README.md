@@ -12,7 +12,12 @@
 
 -   這次討論中遇到的問題：無
 
+**W07 小組作業**
+
+-   [API](docs/planning/api.md)
+
 ## 如何開始
 
 -   [Pre-commit 設定](docs/project_setup/pre-commit_setup.md)
+
 -   [專案初始化](docs/project_setup/project_init.md)
