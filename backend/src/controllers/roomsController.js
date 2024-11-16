@@ -1,4 +1,5 @@
 import RedisClient from '../clients/redisClient.js';
+import RoomService from '../services/roomsService.js';
 
 class RoomsController {
     constructor() {
