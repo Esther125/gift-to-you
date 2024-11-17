@@ -7,7 +7,11 @@ import authRouters from './src/routes/authRoutes.js';
 import internetFileRouter from './src/routes/internetFileRoutes.js';
 import roomsRouter from './src/routes/roomsRouter.js';
 import profileRouter from './src/routes/ProfileRoutes.js';
+import http from 'http';
+import { Server } from 'socket.io';
+import notifyRouter from './src/routes/notifyRouter.js';
 
+// express
 const app = express();
 app.use(cors());
 
@@ -29,8 +33,20 @@ app.use('/api/v1', internetFileRouter);
 app.use('/api/v1', roomsRouter);
 app.use('/api/v1', profileRouter);
 
+// websocket
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+    cors: {
+        origin: '*',
+    },
+});
+
+// use routes
+const notifyNameSpace = io.of('/notify');
+notifyRouter(notifyNameSpace);
+
 // run server
 const PORT = process.env.PORT;
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
