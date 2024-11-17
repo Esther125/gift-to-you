@@ -34,16 +34,7 @@ const chatRouter = (chatNameSpace) => {
             if (VALID_EVENTS.includes(event)) {
                 return;
             }
-
-            let res = {
-                event: 'system message',
-                userID: socket.handshake.query.userID,
-                socketID: socket.id,
-                message: 'Invalid event',
-                timestamp: new Date().toISOString(),
-            };
-            console.log(res);
-            socket.emit('system message', JSON.stringify(res));
+            chatController.invalidEvent(socket);
         });
     });
 };

@@ -48,6 +48,11 @@ class ChatController {
         console.log('[chatController] -----disconnect-----');
         this.chatService.disconnect(socket, reason);
     };
+
+    invalidEvent = (socket) => {
+        console.log('[chatController] -----invalid event-----');
+        this.chatService.systemMessage(socket, 'invalid event', 'fail');
+    };
 }
 
 export default ChatController;

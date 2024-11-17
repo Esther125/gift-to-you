@@ -75,13 +75,13 @@ describe('Test: join chatroom', () => {
         // disconnect with server
         await Promise.all([
             new Promise((resolve, reject) => {
-                if (clientSocket2.connected) { 
+                if (clientSocket2.connected) {
                     clientSocket2.disconnect();
                 }
                 resolve();
             }),
             new Promise((resolve, reject) => {
-                if (clientSocket3.connected) { 
+                if (clientSocket3.connected) {
                     clientSocket3.disconnect();
                 }
                 resolve();
@@ -200,13 +200,13 @@ describe('Test: chat message', () => {
         // disconnect with server
         await Promise.all([
             new Promise((resolve, reject) => {
-                if (clientSocket2.connected) { 
+                if (clientSocket2.connected) {
                     clientSocket2.disconnect();
                 }
                 resolve();
             }),
             new Promise((resolve, reject) => {
-                if (clientSocket3.connected) { 
+                if (clientSocket3.connected) {
                     clientSocket3.disconnect();
                 }
                 resolve();
@@ -250,6 +250,41 @@ describe('Test: chat message', () => {
             expect(res.event).toEqual('system message');
             expect(res.message.stage).toEqual('chat message');
             expect(res.message.status).toEqual('fail');
+            done();
+        });
+    });
+});
+
+describe('Test: invalid event', () => {
+    let clientSocket4;
+
+    beforeEach(async () => {
+        // 建立 1 個 client
+        clientSocket4 = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0004'));
+
+        await new Promise((resolve, reject) => {
+            clientSocket4.on('system message', (res) => {
+                resolve();
+            });
+        });
+    });
+
+    afterEach(async () => {
+        // disconnect with server
+        if (clientSocket4.connected) {
+            clientSocket4.disconnect();
+        }
+    });
+
+    test('Test: invalid event', (done) => {
+        clientSocket4.emit('xxxxxxxx', { chatroomName: '0002_0003' }); // 目前 user 的 userID: 0002
+
+        clientSocket4.on('system message', (res) => {
+            console.log(res);
+            expect(res.event).toEqual('system message');
+            expect(res.message.stage).toEqual('invalid event');
+            expect(res.message.status).toEqual('fail');
+
             done();
         });
     });
