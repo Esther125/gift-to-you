@@ -30,7 +30,7 @@ class RoomService {
         let token = await this._redis.get(`userId:${userId}`);
         let members = new Set([]);
         if (token !== null) {
-            console.log(`[RoomService] User ${userId} is already in a room ${token}`);
+            console.log(`[RoomService] User ${userId} has already in the room ${token}`);
             members = await this._redis.sGet(token);
             this._redis.quit();
             return { token, members };
@@ -100,9 +100,11 @@ class RoomService {
         const tokenFromRedis = await this._redis.get(`userId:${userId}`);
         if (tokenFromRedis === token) {
             // have already in the target room
+            console.log(`[RoomService] User ${userId} has already in the room ${token}`);
             return true;
         } else if (tokenFromRedis === null) {
             // not in any room now
+            console.log(`[RoomService] User ${userId} is not in any room now`);
             return false;
         }
 
