@@ -6,6 +6,6 @@ const internetFileController = new InternetFileController();
 
 // 定義路由
 internetFileRouter.post('/upload', internetFileController.upload);
-internetFileRouter.get('/download/way/:fileId', internetFileController.download);
+internetFileRouter.get('/download/:way/:fileId', internetFileController.download);
 
 export default internetFileRouter;
