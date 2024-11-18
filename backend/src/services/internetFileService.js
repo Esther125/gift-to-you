@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 class InternetFileService {
     _generateUniqueFilename(originalName) {
@@ -10,13 +11,11 @@ class InternetFileService {
     }
 
     async upload(req, res) {
-        // 實現上傳檔案邏輯
         if (!req.files || Object.keys(req.files).length === 0) {
             throw new Error('No files were uploaded.');
         }
 
         const uploadFile = req.files.uploadFile;
-
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = path.dirname(__filename);
         const rootPath = path.join(__dirname, '../../'); // 把路徑設定在 /backend 資料夾下
@@ -34,6 +33,29 @@ class InternetFileService {
                 }
             });
         });
+    }
+
+    async download(req, res) {
+        // TODO: 根據不同 ways 提供不同下載方式
+        const fileId = req.params.fileId;
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const rootPath = path.join(__dirname, '../../uploads');
+
+        const files = await fs.promises.readdir(rootPath);
+        const matchedFile = files.find((file) => path.basename(file, path.extname(file)) === fileId);
+        if (!matchedFile) {
+            throw new Error('File not found');
+        }
+
+        const filePath = path.join(rootPath, matchedFile);
+        const fileHandle = await fs.promises.open(filePath, 'r');
+        const filestream = fs.createReadStream(null, { fd: fileHandle.fd, autoClose: true });
+
+        res.setHeader('Content-Disposition', `attachment; filename="${path.basename(filePath)}"`);
+        res.setHeader('Content-Type', 'application/octet-stream');
+
+        filestream.pipe(res);
     }
 }
 

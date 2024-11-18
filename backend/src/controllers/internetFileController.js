@@ -22,8 +22,13 @@ class InternetFileController {
 
     async download(req, res) {
         console.log('----InternetFileController.download');
-        // TODO: 實現下載檔案邏輯
-        res.status(200).json({ message: 'File download logic not implemented yet' });
+        try {
+            await this.internetFileService.download(req, res);
+            console.info('File donwloaded successfully.');
+        } catch (error) {
+            console.error('Error downloading file: ', error);
+            res.status(500).json({ message: 'Failed to download the file.', error: error.message });
+        }
     }
 }
 
