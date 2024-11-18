@@ -12,7 +12,7 @@ class InternetFileService {
     async upload(req, res) {
         // 實現上傳檔案邏輯
         if (!req.files || Object.keys(req.files).length === 0) {
-            return res.status(400).send('No files were uploaded.');
+            throw new Error('No files were uploaded.');
         }
 
         const uploadFile = req.files.uploadFile;
@@ -24,11 +24,11 @@ class InternetFileService {
         const filename = this._generateUniqueFilename(uploadFile.name);
         const uploadPath = path.join(rootPath, '/uploads/', filename);
 
-        // 把檔案存到指定路徑下
+        // 把檔案存到指定路徑下並回傳結果
         return new Promise((resolve, reject) => {
             uploadFile.mv(uploadPath, function (err) {
                 if (err) {
-                    reject(err);
+                    reject(new Error(err));
                 } else {
                     resolve(filename);
                 }
