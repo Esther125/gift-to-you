@@ -28,7 +28,7 @@ class RoomService {
 
         // 1. check whether user has been in a room or not
         let token = await this._redis.get(`userId:${userId}`);
-        let members = new Set([]);
+        let members;
         if (token !== null) {
             console.log(`[RoomService] User ${userId} has already in the room ${token}`);
             members = await this._redis.sGet(token);
@@ -45,7 +45,7 @@ class RoomService {
             token = this._createToken();
             members = await this._redis.sGet(token);
         }
-        members = { userId };
+        members = [userId];
 
         // 3. add user to redis
         await this._redis.sAdd(token, userId);
@@ -64,23 +64,35 @@ class RoomService {
 
         await this._redis.connect();
 
-        const judge = await this._leaveRoom(userId, token);
+        const inTargetRoom = await this._leaveRoom(userId, token);
         let message;
+        let members;
 
-        if (judge) {
+        if (inTargetRoom) {
             message = `already in target room ${token}`;
-        } else {
-            await this._redis.sAdd(token, userId);
-            await this._redis.set(`userId:${userId}`, token);
-            await this._redis.setExpire(`userId:${userId}`, 8 * 3600);
-            message = `join target room ${token} successfully`;
+            members = await this._redis.sGet(token);
+            console.log(`[RoomService] User ${userId} have already in target room ${token}`);
+            await this._redis.quit();
+            return { message, members };
         }
 
-        const members = await this._redis.sGet(token);
+        const roomExist = await this._redis.sExist(token);
+        if (!roomExist) {
+            message = `room ${token} has not been created`;
+            console.log(`[RoomService] Room ${token} has not been created`);
+            await this._redis.quit();
+            return { message, members: [] };
+        }
 
-        await this._redis.quit();
+        await this._redis.sAdd(token, userId);
+        await this._redis.set(`userId:${userId}`, token);
+        await this._redis.setExpire(`userId:${userId}`, 8 * 3600);
+        message = `join target room ${token} successfully`;
+
+        members = await this._redis.sGet(token);
 
         console.log(`[RoomService] User ${userId} have join the room ${token}`);
+        await this._redis.quit();
 
         return { message, members };
     };

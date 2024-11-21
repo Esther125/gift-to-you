@@ -113,6 +113,17 @@ class RedisClient {
         }
     };
 
+    sExist = async (setKey) => {
+        try {
+            const exists = await this.client.exists(setKey);
+            console.debug(`[RedisClient] Check existence of set: ${setKey}`);
+            return exists > 0;
+        } catch (err) {
+            console.error(`[RedisClient] Error checking existence of set ${setKey}`, err);
+            throw err;
+        }
+    };
+
     quit = async () => {
         try {
             await this.client.quit();

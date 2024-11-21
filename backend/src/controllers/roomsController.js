@@ -8,29 +8,49 @@ class RoomsController {
     createRoom = async (req, res) => {
         console.log('[RoomsController] -----createRoom-----');
 
-        const user = req.body.user;
-
         try {
+            const user = req.body.user;
+
+            if (!user) {
+                console.error('[RoomsController] Error when creating room - User object is required');
+                return res.status(400).json({ message: 'User object is required' });
+            }
+
+            if (!user.id || user.id.length === 0) {
+                console.error('[RoomsController] Error when creating room - User id is required');
+                return res.status(400).json({ message: 'User id is required' });
+            }
+
             const roomObj = await this.roomService.createRoom(user.id);
             res.status(201).json(roomObj);
         } catch {
             console.error(`[RoomsController] Error when creating room for ${user.id}`);
-            res.status(500).json({ mesage: `Error when creating room for ${user.id}` });
+            res.status(500).json({ message: `Error when creating room for ${user.id}` });
         }
     };
 
     joinRoom = async (req, res) => {
         console.log('[RoomsController] -----joinRoom-----');
 
-        const user = req.body.user;
-        const token = req.params.roomToken;
-
         try {
+            const user = req.body.user;
+            const token = req.params.roomToken;
+
+            if (!user) {
+                console.error('[RoomsController] Error when joining room - User object is required');
+                return res.status(400).json({ message: 'User object is required' });
+            }
+
+            if (!user.id || user.id.length === 0) {
+                console.error('[RoomsController] Error when joining room - User id is required');
+                return res.status(400).json({ message: 'User id is required' });
+            }
+
             const joinRoomObj = await this.roomService.joinRoom(user.id, token);
             res.status(200).json(joinRoomObj);
         } catch {
             console.error(`[RoomsController] Error when joining room ${token} for user ${user.id}`);
-            res.status(500).json({ mesage: `Error when when joining room ${token} for user ${user.id}` });
+            res.status(500).json({ message: `Error when when joining room ${token} for user ${user.id}` });
         }
     };
 }
