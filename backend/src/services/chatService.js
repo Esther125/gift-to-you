@@ -25,6 +25,25 @@ class ChatService {
         console.log(`[chatService] user ${userID} connect to /chat websocket server`);
     };
 
+    connectWrongFormat = (socket) => {
+        console.log(`[chatService] user ask to connect to /chat websocket server with wrong format`);
+
+        // 回傳處理結果通知
+        const res = {
+            event: 'system message',
+            message: {
+                stage: 'connect',
+                status: 'fail',
+            },
+            timestamp: new Date().toISOString(),
+        };
+        socket.emit('system message', res);
+        socket.disconnect();
+        console.log(
+            `[chatService] send system message to user asked to connect with wrong format and disconnect with the user`
+        );
+    };
+
     joinChatroom = (socket, roomToken) => {
         const userID = socket.handshake.auth.user.id;
         console.log(`[chatService] user ${userID} ask to join chatroom ${roomToken}`);

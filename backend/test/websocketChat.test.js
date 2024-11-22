@@ -33,7 +33,7 @@ const AUTH_OPTIONS = (userID) => ({
 
 describe('Test: connect and disconnect to server for /chat', () => {
     let clientSocket;
-    it('Test: connect and disconnect to server for /chat', (done) => {
+    it('Test: connect and disconnect to server for /chat (with correct connection format)', (done) => {
         // connect to server
         clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0001'));
 
@@ -44,6 +44,19 @@ describe('Test: connect and disconnect to server for /chat', () => {
             expect(res.message.status).to.be.equal('success');
 
             clientSocket.disconnect();
+            done();
+        });
+    });
+
+    it('Test: connect and disconnect to server for /chat (with wrong connection format, without auth)', (done) => {
+        // connect to server
+        clientSocket = ioc(CHAT_SERVER_URL);
+
+        clientSocket.on('system message', (res) => {
+            console.log(res);
+            expect(res.event).to.be.equal('system message');
+            expect(res.message.stage).to.be.equal('connect');
+            expect(res.message.status).to.be.equal('fail');
             done();
         });
     });

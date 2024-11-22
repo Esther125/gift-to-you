@@ -9,9 +9,19 @@ class ChatController {
         // connect to server (/chat)
         console.log('[chatController] -----connect-----');
 
+        let userID;
         try {
-            const userID = socket.handshake.auth.user.id;
-            this.chatService.connect(socket, userID);
+            userID = socket.handshake.auth.user.id;
+        } catch {
+            userID = null;
+        }
+
+        try {
+            if (userID) {
+                this.chatService.connect(socket, userID);
+            } else {
+                this.chatService.connectWrongFormat(socket);
+            }
         } catch {
             console.error(`[chatController] Error when connecting chat websocket`);
         }
