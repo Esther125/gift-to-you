@@ -8,9 +8,9 @@ class RoomsController {
     createRoom = async (req, res) => {
         console.log('[RoomsController] -----createRoom-----');
 
+        let user;
         try {
-            const user = req.body.user;
-
+            user = req.body.user;
             if (!user) {
                 console.error('[RoomsController] Error when creating room - User object is required');
                 return res.status(400).json({ message: 'User object is required' });
@@ -32,9 +32,11 @@ class RoomsController {
     joinRoom = async (req, res) => {
         console.log('[RoomsController] -----joinRoom-----');
 
+        let user;
+        let token;
         try {
-            const user = req.body.user;
-            const token = req.params.roomToken;
+            user = req.body.user;
+            token = req.params.roomToken;
 
             if (!user) {
                 console.error('[RoomsController] Error when joining room - User object is required');
