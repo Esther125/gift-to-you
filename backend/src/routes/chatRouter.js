@@ -1,6 +1,6 @@
 import ChatController from '../controllers/chatController.js';
 
-const VALID_EVENTS = ['join chatroom', 'chat message', 'leave chatroom'];
+const VALID_EVENTS = ['join chatroom', 'request transfer', 'chat message', 'leave chatroom'];
 
 const chatRouter = (chatNameSpace) => {
     const chatController = new ChatController();
@@ -12,6 +12,11 @@ const chatRouter = (chatNameSpace) => {
         socket.on('join chatroom', (payload) => {
             // join chatroom
             chatController.joinChatroom(socket, payload);
+        });
+
+        socket.on('request transfer', (payload) => {
+            // request transfer (file)
+            chatController.requestTransfer(socket, payload, chatNameSpace);
         });
 
         socket.on('chat message', (payload) => {

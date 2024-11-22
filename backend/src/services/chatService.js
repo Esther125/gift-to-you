@@ -64,13 +64,68 @@ class ChatService {
         }
     };
 
+    _checkUserInRoom = (socket, userID, roomToken) => {
+        let memberSockets;
+        try {
+            memberSockets = [...socket.adapter.rooms.get(roomToken)];
+        } catch {
+            return false;
+        }
+
+        let userSocket;
+        try {
+            userSocket = [...socket.adapter.rooms.get(userID)][0];
+        } catch {
+            return false;
+        }
+
+        if (!memberSockets.includes(userSocket)) {
+            return false;
+        }
+        return true;
+    };
+
+    requestTransfer = (socket, roomToken, receiverID, chatNameSpace) => {
+        const userID = socket.handshake.auth.user.id;
+        const senderID = userID;
+        console.log(`[chatService] user ${userID} ask to transfer file to user ${receiverID}`);
+
+        // 檢查 sender 和 receiver 是否在該 chatroom 內
+        const senderInRoom = this._checkUserInRoom(socket, senderID, roomToken);
+        const receiverInRoom = this._checkUserInRoom(socket, receiverID, roomToken);
+        if (!senderInRoom || !receiverInRoom) {
+            console.log('here1');
+            this.systemMessage(socket, 'request transfer', 'fail');
+            return;
+        }
+
+        if (senderID === receiverID) {
+            // 檢查 sender、receiver 是否相同
+            this.systemMessage(socket, 'request transfer', 'fail');
+            return;
+        }
+
+        // 通知 receiver，sender 要傳檔案給他
+        const res = {
+            event: 'transfer notify',
+            roomToken,
+            senderID,
+            timestamp: new Date().toISOString(),
+        };
+        chatNameSpace.to(receiverID).emit('transfer notify', res);
+        console.log(`[chatService] send transfer notification requested from user ${senderID} to user ${receiverID}`);
+
+        // 回傳處理結果通知
+        this.systemMessage(socket, 'request transfer', 'success');
+    };
+
     chatMessage = (socket, roomToken, message) => {
         const userID = socket.handshake.auth.user.id;
         console.log(`[chatService] user ${userID} ask to send message to chatroom ${roomToken}`);
 
         // 檢查該 user 是否在該 chatroom 內
-        const userJoinedRooms = [...socket.adapter.sids.get(socket.id)];
-        if (!userJoinedRooms || !userJoinedRooms.includes(roomToken)) {
+        const inRoom = this._checkUserInRoom(socket, userID, roomToken);
+        if (!inRoom) {
             this.systemMessage(socket, 'chat message', 'fail');
             return;
         }
@@ -97,8 +152,8 @@ class ChatService {
         console.log(`[chatService] user ${userID} ask to leave chatroom ${roomToken}`);
 
         // 檢查該 user 是否在該 chatroom 內
-        const userJoinedRooms = [...socket.adapter.sids.get(socket.id)];
-        if (!userJoinedRooms || !userJoinedRooms.includes(roomToken)) {
+        const inRoom = this._checkUserInRoom(socket, userID, roomToken);
+        if (!inRoom) {
             this.systemMessage(socket, 'leave chatroom', 'fail');
             return;
         }

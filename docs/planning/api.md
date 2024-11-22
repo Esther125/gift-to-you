@@ -39,12 +39,10 @@
 
 ## WebSocket
 
-<img src="../assets/system_design/api_websocket.png" width="50%">
-
--   建立連線：-- client 端在使用各服務前須先與對應的 namespace 建立連線
+-   建立連線：
 
     ```js
-    const socket = io(`${serverURL}/${namespace}`, {
+    const socket = io(`${serverURL}/chat`, {
         auth: {
             user: {
                 id: userID;
@@ -52,19 +50,6 @@
         }
     });
     ```
-
--   關閉連線：
-
-    ```js
-    socket.disconnect();
-    ```
-
-### 聊天室 -- namespace: chat
-
--   使用期間：
-
-    -   建立連線：使用者同意進行一對一檔案傳輸。
-    -   關閉連線：傳輸雙方結束一對一檔案傳輸一定時間後。
 
 -   相關事件：
 
@@ -76,13 +61,19 @@
             socket.emit('join chatroom', { roomToken });
             ```
 
-        2. chat message -- 向聊天室發送訊息
+        2. request transfer -- 傳送方欲傳送檔案給接收方
+
+            ```js
+            socket.emit('request transfer', { roomToken, receiverID });
+            ```
+
+        3. chat message -- 向聊天室發送訊息
 
             ```js
             socket.emit('chat message', { roomToken, message });
             ```
 
-        3. leave chatroom -- 離開聊天室
+        4. leave chatroom -- 離開聊天室
 
             ```js
             socket.emit('leave chatroom', { roomToken });
@@ -110,7 +101,18 @@
             }
             ```
 
-        2. chat message -- 來自聊天室中其他人傳來的訊息
+        2. transfer notify -- server 向傳輸的接收方寄送傳輸通知
+
+            ```js
+            {
+                event: 'transfer notify',
+                roomToken,
+                senderID,
+                timestamp: new Date().toISOString(),
+            }
+            ```
+
+        3. chat message -- 來自聊天室中其他人傳來的訊息
 
             ```js
             {
@@ -123,3 +125,9 @@
                 timestamp: new Date().toISOString(),
             }
             ```
+
+-   關閉連線：
+
+    ```js
+    socket.disconnect();
+    ```

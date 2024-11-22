@@ -40,6 +40,20 @@ class ChatController {
         }
     };
 
+    requestTransfer = (socket, payload, chatNameSpace) => {
+        console.log('[chatController] -----requestTransfer-----');
+        const userID = socket.handshake.auth.user.id;
+
+        try {
+            const roomToken = payload.roomToken;
+            const receiverID = payload.receiverID;
+            this.chatService.requestTransfer(socket, roomToken, receiverID, chatNameSpace);
+        } catch {
+            console.error(`[chatController] Error when user ${userID} request transfer`);
+            this.chatService.systemMessage(socket, 'request transfer', 'error');
+        }
+    };
+
     chatMessage = (socket, payload) => {
         console.log('[chatController] -----chatMessage-----');
         const userID = socket.handshake.auth.user.id;
