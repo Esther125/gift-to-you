@@ -79,7 +79,10 @@ class ChatService {
         const res = {
             event: 'chat message',
             roomToken,
-            message,
+            message: {
+                senderID: userID,
+                content: message,
+            },
             timestamp: new Date().toISOString(),
         };
         socket.to(roomToken).emit('chat message', res);
@@ -87,6 +90,25 @@ class ChatService {
         // 回傳處理結果通知
         this.systemMessage(socket, 'chat message', 'success');
         console.log(`[chatService] user ${userID} send message ${message} to chatroom ${roomToken}`);
+    };
+
+    leaveChatroom = (socket, roomToken) => {
+        const userID = socket.handshake.auth.user.id;
+        console.log(`[chatService] user ${userID} ask to leave chatroom ${roomToken}`);
+
+        // 檢查該 user 是否在該 chatroom 內
+        const userJoinedRooms = [...socket.adapter.sids.get(socket.id)];
+        if (!userJoinedRooms || !userJoinedRooms.includes(roomToken)) {
+            this.systemMessage(socket, 'leave chatroom', 'fail');
+            return;
+        }
+
+        // 離開聊天室
+        socket.leave(roomToken);
+
+        // 回傳處理結果通知
+        this.systemMessage(socket, 'leave chatroom', 'success');
+        console.log(`[chatService] user ${userID} leave chatroom ${roomToken}`);
     };
 
     disconnect = (socket, reason) => {

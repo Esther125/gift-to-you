@@ -54,6 +54,19 @@ class ChatController {
         }
     };
 
+    leaveChatroom = (socket, payload) => {
+        console.log('[chatController] -----leaveChatroom-----');
+        const userID = socket.handshake.auth.user.id;
+
+        try {
+            const roomToken = payload.roomToken;
+            this.chatService.leaveChatroom(socket, roomToken);
+        } catch {
+            console.error(`[chatController] Error when leaving chatroom for ${userID}`);
+            this.chatService.systemMessage(socket, 'leave chatroom', 'error');
+        }
+    };
+
     disconnect = (socket, reason) => {
         console.log('[chatController] -----disconnect-----');
         this.chatService.disconnect(socket, reason);

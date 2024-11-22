@@ -17,7 +17,10 @@ expected response structure
     {
         event: 'chat message',
         roomToken,
-        message,
+        message: {
+            senderID,
+            content
+        },
         timestamp: new Date().toISOString(),
     }
 */
@@ -77,7 +80,7 @@ describe('Test: join chatroom', () => {
                     resolve();
                 });
             }),
-            await new Promise((resolve, reject) => {
+            new Promise((resolve, reject) => {
                 clientSocket3.on('system message', (res) => {
                     resolve();
                 });
@@ -117,7 +120,7 @@ describe('Test: join chatroom', () => {
     });
 });
 
-describe('Test: chat message', () => {
+describe('Test: other (after joining chatroom)', () => {
     let clientSocket2;
     let clientSocket3;
     let client1_2RoomToken = 'ABCDE';
@@ -176,78 +179,91 @@ describe('Test: chat message', () => {
         ]);
     });
 
-    it('Test: send message (給目前 user 所在的房間)', async () => {
-        const message = 'Hi';
-        clientSocket2.emit('chat message', { roomToken: client1_2RoomToken, message });
+    describe('Test: chat message', () => {
+        it('Test: send message (給目前 user 所在的房間)', async () => {
+            const message = 'Hi';
+            clientSocket2.emit('chat message', { roomToken: client1_2RoomToken, message });
 
-        await Promise.all([
-            new Promise((resolve, reject) => {
-                // chat 的發送方收到系統回傳結果通知
-                clientSocket2.on('system message', (res) => {
-                    console.log(res);
-                    expect(res.event).to.be.equal('system message');
-                    expect(res.message.stage).to.be.equal('chat message');
-                    expect(res.message.status).to.be.equal('success');
-                    resolve();
-                });
-            }),
-            new Promise((resolve, reject) => {
-                clientSocket3.on('chat message', (res) => {
-                    console.log(res);
-                    expect(res.event).to.be.equal('chat message');
-                    expect(res.roomToken).to.be.equal(client1_2RoomToken);
-                    expect(res.message).to.be.equal(message);
-                    resolve();
-                });
-            }),
-        ]);
-    });
-
-    it('Test: send message (給目前 user 不在的房間)', (done) => {
-        const message = 'Hi';
-        clientSocket2.emit('chat message', { roomToken: '30943', message });
-
-        clientSocket2.on('system message', (res) => {
-            console.log(res);
-            expect(res.event).to.be.equal('system message');
-            expect(res.message.stage).to.be.equal('chat message');
-            expect(res.message.status).to.be.equal('fail');
-            done();
+            await Promise.all([
+                new Promise((resolve, reject) => {
+                    // chat 的發送方收到系統回傳結果通知
+                    clientSocket2.on('system message', (res) => {
+                        console.log(res);
+                        expect(res.event).to.be.equal('system message');
+                        expect(res.message.stage).to.be.equal('chat message');
+                        expect(res.message.status).to.be.equal('success');
+                        resolve();
+                    });
+                }),
+                new Promise((resolve, reject) => {
+                    clientSocket3.on('chat message', (res) => {
+                        console.log(res);
+                        expect(res.event).to.be.equal('chat message');
+                        expect(res.roomToken).to.be.equal(client1_2RoomToken);
+                        expect(res.message.senderID).to.be.equal('0002');
+                        expect(res.message.content).to.be.equal(message);
+                        resolve();
+                    });
+                }),
+            ]);
         });
-    });
-});
 
-describe('Test: invalid event', () => {
-    let clientSocket4;
+        it('Test: send message (給目前 user 不在的房間)', (done) => {
+            const message = 'Hi';
+            clientSocket2.emit('chat message', { roomToken: '30943', message });
 
-    beforeEach(async () => {
-        // 建立 1 個 client
-        clientSocket4 = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0004'));
-
-        await new Promise((resolve, reject) => {
-            clientSocket4.on('system message', (res) => {
-                resolve();
+            clientSocket2.on('system message', (res) => {
+                console.log(res);
+                expect(res.event).to.be.equal('system message');
+                expect(res.message.stage).to.be.equal('chat message');
+                expect(res.message.status).to.be.equal('fail');
+                done();
             });
         });
     });
 
-    afterEach(async () => {
-        // disconnect with server
-        if (clientSocket4.connected) {
-            clientSocket4.disconnect();
-        }
+    describe('Test: leave chatroom', () => {
+        it('Test: leave chatroom (目前 user 所在的房間)', async () => {
+            clientSocket2.emit('leave chatroom', { roomToken: client1_2RoomToken });
+
+            await new Promise((resolve, reject) => {
+                clientSocket2.on('system message', (res) => {
+                    console.log(res);
+                    expect(res.event).to.be.equal('system message');
+                    expect(res.message.stage).to.be.equal('leave chatroom');
+                    expect(res.message.status).to.be.equal('success');
+                    resolve();
+                });
+            });
+        });
+
+        it('Test: leave chatroom (目前 user 不在的房間)', async () => {
+            clientSocket2.emit('leave chatroom', { roomToken: '30943' });
+
+            await new Promise((resolve, reject) => {
+                clientSocket2.on('system message', (res) => {
+                    console.log(res);
+                    expect(res.event).to.be.equal('system message');
+                    expect(res.message.stage).to.be.equal('leave chatroom');
+                    expect(res.message.status).to.be.equal('fail');
+                    resolve();
+                });
+            });
+        });
     });
 
-    it('Test: invalid event', (done) => {
-        clientSocket4.emit('xxxxxxxx', { roomToken: '0002_0003' });
+    describe('Test: invalid event', () => {
+        it('Test: invalid event', (done) => {
+            clientSocket2.emit('xxxxxxxx');
 
-        clientSocket4.on('system message', (res) => {
-            console.log(res);
-            expect(res.event).to.be.equal('system message');
-            expect(res.message.stage).to.be.equal('invalid event');
-            expect(res.message.status).to.be.equal('fail');
+            clientSocket2.on('system message', (res) => {
+                console.log(res);
+                expect(res.event).to.be.equal('system message');
+                expect(res.message.stage).to.be.equal('invalid event');
+                expect(res.message.status).to.be.equal('fail');
 
-            done();
+                done();
+            });
         });
     });
 });

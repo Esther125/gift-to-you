@@ -1,6 +1,6 @@
 import ChatController from '../controllers/chatController.js';
 
-const VALID_EVENTS = ['join chatroom', 'chat message', 'close chatroom'];
+const VALID_EVENTS = ['join chatroom', 'chat message', 'leave chatroom'];
 
 const chatRouter = (chatNameSpace) => {
     const chatController = new ChatController();
@@ -17,6 +17,11 @@ const chatRouter = (chatNameSpace) => {
         socket.on('chat message', (payload) => {
             // chat message
             chatController.chatMessage(socket, payload);
+        });
+
+        socket.on('leave chatroom', (payload) => {
+            // leave chatroom
+            chatController.leaveChatroom(socket, payload);
         });
 
         socket.on('disconnect', (reason) => {

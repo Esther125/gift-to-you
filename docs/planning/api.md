@@ -70,16 +70,22 @@
 
     -   由 client 端向 server 端發起的事件 + 發起方式：
 
-        1. join chatroom -- 建立雙人聊天室
+        1. join chatroom -- 進入聊天室
 
             ```js
             socket.emit('join chatroom', { roomToken });
             ```
 
-        2. chat message -- 向雙人聊天室發送訊息
+        2. chat message -- 向聊天室發送訊息
 
             ```js
             socket.emit('chat message', { roomToken, message });
+            ```
+
+        3. leave chatroom -- 離開聊天室
+
+            ```js
+            socket.emit('leave chatroom', { roomToken });
             ```
 
     -   由 server 端向 client 端發送的事件 + 接收到的資料格式：
@@ -104,13 +110,16 @@
             }
             ```
 
-        2. chat message -- 來自雙人聊天室中對方傳來的訊息
+        2. chat message -- 來自聊天室中其他人傳來的訊息
 
             ```js
             {
                 event: 'chat message',
                 roomToken,
-                message,
+                message: {
+                    senderID,
+                    content
+                },
                 timestamp: new Date().toISOString(),
             }
             ```
