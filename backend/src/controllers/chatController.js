@@ -22,8 +22,8 @@ class ChatController {
         const userID = socket.handshake.auth.user.id;
 
         try {
-            const chatroomName = payload.chatroomName;
-            this.chatService.joinChatroom(socket, chatroomName);
+            const roomToken = payload.roomToken;
+            this.chatService.joinChatroom(socket, roomToken);
         } catch {
             console.error(`[chatController] Error when joining chatroom for ${userID}`);
             this.chatService.systemMessage(socket, 'join chatroom', 'error');
@@ -35,9 +35,9 @@ class ChatController {
         const userID = socket.handshake.auth.user.id;
 
         try {
-            const chatroomName = payload.chatroomName;
+            const roomToken = payload.roomToken;
             const message = payload.message;
-            this.chatService.chatMessage(socket, chatroomName, message);
+            this.chatService.chatMessage(socket, roomToken, message);
         } catch {
             console.error(`[chatController] Error when user ${userID} send chat message`);
             this.chatService.systemMessage(socket, 'chat message', 'error');

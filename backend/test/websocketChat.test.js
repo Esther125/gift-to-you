@@ -1,4 +1,4 @@
-import { expect } from "chai";
+import { expect } from 'chai';
 import { io as ioc } from 'socket.io-client';
 
 /*
@@ -16,7 +16,7 @@ expected response structure
 2. event: chat message
     {
         event: 'chat message',
-        chatroomName,
+        roomToken,
         message,
         timestamp: new Date().toISOString(),
     }
@@ -90,66 +90,14 @@ describe('Test: join chatroom', () => {
         ]);
     });
 
-    it('Test: join chatroom (目前 user 是這次檔案傳輸的 sender)', (done) => {
-        clientSocket2.emit('join chatroom', { chatroomName: '0002_0003' }); // 目前 user 的 userID: 0002
+    it('Test: join chatroom (user 有在該房間內)', (done) => {
+        clientSocket2.emit('join chatroom', { roomToken: 'ABCDE' });
 
         clientSocket2.on('system message', (res) => {
             console.log(res);
             expect(res.event).to.be.equal('system message');
             expect(res.message.stage).to.be.equal('join chatroom');
             expect(res.message.status).to.be.equal('success');
-
-            done();
-        });
-    });
-
-    it('Test: join chatroom (目前 user 是這次檔案傳輸的 receiver)', (done) => {
-        clientSocket2.emit('join chatroom', { chatroomName: '0003_0002' }); // 目前 user 的 userID: 0002
-
-        clientSocket2.on('system message', (res) => {
-            console.log(res);
-            expect(res.event).to.be.equal('system message');
-            expect(res.message.stage).to.be.equal('join chatroom');
-            expect(res.message.status).to.be.equal('success');
-
-            done();
-        });
-    });
-
-    it('Test: join chatroom (目前 user 與這次檔案傳輸無關)', (done) => {
-        clientSocket2.emit('join chatroom', { chatroomName: '0001_0004' }); // 目前 user 的 userID: 0002
-
-        clientSocket2.on('system message', (res) => {
-            console.log(res);
-            expect(res.event).to.be.equal('system message');
-            expect(res.message.stage).to.be.equal('join chatroom');
-            expect(res.message.status).to.be.equal('fail');
-
-            done();
-        });
-    });
-
-    it('Test: join chatroom (sender、receiver 都是同一個人)', (done) => {
-        clientSocket2.emit('join chatroom', { chatroomName: '0002_0002' }); // 不合法的房間名稱
-
-        clientSocket2.on('system message', (res) => {
-            console.log(res);
-            expect(res.event).to.be.equal('system message');
-            expect(res.message.stage).to.be.equal('join chatroom');
-            expect(res.message.status).to.be.equal('fail');
-
-            done();
-        });
-    });
-
-    it('Test: join chatroom (傳輸雙方其中一方不是 user)', (done) => {
-        clientSocket2.emit('join chatroom', { chatroomName: '0002_0005' }); // 目前所有 user 為 0002、0003
-
-        clientSocket2.on('system message', (res) => {
-            console.log(res);
-            expect(res.event).to.be.equal('system message');
-            expect(res.message.stage).to.be.equal('join chatroom');
-            expect(res.message.status).to.be.equal('fail');
 
             done();
         });
@@ -159,7 +107,7 @@ describe('Test: join chatroom', () => {
 describe('Test: chat message', () => {
     let clientSocket2;
     let clientSocket3;
-    let client1_2ChatroomName = '0002_0003';
+    let client1_2RoomToken = 'ABCDE';
 
     beforeEach(async () => {
         // 建立 2 個 client
@@ -180,8 +128,8 @@ describe('Test: chat message', () => {
         ]);
 
         // client 1 和 client 2 加入相同聊天室
-        clientSocket2.emit('join chatroom', { chatroomName: client1_2ChatroomName });
-        clientSocket3.emit('join chatroom', { chatroomName: client1_2ChatroomName });
+        clientSocket2.emit('join chatroom', { roomToken: client1_2RoomToken });
+        clientSocket3.emit('join chatroom', { roomToken: client1_2RoomToken });
 
         await Promise.all([
             new Promise((resolve, reject) => {
@@ -217,7 +165,7 @@ describe('Test: chat message', () => {
 
     it('Test: send message (給目前 user 所在的房間)', async () => {
         const message = 'Hi';
-        clientSocket2.emit('chat message', { chatroomName: client1_2ChatroomName, message });
+        clientSocket2.emit('chat message', { roomToken: client1_2RoomToken, message });
 
         await Promise.all([
             new Promise((resolve, reject) => {
@@ -234,7 +182,7 @@ describe('Test: chat message', () => {
                 clientSocket3.on('chat message', (res) => {
                     console.log(res);
                     expect(res.event).to.be.equal('chat message');
-                    expect(res.chatroomName).to.be.equal(client1_2ChatroomName);
+                    expect(res.roomToken).to.be.equal(client1_2RoomToken);
                     expect(res.message).to.be.equal(message);
                     resolve();
                 });
@@ -244,7 +192,7 @@ describe('Test: chat message', () => {
 
     it('Test: send message (給目前 user 不在的房間)', (done) => {
         const message = 'Hi';
-        clientSocket2.emit('chat message', { chatroomName: '0005_0002', message });
+        clientSocket2.emit('chat message', { roomToken: '30943', message });
 
         clientSocket2.on('system message', (res) => {
             console.log(res);
@@ -278,7 +226,7 @@ describe('Test: invalid event', () => {
     });
 
     it('Test: invalid event', (done) => {
-        clientSocket4.emit('xxxxxxxx', { chatroomName: '0002_0003' }); // 目前 user 的 userID: 0002
+        clientSocket4.emit('xxxxxxxx', { roomToken: '0002_0003' });
 
         clientSocket4.on('system message', (res) => {
             console.log(res);

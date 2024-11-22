@@ -73,14 +73,13 @@
         1. join chatroom -- 建立雙人聊天室
 
             ```js
-            // chatroomName 格式：{senderID}_{receiverID}
-            socket.emit('join chatroom', { chatroomName });
+            socket.emit('join chatroom', { roomToken });
             ```
 
         2. chat message -- 向雙人聊天室發送訊息
 
             ```js
-            socket.emit('chat message', { chatroomName, message });
+            socket.emit('chat message', { roomToken, message });
             ```
 
     -   由 server 端向 client 端發送的事件 + 接收到的資料格式：
@@ -110,7 +109,7 @@
             ```js
             {
                 event: 'chat message',
-                chatroomName,
+                roomToken,
                 message,
                 timestamp: new Date().toISOString(),
             }

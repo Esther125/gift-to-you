@@ -16,7 +16,7 @@ class ChatService {
 
     connect = (socket, userID) => {
         console.log(`[chatService] user ${userID} ask to connect to /chat websocket server`);
-        
+
         // 加入以 userID 命名的聊天室
         socket.join(userID);
 
@@ -25,45 +25,33 @@ class ChatService {
         console.log(`[chatService] user ${userID} connect to /chat websocket server`);
     };
 
-    joinChatroom = (socket, chatroomName) => {
+    joinChatroom = (socket, roomToken) => {
         const userID = socket.handshake.auth.user.id;
-        console.log(`[chatService] user ${userID} ask to join chatroom ${chatroomName}`);
-        
-        // chatroomName 結構: {senderID}_{receiverID}
-        const [senderID, receiverID] = chatroomName.split('_');
-        const allRooms = [...socket.adapter.rooms.keys()];
-        
-        if (senderID === receiverID) {
-            // 檢查是否為 sender、receiver 是否相同
+        console.log(`[chatService] user ${userID} ask to join chatroom ${roomToken}`);
+
+        const inRoom = true; // TODO: 之後再看怎麼接 roomService 來判斷
+
+        if (inRoom) {
+            // 加入聊天室
+            socket.join(roomToken);
+
+            // 回傳處理結果通知
+            this.systemMessage(socket, 'join chatroom', 'success');
+            console.log(`[chatService] user ${userID} join chatroom ${roomToken}`);
+        } else {
+            // 回傳處理結果通知
             this.systemMessage(socket, 'join chatroom', 'fail');
-            return;
+            console.log(`[chatService] user ${userID} is not in room ${roomToken}`);
         }
-        if (!allRooms || !allRooms.includes(senderID) || !allRooms.includes(receiverID)) {
-            // 檢查 sender、receiver 是否存在
-            this.systemMessage(socket, 'join chatroom', 'fail');
-            return;
-        }
-        if (userID !== senderID && userID !== receiverID) {
-            // 檢查該 user 是否為傳輸雙方之一
-            this.systemMessage(socket, 'join chatroom', 'fail');
-            return;
-        }
-        
-        // 加入兩人的聊天室
-        socket.join(chatroomName);
-        
-        // 回傳處理結果通知
-        this.systemMessage(socket, 'join chatroom', 'success');
-        console.log(`[chatService] user ${userID} join chatroom ${chatroomName}`);
     };
-    
-    chatMessage = (socket, chatroomName, message) => {
+
+    chatMessage = (socket, roomToken, message) => {
         const userID = socket.handshake.auth.user.id;
-        console.log(`[chatService] user ${userID} ask to send message to chatroom ${chatroomName}`);
+        console.log(`[chatService] user ${userID} ask to send message to chatroom ${roomToken}`);
 
         // 檢查該 user 是否在該 chatroom 內
         const userJoinedRooms = [...socket.adapter.sids.get(socket.id)];
-        if (!userJoinedRooms || !userJoinedRooms.includes(chatroomName)) {
+        if (!userJoinedRooms || !userJoinedRooms.includes(roomToken)) {
             this.systemMessage(socket, 'chat message', 'fail');
             return;
         }
@@ -71,15 +59,15 @@ class ChatService {
         // 將訊息發給 chatroom 中的對方
         const res = {
             event: 'chat message',
-            chatroomName,
+            roomToken,
             message,
             timestamp: new Date().toISOString(),
         };
-        socket.to(chatroomName).emit('chat message', res);
+        socket.to(roomToken).emit('chat message', res);
 
         // 回傳處理結果通知
         this.systemMessage(socket, 'chat message', 'success');
-        console.log(`[chatService] user ${userID} send message ${message} to chatroom ${chatroomName}`);
+        console.log(`[chatService] user ${userID} send message ${message} to chatroom ${roomToken}`);
     };
 
     disconnect = (socket, reason) => {
