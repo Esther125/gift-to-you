@@ -2,12 +2,12 @@ import { createClient } from 'redis';
 
 class RedisClient {
     constructor() {
+        console.debug('[RedisClient] Initializing Redis client');
         this.client = createClient({
             socket: {
                 reconnectStrategy: function (retries) {
                     if (retries > 5) {
-                        console.log('Too many attempts to reconnect. Redis connection was terminated');
-                        return new Error('Too many retries.');
+                        return new Error('Too many attempts to reconnect. Redis connection was terminated');
                     } else {
                         return retries * 500;
                     }
@@ -15,73 +15,121 @@ class RedisClient {
             },
         });
         this.client.on('error', (err) => {
-            console.error('Redis Client Error', err);
-            process.e;
+            console.error('[RedisClient] Redis Client Error', err);
         });
     }
 
-    _connect = async () => {
+    connect = async () => {
         try {
             await this.client.connect();
-            console.log('Redis Client connected');
+            console.debug('[RedisClient] Connected to Redis');
         } catch (err) {
-            console.error('Error connecting to Redis', err);
+            console.error('[RedisClient] Error connecting to Redis:', err);
             throw err;
         }
     };
 
-    _set = async (key, value) => {
+    set = async (key, value) => {
         try {
             await this.client.set(key, value);
-            console.log(`Set key: ${key} with value: ${value}`);
+            console.debug(`[RedisClient] Set key: ${key} with value: ${value}`);
         } catch (err) {
-            console.error('Error setting value in Redis', err);
+            console.error(`[RedisClient] Error setting value of key ${key}`, err);
             throw err;
         }
     };
 
-    _setExpire = async (key, second = 0) => {
+    setExpire = async (key, second = 0) => {
         try {
             if (second === 0) {
-                const todayEnd = new Date().setHours(23, 59, 59, 999);
+                const todayEnd = new Date().setHours(3, 0, 0, 0);
                 this.client.expireAt(key, parseInt(todayEnd / 1000));
+                console.debug(`[RedisClient] Set expire time for key: ${key}`);
                 return;
             }
 
             await this.client.expire(key, second);
+            console.debug(`[RedisClient] Set expire second ${second / 3600} hours for key: ${key}`);
             return;
         } catch (err) {
-            console.error('Error setting expire in Redis', err);
+            console.error(`[RedisClient] Error setting expire of key ${key}`, err);
             throw err;
         }
     };
 
-    _get = async (key) => {
+    get = async (key) => {
         try {
             const value = await this.client.get(key);
-            console.log(`Get key: ${key} with value: ${value}`);
+            console.debug(`[RedisClient] Get key: ${key} with value: ${value}`);
             return value;
         } catch (err) {
-            console.error('Error getting value from Redis', err);
+            console.error(`[RedisClient] Error getting value of key ${key}`, err);
             throw err;
         }
     };
 
-    _del = async (key) => {
+    del = async (key) => {
         try {
             await this.client.del(key);
+            console.debug(`[RedisClient] Delete key: ${key}`);
         } catch (err) {
-            console.error('Error deleting key from Redis', err);
+            console.error(`[RedisClient] Error deleting key ${key}`, err);
             throw err;
         }
     };
 
-    _quit = async () => {
+    sAdd = async (setKey, member) => {
+        try {
+            await this.client.sAdd(setKey, member);
+            console.debug(`[RedisClient] Add member: ${member} to set: ${setKey}`);
+        } catch (err) {
+            console.error('[RedisClient] Error adding member to set', err);
+            throw err;
+        }
+    };
+
+    sGet = async (setKey) => {
+        try {
+            const members = await this.client.sMembers(setKey);
+            console.debug(`[RedisClient] Get member of set: ${setKey}`);
+            return members;
+        } catch (err) {
+            console.error(`[RedisClient] Error getting all from set ${setKey}`, err);
+            throw err;
+        }
+    };
+
+    sRem = async (setKey, member) => {
+        try {
+            const removedCount = await this.client.sRem(setKey, member);
+            if (removedCount > 0) {
+                console.debug(`[RedisClient] Removed member: ${member} from set: ${setKey}`);
+            } else {
+                console.debug(`[RedisClient] Member: ${member} not found in set: ${setKey}`);
+            }
+        } catch (err) {
+            console.error(`[RedisClient] Error removing member from set ${setKey}`, err);
+            throw err;
+        }
+    };
+
+    sExist = async (setKey) => {
+        try {
+            const exists = await this.client.exists(setKey);
+            console.debug(`[RedisClient] Check existence of set: ${setKey}`);
+            return exists > 0;
+        } catch (err) {
+            console.error(`[RedisClient] Error checking existence of set ${setKey}`, err);
+            throw err;
+        }
+    };
+
+    quit = async () => {
         try {
             await this.client.quit();
-            console.log('Redis Client quit');
+            console.debug('[RedisClient] Quit to Redis');
         } catch (err) {
-            console.error('Error quitting Redis Client', err);
+            console.error('[RedisClient] Error quitting Redis Client', err);
             throw err;
         }
     };
