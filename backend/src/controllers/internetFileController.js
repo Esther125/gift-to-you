@@ -8,7 +8,7 @@ class InternetFileController {
         this.download = this.download.bind(this);
     }
 
-    async upload(req, res) {
+    upload = async (req, res) => {
         console.log('----InternetFileController.upload');
         try {
             const filename = await this.internetFileService.upload(req, res);
@@ -18,13 +18,13 @@ class InternetFileController {
             console.error('Error uploading file: ', error);
             res.status(500).json({ message: 'Failed to upload the file.', error: error.message });
         }
-    }
+    };
 
-    async download(req, res) {
+    download = async (req, res) => {
         console.log('----InternetFileController.download');
         // TODO: 實現下載檔案邏輯
         res.status(200).json({ message: 'File download logic not implemented yet' });
-    }
+    };
 }
 
 export default InternetFileController;

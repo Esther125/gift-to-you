@@ -3,13 +3,13 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 class InternetFileService {
-    _generateUniqueFilename(originalName) {
+    _generateUniqueFilename = (originalName) => {
         // 產生一個包含唯一識別碼(uuid)的檔案名稱
         const extension = path.extname(originalName);
         return `${uuidv4()}${extension}`;
-    }
+    };
 
-    async upload(req, res) {
+    upload = async (req, res) => {
         // 實現上傳檔案邏輯
         if (!req.files || Object.keys(req.files).length === 0) {
             throw new Error('No files were uploaded.');
@@ -34,7 +34,7 @@ class InternetFileService {
                 }
             });
         });
-    }
+    };
 }
 
 export default InternetFileService;
