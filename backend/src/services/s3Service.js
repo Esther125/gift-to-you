@@ -17,7 +17,7 @@ class S3Service {
         this._bucket = process.env.BUCKET_NAME;
     }
 
-    async uploadFile(file, filename, userId) {
+    uploadFile = async (file, filename, userId) => {
         console.log(`[S3Service] uploadFile() called with file: ${file.name}, userId: ${userId}, filename: ${filename}`);
 
         const key = `user/${userId}/${filename}`; // S3 file key format
