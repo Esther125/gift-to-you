@@ -4,13 +4,13 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 
 class InternetFileService {
-    _generateUniqueFilename(originalName) {
+    _generateUniqueFilename = (originalName) => {
         // 產生一個包含唯一識別碼(uuid)的檔案名稱
         const extension = path.extname(originalName);
         return `${uuidv4()}${extension}`;
-    }
+    };
 
-    async upload(req, res) {
+    upload = async (req, res) => {
         if (!req.files || Object.keys(req.files).length === 0) {
             throw new Error('No files were uploaded.');
         }
@@ -33,9 +33,9 @@ class InternetFileService {
                 }
             });
         });
-    }
+    };
 
-    async download(req, res) {
+    download = async (req, res) => {
         // TODO: 根據不同 ways 提供不同下載方式
         const fileId = req.params.fileId;
         const __filename = fileURLToPath(import.meta.url);
@@ -56,7 +56,7 @@ class InternetFileService {
         res.setHeader('Content-Type', 'application/octet-stream');
 
         filestream.pipe(res);
-    }
+    };
 }
 
 export default InternetFileService;

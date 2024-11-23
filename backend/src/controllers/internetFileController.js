@@ -8,7 +8,7 @@ class InternetFileController {
         this.download = this.download.bind(this);
     }
 
-    async upload(req, res) {
+    upload = async (req, res) => {
         console.log('----InternetFileController.upload');
         try {
             const filename = await this.internetFileService.upload(req, res);
@@ -18,9 +18,9 @@ class InternetFileController {
             console.error('Error uploading file: ', error);
             res.status(500).json({ message: 'Failed to upload the file.', error: error.message });
         }
-    }
+    };
 
-    async download(req, res) {
+    download = async (req, res) => {
         console.log('----InternetFileController.download');
         try {
             await this.internetFileService.download(req, res);
@@ -29,7 +29,7 @@ class InternetFileController {
             console.error('Error downloading file: ', error);
             res.status(500).json({ message: 'Failed to download the file.', error: error.message });
         }
-    }
+    };
 }
 
 export default InternetFileController;
