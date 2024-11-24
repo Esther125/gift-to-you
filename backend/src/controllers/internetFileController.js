@@ -1,4 +1,10 @@
 class InternetFileController {
+    send = (req, res) => {
+        console.log('----InternetFileController.send');
+        // TODO: 實現傳送邏輯
+        res.status(201).json({ message: 'Send file logic not implemented yet' });
+    };
+
     async upload(req, res) {
         console.log('----InternetFileController.upload');
         // TODO: 實現上傳檔案邏輯
