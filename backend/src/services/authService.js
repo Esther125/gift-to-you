@@ -5,27 +5,16 @@ import crypto from 'crypto';
 class AuthService {
     constructor() {
         this._dynamodbService = new DynamodbService();
-        this._USERID_LENGTH = 8;
     }
 
-    _genNewUserID = async () => {
-        let userID;
-        let userName;
-        do {
-            userID = crypto.randomBytes(this._USERID_LENGTH / 2).toString('hex');
-            userName = await this._dynamodbService.getUserNameFromID(userID);
-        } while (userName);
-        return userID;
-    };
-
     _hashPassword = (password, passwordSalt) => {
-        // hash password
         return crypto.pbkdf2Sync(password, passwordSalt, 1000, 64, 'sha512').toString('hex');
     };
 
     _getUserIDFromLabel = (label) => {
-        const pos = label.indexOf('#');
-        return label.slice(pos + 1, pos + 1 + this._USERID_LENGTH);
+        const pos1 = label.indexOf('#');
+        const pos2 = label.slice(pos1 + 1).indexOf('#') + pos1 + 1;
+        return label.slice(pos1 + 1, pos2);
     };
 
     _hidePasswordInfo = (userInfo) => {
@@ -36,7 +25,7 @@ class AuthService {
         };
     };
 
-    register = async (email, password, userName) => {
+    register = async (userID, email, password, userName) => {
         console.log(`[AuthService] ${email} try to register`);
 
         // check registered or not
@@ -50,7 +39,6 @@ class AuthService {
         } else {
             // not yet registered
             console.log(`[AuthService] ${email} not registered yet`);
-            const userID = await this._genNewUserID();
             const passwordSalt = crypto.randomBytes(16).toString('hex');
             const passwordHash = this._hashPassword(password, passwordSalt);
             await this._dynamodbService.createUserInfo(userID, email, passwordSalt, passwordHash, userName);
@@ -60,7 +48,6 @@ class AuthService {
 
             console.log(`[AuthService] ${email} successfully registered`);
         }
-
         return {
             create,
             data: this._hidePasswordInfo(userInfo),

@@ -6,8 +6,13 @@ class AuthController {
 
     register = async (req, res) => {
         console.log('[AuthController] -----register-----');
-        let email, password, userName;
+        let userID, email, password, userName;
         try {
+            userID = req.body.userID;
+            if (!userID) {
+                res.status(400).json({ message: 'UserID is required' });
+                return;
+            }
             email = req.body.email;
             if (!email) {
                 res.status(400).json({ message: 'Email is required' });
@@ -23,7 +28,7 @@ class AuthController {
                 res.status(400).json({ message: 'UserName is required' });
                 return;
             }
-            const userInfo = await this.authService.register(email, password, userName);
+            const userInfo = await this.authService.register(userID, email, password, userName);
 
             if (userInfo.create) {
                 res.status(201).json({ message: 'Register success', data: userInfo.data });

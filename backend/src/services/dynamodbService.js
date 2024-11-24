@@ -79,7 +79,6 @@ class DynamodbService {
                         `[dynamodbService] fail to get user's name for user ${userID} since user does not exist`
                     );
                     return null;
-                    break;
                 default:
                     console.error(`[dynamodbService] fail to get user's name for user ${userID} since ${error}`);
             }
