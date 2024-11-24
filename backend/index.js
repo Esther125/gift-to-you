@@ -7,6 +7,7 @@ import authRouters from './src/routes/authRoutes.js';
 import internetFileRouter from './src/routes/internetFileRoutes.js';
 import roomsRouter from './src/routes/roomsRouter.js';
 import profileRouter from './src/routes/ProfileRoutes.js';
+import { logWithFileInfo } from './logger.js';
 
 const app = express();
 app.use(cors());
@@ -17,7 +18,7 @@ app.use(json());
 
 // Middleware：log request message
 app.use((req, res, next) => {
-    console.log(`\n${req.method} ${req.url}`);
+    logWithFileInfo('info', `${req.method} ${req.url}`);
     next();
 });
 
@@ -32,5 +33,8 @@ app.use('/api/v1', profileRouter);
 // run server
 const PORT = process.env.PORT;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    logWithFileInfo('info', `Server is running on port ${PORT}`);
+    // Error example log:
+    // const exampleError = new Error('This is an example error log');
+    // logWithFileInfo('error', 'An example error occurred', exampleError);
 });
