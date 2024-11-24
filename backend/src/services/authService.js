@@ -10,11 +10,11 @@ class AuthService {
 
     _genNewUserID = async () => {
         let userID;
-        let isUserIDExisted;
+        let userName;
         do {
             userID = crypto.randomBytes(this._USERID_LENGTH / 2).toString('hex');
-            isUserIDExisted = await this._dynamodbService.checkUserIDExist(userID);
-        } while (isUserIDExisted);
+            userName = await this._dynamodbService.getUserNameFromID(userID);
+        } while (userName);
         return userID;
     };
 

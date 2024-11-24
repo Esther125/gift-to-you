@@ -53,7 +53,7 @@ class DynamodbService {
         }
     };
 
-    getUserName = async (userID) => {
+    getUserNameFromID = async (userID) => {
         // get userName from userID
         console.log(`[dynamodbService] try to get user's name for user ${userID}`);
 
@@ -75,9 +75,10 @@ class DynamodbService {
         } catch (error) {
             switch (error.name) {
                 case 'TypeError':
-                    console.error(
+                    console.log(
                         `[dynamodbService] fail to get user's name for user ${userID} since user does not exist`
                     );
+                    return null;
                     break;
                 default:
                     console.error(`[dynamodbService] fail to get user's name for user ${userID} since ${error}`);
@@ -116,32 +117,6 @@ class DynamodbService {
             return null;
         } catch (error) {
             console.error(`[dynamodbService] fail to get user info from email ${email} since ${error}`);
-        }
-    };
-
-    checkUserIDExist = async (userID) => {
-        // check if userID exists
-        console.log(`[dynamodbService] try to check whether userID ${userID} exists`);
-
-        try {
-            const command = new GetCommand({
-                TableName: this._tableName,
-                Key: {
-                    pk: `USER#${userID}#INFO`,
-                    sk: 'INFO',
-                },
-                ProjectionExpression: 'userName',
-                ReturnConsumedCapacity: 'INDEXES',
-            });
-
-            const response = await this._docClient.send(command);
-            if (response.Item === undefined) {
-                return false;
-            } else {
-                return true;
-            }
-        } catch (error) {
-            console.error(`[dynamodbService] fail to check whether userID ${userID} exists since ${error}`);
         }
     };
 }
