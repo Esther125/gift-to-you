@@ -10,11 +10,17 @@ const testUpload = async () => {
     };
 
     const mockFilename = "unique-test-file.txt"; // 上傳到 S3 的檔案名稱
-    const mockUserId = "12345";                 // 模擬使用者 ID
+    const mockUserId = "12345";                 // user ID
+    const mockRoomId = "12345";                 // room ID
 
     try {
-        const result = await s3Service.uploadFile(mockFile, mockFilename, mockUserId, group);
-        console.log("Upload Success:", result);
+        // user
+        const userResult = await s3Service.uploadFile(mockFile, mockFilename, "user", mockUserId);
+        console.log("User Upload Success:", userResult);
+
+        // room
+        const roomResult = await s3Service.uploadFile(mockFile, mockFilename, "room", mockRoomId);
+        console.log("Room Upload Success:", roomResult);
     } catch (error) {
         console.error("Upload Failed:", error.message);
     }

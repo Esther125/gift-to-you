@@ -17,10 +17,20 @@ class S3Service {
         this._bucket = process.env.BUCKET_NAME;
     }
 
-    uploadFile = async (file, filename, userId) => {
-        console.log(`[S3Service] uploadFile() called with file: ${file.name}, userId: ${userId}, filename: ${filename}`);
+    _generateS3Key = (type, id, filename) => {
+        if (type === "user") {
+            return `user/${id}/${filename}`;
+        } else if (type === "room") {
+            return `room/${id}/${filename}`;
+        } else {
+            throw new Error(`[S3Service] Invalid type: ${type}`);
+        }
+    };
 
-        const key = `user/${userId}/${filename}`; // S3 file key format
+    uploadFile = async (file, filename, type, id) => {
+        console.log(`[S3Service] uploadFile() called with type: ${type}, id: ${id}, filename: ${filename}`);
+
+        const key = this._generateS3Key(type, id, filename); // S3 file key
 
         // 驗證檔案是否存在
         if (!fs.existsSync(file.tempFilePath)) {
