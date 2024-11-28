@@ -1,5 +1,6 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from "dotenv";
 
 dotenv.config(); // import .env variable
@@ -59,6 +60,32 @@ class S3Service {
             };
         } catch (err) {
             console.error("[S3Service] Upload Failed:", err.message);
+            throw err;
+        }
+    }
+
+    generatePresignedUrl = async (filename, type, id) => {
+        console.log(`[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`);
+
+        // S3 file key
+        const key = this._generateS3Key(type, id, filename); 
+
+        // s3 下載參數
+        const command = new GetObjectCommand({
+            Bucket: this._bucket,
+            Key: key,
+        });
+
+        // set 1 days expired
+        const signedUrlExpireSeconds = 60 * 60 * 24 * 1; 
+
+        try {
+            const url = await getSignedUrl(this._s3, command, { expiresIn: signedUrlExpireSeconds });
+
+            console.log(`[S3Service] Presigned URL generated: ${url}`);
+            return url;
+        } catch (err) {
+            console.log("[S3Service] Failed to generate presigned URL:", err.message)
             throw err;
         }
     }
