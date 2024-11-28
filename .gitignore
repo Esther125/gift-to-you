@@ -7,5 +7,4 @@ node_modules
 /backend/uploads/*
 # 但不忽略資料夾本身
 !/backend/uploads/.gitkeep
-
 /backend/logs/*

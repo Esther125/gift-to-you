@@ -17,7 +17,8 @@
     "express": "^4.21.1",
     "redis": "^4.7.0",
     "uuid": "^11.0.3",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "express-fileupload": "^1.5.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.7"

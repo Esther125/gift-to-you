@@ -1,3 +1,6 @@
+import InternetFileService from '../services/internetFileService.js';
+import path from 'path';
+
 import { logWithFileInfo } from '../../logger.js';
 
 class InternetFileController {
