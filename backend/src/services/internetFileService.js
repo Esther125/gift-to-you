@@ -11,6 +11,7 @@ class InternetFileService {
     };
 
     upload = async (req, res) => {
+        // 實現上傳檔案邏輯
         if (!req.files || Object.keys(req.files).length === 0) {
             throw new Error('No files were uploaded.');
         }

@@ -4,8 +4,6 @@ import path from 'path';
 class InternetFileController {
     constructor() {
         this.internetFileService = new InternetFileService();
-        this.upload = this.upload.bind(this);
-        this.download = this.download.bind(this);
     }
 
     upload = async (req, res) => {
