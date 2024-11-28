@@ -16,8 +16,8 @@
     "crypto": "^1.0.1",
     "express": "^4.21.1",
     "redis": "^4.7.0",
+    "fs": "^0.0.1-security",
     "express-fileupload": "^1.5.1",
-
     "uuid": "^11.0.3"
   },
   "devDependencies": {
