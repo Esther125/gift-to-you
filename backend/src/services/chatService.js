@@ -44,26 +44,6 @@ class ChatService {
         );
     };
 
-    joinChatroom = (socket, roomToken) => {
-        const userID = socket.handshake.auth.user.id;
-        console.log(`[chatService] user ${userID} ask to join chatroom ${roomToken}`);
-
-        const inRoom = true; // TODO: 之後再看怎麼接 roomService 來判斷
-
-        if (inRoom) {
-            // 加入聊天室
-            socket.join(roomToken);
-
-            // 回傳處理結果通知
-            this.systemMessage(socket, 'join chatroom', 'success');
-            console.log(`[chatService] user ${userID} join chatroom ${roomToken}`);
-        } else {
-            // 回傳處理結果通知
-            this.systemMessage(socket, 'join chatroom', 'fail');
-            console.log(`[chatService] user ${userID} is not in room ${roomToken}`);
-        }
-    };
-
     _checkUserInRoom = (socket, userID, roomToken) => {
         let memberSockets;
         let userSocket;
@@ -78,6 +58,40 @@ class ChatService {
             return false;
         }
         return true;
+    };
+
+    _sendRoomNotify = (socket, roomToken, userID, type) => {
+        const res = {
+            event: 'room notify',
+            roomToken,
+            userID,
+            type,
+            timestamp: new Date().toISOString(),
+        };
+        socket.to(roomToken).emit('room notify', res);
+    };
+
+    joinChatroom = (socket, roomToken) => {
+        const userID = socket.handshake.auth.user.id;
+        console.log(`[chatService] user ${userID} ask to join chatroom ${roomToken}`);
+
+        const roomExist = true; // TODO: 之後再看怎麼接 roomService 來判斷
+
+        if (roomExist) {
+            // 加入聊天室
+            socket.join(roomToken);
+
+            // 通知 room 內其他人
+            this._sendRoomNotify(socket, roomToken, userID, 'join');
+
+            // 回傳處理結果通知
+            this.systemMessage(socket, 'join chatroom', 'success');
+            console.log(`[chatService] user ${userID} join chatroom ${roomToken}`);
+        } else {
+            // 回傳處理結果通知
+            this.systemMessage(socket, 'join chatroom', 'fail');
+            console.log(`[chatService] user ${userID} can not join non existed room ${roomToken}`);
+        }
     };
 
     requestTransfer = (socket, roomToken, receiverID, chatNameSpace) => {
@@ -180,6 +194,9 @@ class ChatService {
 
         // 離開聊天室
         socket.leave(roomToken);
+
+        // 通知 room 內其他人
+        this._sendRoomNotify(socket, roomToken, userID, 'leave');
 
         // 回傳處理結果通知
         this.systemMessage(socket, 'leave chatroom', 'success');

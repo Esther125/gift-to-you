@@ -116,7 +116,19 @@
             }
             ```
 
-        3. chat message -- 來自聊天室中其他人傳來的訊息
+        3. room notify -- server 向 room 中其他人發送其他 user 加入/離開 room 的通知
+
+            ```js
+            {
+                event: "room notify",
+                roomToken,
+                userID, // 加入/離開 room 的 user
+                type, // join, leave
+                timestamp: new Date().toISOString(),
+            }
+            ```
+
+        4. chat message -- 來自聊天室中其他人傳來的訊息
 
             ```js
             {
