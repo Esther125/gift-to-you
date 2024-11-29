@@ -114,7 +114,7 @@ describe('Test: join chatroom', () => {
         ]);
     });
 
-    it('Test: join chatroom (user 有在該房間內)', (done) => {
+    it('Test: join chatroom', (done) => {
         clientSocket2.emit('join chatroom', { roomToken: 'ABCDE' });
 
         clientSocket2.on('system message', (res) => {
@@ -132,11 +132,14 @@ describe('Test: other (after joining chatroom)', () => {
     let clientSocket2;
     let clientSocket3;
     let client2_3RoomToken = 'ABCDE';
+    let clientSocket5;
+    let client5RoomToken = 'OPELG';
 
     beforeEach(async () => {
         // 建立 2 個 client
         clientSocket2 = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0002'));
         clientSocket3 = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0003'));
+        clientSocket5 = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0005'));
 
         await Promise.all([
             new Promise((resolve, reject) => {
@@ -146,6 +149,11 @@ describe('Test: other (after joining chatroom)', () => {
             }),
             new Promise((resolve, reject) => {
                 clientSocket3.on('system message', (res) => {
+                    resolve();
+                });
+            }),
+            new Promise((resolve, reject) => {
+                clientSocket5.on('system message', (res) => {
                     resolve();
                 });
             }),
@@ -154,6 +162,7 @@ describe('Test: other (after joining chatroom)', () => {
         // client 1 和 client 2 加入相同聊天室
         clientSocket2.emit('join chatroom', { roomToken: client2_3RoomToken });
         clientSocket3.emit('join chatroom', { roomToken: client2_3RoomToken });
+        clientSocket5.emit('join chatroom', { roomToken: client5RoomToken });
 
         await Promise.all([
             new Promise((resolve, reject) => {
@@ -163,6 +172,11 @@ describe('Test: other (after joining chatroom)', () => {
             }),
             new Promise((resolve, reject) => {
                 clientSocket3.on('system message', (res) => {
+                    resolve();
+                });
+            }),
+            new Promise((resolve, reject) => {
+                clientSocket5.on('system message', (res) => {
                     resolve();
                 });
             }),
@@ -184,12 +198,21 @@ describe('Test: other (after joining chatroom)', () => {
                 }
                 resolve();
             }),
+            new Promise((resolve, reject) => {
+                if (clientSocket5.connected) {
+                    clientSocket5.disconnect();
+                }
+                resolve();
+            }),
         ]);
     });
 
     describe('Test: request transfer', () => {
-        it('Test: request transfer (有存在該 room 的 user)', async () => {
-            clientSocket2.emit('request transfer', { roomToken: client2_3RoomToken, receiverID: '0003' });
+        it('Test: request transfer (對象: user + receiver 有存在該 room 內)', async () => {
+            clientSocket2.emit('request transfer', {
+                roomToken: client2_3RoomToken,
+                receiverID: '0003',
+            }); // user 0002 和 0003 都在 room client2_3RoomToken = 'ABCDE'
 
             await Promise.all([
                 new Promise((resolve, reject) => {
@@ -215,8 +238,11 @@ describe('Test: other (after joining chatroom)', () => {
             ]);
         });
 
-        it('Test: request transfer (不存在的 user)', (done) => {
-            clientSocket2.emit('request transfer', { roomToken: client2_3RoomToken, receiverID: '0005' }); // 目前有的 user: 0002、0003
+        it('Test: request transfer (對象: user + receiver 不存在該 room 內)', (done) => {
+            clientSocket2.emit('request transfer', {
+                roomToken: client2_3RoomToken,
+                receiverID: '0005',
+            }); // userID 0005 的 user 在 room client5RoomToken = 'OPELG'
 
             clientSocket2.on('system message', (res) => {
                 console.log(res);
@@ -228,8 +254,56 @@ describe('Test: other (after joining chatroom)', () => {
             });
         });
 
-        it('Test: request transfer (傳給自己)', (done) => {
-            clientSocket2.emit('request transfer', { receiverID: '0002' });
+        it('Test: request transfer (對象: user + 傳給自己)', (done) => {
+            clientSocket2.emit('request transfer', {
+                roomToken: client2_3RoomToken,
+                receiverID: '0002',
+            }); // user 0002 和 0003 都在 room client2_3RoomToken = 'ABCDE'
+
+            clientSocket2.on('system message', (res) => {
+                console.log(res);
+                expect(res.event).to.be.equal('system message');
+                expect(res.message.stage).to.be.equal('request transfer');
+                expect(res.message.status).to.be.equal('fail');
+
+                done();
+            });
+        });
+
+        it('Test: request transfer (對象: room + sender 有在該 room 內)', async () => {
+            clientSocket2.emit('request transfer', {
+                roomToken: client2_3RoomToken,
+            });
+
+            await Promise.all([
+                new Promise((resolve, reject) => {
+                    // sender 收到 server 回覆成功處理
+                    clientSocket2.on('system message', (res) => {
+                        console.log(res);
+                        expect(res.event).to.be.equal('system message');
+                        expect(res.message.stage).to.be.equal('request transfer');
+                        expect(res.message.status).to.be.equal('success');
+                        resolve();
+                    });
+                }),
+                new Promise((resolve, reject) => {
+                    // room 中的其他 user 收到系統的傳送通知
+                    // user 0002 和 0003 都在 room client2_3RoomToken = 'ABCDE'
+                    clientSocket3.on('transfer notify', (res) => {
+                        console.log(res);
+                        expect(res.event).to.be.equal('transfer notify');
+                        expect(res.roomToken).to.be.equal(client2_3RoomToken);
+                        expect(res.senderID).to.be.equal('0002');
+                        resolve();
+                    });
+                }),
+            ]);
+        });
+
+        it('Test: request transfer (sender 不在該 room 中)', (done) => {
+            clientSocket2.emit('request transfer', {
+                roomToken: client5RoomToken,
+            });
 
             clientSocket2.on('system message', (res) => {
                 console.log(res);

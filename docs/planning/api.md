@@ -64,7 +64,11 @@
         2. request transfer -- 傳送方欲傳送檔案給接收方
 
             ```js
+            // 接收方為個人
             socket.emit('request transfer', { roomToken, receiverID });
+
+            // 接收方為 room
+            socket.emit('request transfer', { roomToken });
             ```
 
         3. chat message -- 向聊天室發送訊息

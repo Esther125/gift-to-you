@@ -46,7 +46,12 @@ class ChatController {
 
         try {
             const roomToken = payload.roomToken;
-            const receiverID = payload.receiverID;
+            let receiverID;
+            try {
+                receiverID = payload.receiverID;
+            } catch {
+                receiverID = null;
+            }
             this.chatService.requestTransfer(socket, roomToken, receiverID, chatNameSpace);
         } catch {
             console.error(`[chatController] Error when user ${userID} request transfer`);
