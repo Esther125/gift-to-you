@@ -7,6 +7,7 @@ import authRouters from './src/routes/authRoutes.js';
 import internetFileRouter from './src/routes/internetFileRoutes.js';
 import roomsRouter from './src/routes/roomsRouter.js';
 import profileRouter from './src/routes/ProfileRoutes.js';
+import fileUpload from 'express-fileupload';
 import http from 'http';
 import { Server } from 'socket.io';
 import chatRouter from './src/routes/chatRouter.js';
@@ -24,6 +25,9 @@ app.use((req, res, next) => {
     console.log(`\n${req.method} ${req.url}`);
     next();
 });
+
+// Middleware：file upload
+app.use(fileUpload());
 
 // use routes
 app.use('/api/v1', homeRouter);
