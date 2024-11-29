@@ -122,8 +122,8 @@
             {
                 event: "room notify",
                 roomToken,
-                userID, // 加入/離開 room 的 user
-                type, // join, leave
+                userID,    // 加入/離開 room 的 user
+                type,      // join, leave
                 timestamp: new Date().toISOString(),
             }
             ```
