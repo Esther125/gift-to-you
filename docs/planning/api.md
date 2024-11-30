@@ -100,6 +100,7 @@
                 message: {
                     stage,   // 對應處理的事件名稱
                     status,  // success, fail, error
+                    content,
                 },
                 timestamp: new Date().toISOString(),
             }

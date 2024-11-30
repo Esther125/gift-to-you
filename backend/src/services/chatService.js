@@ -1,17 +1,34 @@
 class ChatService {
-    systemMessage = (socket, stage, status) => {
+    systemMessage = (socket, stage, status, content = null) => {
         // 回傳處理結果通知給 client 用
-        const userID = socket.handshake.auth.user.id;
+        const userID = socket.handshake.auth?.user?.id || null;
         const res = {
             event: 'system message',
             message: {
                 stage,
                 status,
+                content,
             },
             timestamp: new Date().toISOString(),
         };
         socket.emit('system message', res);
-        console.log(`[chatService] send system message "${stage}: ${status}" to user ${userID}`);
+
+        if (userID) {
+            console.log(`[chatService] send system message "${stage}: ${status}" to user ${userID}`);
+        } else {
+            console.log(`[chatService] send system message "${stage}: ${status}" to user with missing userID`);
+        }
+    };
+
+    eventWithMissingValues = (socket, stage, requiredValues) => {
+        const userID = socket.handshake.auth?.user?.id || null;
+        console.log(`[chatService] user ${userID} ask to ${stage} with missing values`);
+
+        const missingValues = Object.entries(requiredValues)
+            .filter(([key, value]) => value === null)
+            .map(([key, value]) => key);
+        const msg = `${missingValues.join(', ')} required`;
+        this.systemMessage(socket, stage, 'fail', msg);
     };
 
     connect = (socket, userID) => {
@@ -21,27 +38,8 @@ class ChatService {
         socket.join(userID);
 
         // 回傳處理結果通知
-        this.systemMessage(socket, 'connect', 'success');
+        this.systemMessage(socket, 'connect', 'success', 'success');
         console.log(`[chatService] user ${userID} connect to /chat websocket server`);
-    };
-
-    connectWrongFormat = (socket) => {
-        console.log(`[chatService] user ask to connect to /chat websocket server with wrong format`);
-
-        // 回傳處理結果通知
-        const res = {
-            event: 'system message',
-            message: {
-                stage: 'connect',
-                status: 'fail',
-            },
-            timestamp: new Date().toISOString(),
-        };
-        socket.emit('system message', res);
-        socket.disconnect();
-        console.error(
-            `[chatService] send system message to user asked to connect with wrong format and disconnect with the user`
-        );
     };
 
     _checkUserInRoom = (socket, userID, roomToken) => {
@@ -85,7 +83,7 @@ class ChatService {
             this._sendRoomNotify(socket, roomToken, userID, 'join');
 
             // 回傳處理結果通知
-            this.systemMessage(socket, 'join chatroom', 'success');
+            this.systemMessage(socket, 'join chatroom', 'success', 'success');
             console.log(`[chatService] user ${userID} join chatroom ${roomToken}`);
         } else {
             // 回傳處理結果通知
@@ -107,7 +105,7 @@ class ChatService {
         // 檢查 sender 是否在該 chatroom 內
         const senderInRoom = this._checkUserInRoom(socket, senderID, roomToken);
         if (!senderInRoom) {
-            this.systemMessage(socket, 'request transfer', 'fail');
+            this.systemMessage(socket, 'request transfer', 'fail', `sender not in room ${roomToken}`);
             console.log(`[chatService] sender ${userID} is not in room ${roomToken}`);
             return;
         }
@@ -119,14 +117,14 @@ class ChatService {
             // 檢查 receiver 是否在該 chatroom 內
             const receiverInRoom = this._checkUserInRoom(socket, receiverID, roomToken);
             if (!receiverInRoom) {
-                this.systemMessage(socket, 'request transfer', 'fail');
+                this.systemMessage(socket, 'request transfer', 'fail', `receiver not in room ${roomToken}`);
                 console.log(`[chatService] receiver ${userID} is not in room ${roomToken}`);
                 return;
             }
 
             // 檢查 sender、receiver 是否相同
             if (senderID === receiverID) {
-                this.systemMessage(socket, 'request transfer', 'fail');
+                this.systemMessage(socket, 'request transfer', 'fail', `sender and receiver are the same`);
                 console.log(`[chatService] user ${userID} ask to transfer to himself`);
                 return;
             }
@@ -148,7 +146,7 @@ class ChatService {
         }
 
         // 回傳處理結果通知
-        this.systemMessage(socket, 'request transfer', 'success');
+        this.systemMessage(socket, 'request transfer', 'success', 'success');
     };
 
     chatMessage = (socket, roomToken, message) => {
@@ -158,7 +156,7 @@ class ChatService {
         // 檢查該 user 是否在該 chatroom 內
         const inRoom = this._checkUserInRoom(socket, userID, roomToken);
         if (!inRoom) {
-            this.systemMessage(socket, 'chat message', 'fail');
+            this.systemMessage(socket, 'chat message', 'fail', `sender not in room ${roomToken}`);
             console.log(`[chatService] user ${userID} is not in room ${roomToken}`);
             return;
         }
@@ -176,7 +174,7 @@ class ChatService {
         socket.to(roomToken).emit('chat message', res);
 
         // 回傳處理結果通知
-        this.systemMessage(socket, 'chat message', 'success');
+        this.systemMessage(socket, 'chat message', 'success', 'success');
         console.log(`[chatService] user ${userID} send message ${message} to chatroom ${roomToken}`);
     };
 
@@ -187,7 +185,7 @@ class ChatService {
         // 檢查該 user 是否在該 chatroom 內
         const inRoom = this._checkUserInRoom(socket, userID, roomToken);
         if (!inRoom) {
-            this.systemMessage(socket, 'leave chatroom', 'fail');
+            this.systemMessage(socket, 'leave chatroom', 'fail', `user not in room ${roomToken}`);
             console.log(`[chatService] user ${userID} is not in room ${roomToken}`);
             return;
         }
@@ -199,13 +197,19 @@ class ChatService {
         this._sendRoomNotify(socket, roomToken, userID, 'leave');
 
         // 回傳處理結果通知
-        this.systemMessage(socket, 'leave chatroom', 'success');
+        this.systemMessage(socket, 'leave chatroom', 'success', 'success');
         console.log(`[chatService] user ${userID} leave chatroom ${roomToken}`);
     };
 
     disconnect = (socket, reason) => {
-        const userID = socket.handshake.auth.user.id;
-        console.log(`[chatService] user ${userID} disconnect with /chat websocket server because of ${reason}`);
+        const userID = socket.handshake.auth?.user?.id || null;
+        if (userID) {
+            console.log(`[chatService] user ${userID} disconnect with /chat websocket server because of ${reason}`);
+        } else {
+            console.log(
+                `[chatService] user with missing userID disconnect with /chat websocket server because of ${reason}`
+            );
+        }
     };
 }
 

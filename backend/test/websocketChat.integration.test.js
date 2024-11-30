@@ -53,6 +53,16 @@ const AUTH_OPTIONS = (userID) => ({
 
 describe('Test: connect and disconnect to server for /chat', () => {
     let clientSocket;
+
+    afterEach(async () => {
+        await new Promise((resolve, reject) => {
+            if (clientSocket.connected) {
+                clientSocket.disconnect();
+            }
+            resolve();
+        });
+    });
+
     it('Test: connect and disconnect to server for /chat (with correct connection format)', (done) => {
         // connect to server
         clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0001'));
@@ -62,8 +72,7 @@ describe('Test: connect and disconnect to server for /chat', () => {
             expect(res.event).to.be.equal('system message');
             expect(res.message.stage).to.be.equal('connect');
             expect(res.message.status).to.be.equal('success');
-
-            clientSocket.disconnect();
+            expect(res.message.content).to.be.equal('success');
             done();
         });
     });
@@ -77,6 +86,7 @@ describe('Test: connect and disconnect to server for /chat', () => {
             expect(res.event).to.be.equal('system message');
             expect(res.message.stage).to.be.equal('connect');
             expect(res.message.status).to.be.equal('fail');
+            expect(res.message.content).to.be.equal('userID required');
             done();
         });
     });
@@ -124,7 +134,7 @@ describe('Test: join chatroom', () => {
         ]);
     });
 
-    it('Test: join chatroom', (done) => {
+    it('Test: join chatroom (correct format)', (done) => {
         clientSocket2.emit('join chatroom', { roomToken: client2_3RoomToken });
 
         clientSocket2.on('system message', (res) => {
@@ -132,7 +142,20 @@ describe('Test: join chatroom', () => {
             expect(res.event).to.be.equal('system message');
             expect(res.message.stage).to.be.equal('join chatroom');
             expect(res.message.status).to.be.equal('success');
+            expect(res.message.content).to.be.equal('success');
+            done();
+        });
+    });
 
+    it('Test: join chatroom (without roomToken)', (done) => {
+        clientSocket2.emit('join chatroom');
+
+        clientSocket2.on('system message', (res) => {
+            console.log(res);
+            expect(res.event).to.be.equal('system message');
+            expect(res.message.stage).to.be.equal('join chatroom');
+            expect(res.message.status).to.be.equal('fail');
+            expect(res.message.content).to.be.equal('roomToken required');
             done();
         });
     });
@@ -146,6 +169,7 @@ describe('Test: join chatroom', () => {
                 expect(res.event).to.be.equal('system message');
                 expect(res.message.stage).to.be.equal('join chatroom');
                 expect(res.message.status).to.be.equal('success');
+                expect(res.message.content).to.be.equal('success');
                 resolve();
             });
         });
@@ -171,6 +195,7 @@ describe('Test: join chatroom', () => {
                     expect(res.event).to.be.equal('system message');
                     expect(res.message.stage).to.be.equal('join chatroom');
                     expect(res.message.status).to.be.equal('success');
+                    expect(res.message.content).to.be.equal('success');
                     resolve();
                 });
             }),
@@ -272,6 +297,7 @@ describe('Test: other (after joining chatroom)', () => {
                         expect(res.event).to.be.equal('system message');
                         expect(res.message.stage).to.be.equal('request transfer');
                         expect(res.message.status).to.be.equal('success');
+                        expect(res.message.content).to.be.equal('success');
                         resolve();
                     });
                 }),
@@ -299,7 +325,7 @@ describe('Test: other (after joining chatroom)', () => {
                 expect(res.event).to.be.equal('system message');
                 expect(res.message.stage).to.be.equal('request transfer');
                 expect(res.message.status).to.be.equal('fail');
-
+                expect(res.message.content).to.be.equal(`receiver not in room ${client2_3RoomToken}`);
                 done();
             });
         });
@@ -315,7 +341,7 @@ describe('Test: other (after joining chatroom)', () => {
                 expect(res.event).to.be.equal('system message');
                 expect(res.message.stage).to.be.equal('request transfer');
                 expect(res.message.status).to.be.equal('fail');
-
+                expect(res.message.content).to.be.equal(`sender and receiver are the same`);
                 done();
             });
         });
@@ -333,6 +359,7 @@ describe('Test: other (after joining chatroom)', () => {
                         expect(res.event).to.be.equal('system message');
                         expect(res.message.stage).to.be.equal('request transfer');
                         expect(res.message.status).to.be.equal('success');
+                        expect(res.message.content).to.be.equal('success');
                         resolve();
                     });
                 }),
@@ -360,7 +387,7 @@ describe('Test: other (after joining chatroom)', () => {
                 expect(res.event).to.be.equal('system message');
                 expect(res.message.stage).to.be.equal('request transfer');
                 expect(res.message.status).to.be.equal('fail');
-
+                expect(res.message.content).to.be.equal(`sender not in room ${client5RoomToken}`);
                 done();
             });
         });
@@ -379,6 +406,7 @@ describe('Test: other (after joining chatroom)', () => {
                         expect(res.event).to.be.equal('system message');
                         expect(res.message.stage).to.be.equal('chat message');
                         expect(res.message.status).to.be.equal('success');
+                        expect(res.message.content).to.be.equal('success');
                         resolve();
                     });
                 }),
@@ -405,6 +433,46 @@ describe('Test: other (after joining chatroom)', () => {
                 expect(res.event).to.be.equal('system message');
                 expect(res.message.stage).to.be.equal('chat message');
                 expect(res.message.status).to.be.equal('fail');
+                expect(res.message.content).to.be.equal(`sender not in room 30943`);
+                done();
+            });
+        });
+        it('Test: send message (wrong format 1)', (done) => {
+            const message = 'Hi';
+            clientSocket2.emit('chat message');
+
+            clientSocket2.on('system message', (res) => {
+                console.log(res);
+                expect(res.event).to.be.equal('system message');
+                expect(res.message.stage).to.be.equal('chat message');
+                expect(res.message.status).to.be.equal('fail');
+                expect(res.message.content).to.be.equal(`roomToken, message required`);
+                done();
+            });
+        });
+        it('Test: send message (wrong format 2)', (done) => {
+            const message = 'Hi';
+            clientSocket2.emit('chat message', { roomToken: '30943' });
+
+            clientSocket2.on('system message', (res) => {
+                console.log(res);
+                expect(res.event).to.be.equal('system message');
+                expect(res.message.stage).to.be.equal('chat message');
+                expect(res.message.status).to.be.equal('fail');
+                expect(res.message.content).to.be.equal(`message required`);
+                done();
+            });
+        });
+        it('Test: send message (wrong format 3)', (done) => {
+            const message = 'Hi';
+            clientSocket2.emit('chat message', { message });
+
+            clientSocket2.on('system message', (res) => {
+                console.log(res);
+                expect(res.event).to.be.equal('system message');
+                expect(res.message.stage).to.be.equal('chat message');
+                expect(res.message.status).to.be.equal('fail');
+                expect(res.message.content).to.be.equal(`roomToken required`);
                 done();
             });
         });
@@ -422,6 +490,7 @@ describe('Test: other (after joining chatroom)', () => {
                         expect(res.event).to.be.equal('system message');
                         expect(res.message.stage).to.be.equal('leave chatroom');
                         expect(res.message.status).to.be.equal('success');
+                        expect(res.message.content).to.be.equal('success');
                         resolve();
                     });
                 }),
@@ -448,6 +517,22 @@ describe('Test: other (after joining chatroom)', () => {
                     expect(res.event).to.be.equal('system message');
                     expect(res.message.stage).to.be.equal('leave chatroom');
                     expect(res.message.status).to.be.equal('fail');
+                    expect(res.message.content).to.be.equal(`user not in room 30943`);
+                    resolve();
+                });
+            });
+        });
+
+        it('Test: leave chatroom (wrong format)', async () => {
+            clientSocket2.emit('leave chatroom');
+
+            await new Promise((resolve, reject) => {
+                clientSocket2.on('system message', (res) => {
+                    console.log(res);
+                    expect(res.event).to.be.equal('system message');
+                    expect(res.message.stage).to.be.equal('leave chatroom');
+                    expect(res.message.status).to.be.equal('fail');
+                    expect(res.message.content).to.be.equal(`roomToken required`);
                     resolve();
                 });
             });
