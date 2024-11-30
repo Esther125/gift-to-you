@@ -4,32 +4,24 @@ class AuthController {
         this.authService = new AuthService();
     }
 
+    _reqWithMissingValue = (res, requiredValues) => {
+        const missingValues = Object.entries(requiredValues)
+            .filter(([key, value]) => value === undefined)
+            .map(([key, value]) => key);
+        res.status(400).json({ message: `${missingValues.join(', ')} is required` });
+        console.log('[AuthController] bad request with missing values');
+    };
+
     register = async (req, res) => {
         console.log('[AuthController] -----register-----');
-        let userID, email, password, userName;
-        try {
-            userID = req.body.userID;
-            if (!userID) {
-                res.status(400).json({ message: 'UserID is required' });
-                return;
-            }
-            email = req.body.email;
-            if (!email) {
-                res.status(400).json({ message: 'Email is required' });
-                return;
-            }
-            password = req.body.password;
-            if (!password) {
-                res.status(400).json({ message: 'Password is required' });
-                return;
-            }
-            userName = req.body.userName;
-            if (!userName) {
-                res.status(400).json({ message: 'UserName is required' });
-                return;
-            }
-            const userInfo = await this.authService.register(userID, email, password, userName);
+        const { userID, email, password, userName } = req.body;
+        if (!userID || !email || !password || !userName) {
+            this._reqWithMissingValue(res, { userID, email, password, userName });
+            return;
+        }
 
+        try {
+            const userInfo = await this.authService.register(userID, email, password, userName);
             if (userInfo.create) {
                 res.status(201).json({ message: 'Register success', data: userInfo.data });
             } else {
@@ -43,19 +35,13 @@ class AuthController {
 
     login = async (req, res) => {
         console.log('[AuthController] -----login-----');
-        let email, password;
-        try {
-            email = req.body.email;
-            if (!email) {
-                res.status(400).json({ message: 'Email is required' });
-                return;
-            }
-            password = req.body.password;
-            if (!password) {
-                res.status(400).json({ message: 'Password is required' });
-                return;
-            }
+        const { email, password } = req.body;
+        if (!email || !password) {
+            this._reqWithMissingValue(res, { email, password });
+            return;
+        }
 
+        try {
             const loginResult = await this.authService.login(email, password);
             if (loginResult.success) {
                 res.status(200).json({ message: 'Login success', data: loginResult.data });

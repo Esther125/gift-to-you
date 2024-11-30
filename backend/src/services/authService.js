@@ -12,9 +12,7 @@ class AuthService {
     };
 
     _getUserIDFromLabel = (label) => {
-        const pos1 = label.indexOf('#');
-        const pos2 = label.slice(pos1 + 1).indexOf('#') + pos1 + 1;
-        return label.slice(pos1 + 1, pos2);
+        return label.split('#')[1];
     };
 
     _hidePasswordInfo = (userInfo) => {
