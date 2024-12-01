@@ -67,6 +67,7 @@ class InternetFileService {
 
         const files = await fs.promises.readdir(rootPath);
         const matchedFile = files.find((file) => path.basename(file, path.extname(file)) === fileId);
+        // 沒有匹配的檔案
         if (!matchedFile) {
             throw new Error('File not found');
         }
