@@ -1,20 +1,11 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import fs from "fs";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import dotenv from "dotenv";
-
-dotenv.config(); // import .env variable
 
 class S3Service {
     constructor() {
-        this._s3 = new S3Client({
-            region: process.env.S3_BUCKET_REGION,
-            Credentials: {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-            },
-        });
-        this._bucket = process.env.BUCKET_NAME;
+        this._s3 = new S3Client({});
+        this._bucket = process.env.AWS_BUCKET_NAME;
     }
 
     _generateS3Key = (type, id, filename) => {
@@ -56,7 +47,7 @@ class S3Service {
             console.log("[S3Service] Upload Success:", data);
             return {
                 filename,
-                location: `https://${this._bucket}.s3.${process.env.S3_BUCKET_REGION}.amazonaws.com/${key}`,
+                location: `https://${this._bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
             };
         } catch (err) {
             console.error("[S3Service] Upload Failed:", err.message);
@@ -82,7 +73,7 @@ class S3Service {
         try {
             const url = await getSignedUrl(this._s3, command, { expiresIn: signedUrlExpireSeconds });
 
-            console.log(`[S3Service] Presigned URL generated: ${url}`);
+            console.log(`[S3Service] Presigned URL generated Successfully`);
             return url;
         } catch (err) {
             console.log("[S3Service] Failed to generate presigned URL:", err.message)
