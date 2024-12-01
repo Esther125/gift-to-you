@@ -11,14 +11,22 @@ class InternetFileService {
     };
 
     send = async (req, res) => {
+        const senderId = req.body.senderId;
         const receiverId = req.body.receiverId;
-        const fileId = req.body.fileId; // 假設在上傳檔案成功後前端會存 fileId
+        const fileId = req.body.fileId;
         if (!receiverId) {
             throw new Error('Receiver ID is required');
         }
 
         // TODO: 驗證使用者 ID 確定使用者真的存在
-        // TODO: 用 web socket 將文件資訊發送給 receiver
+
+        // 用 web socket 將檔案資訊發送給 receiver
+        io.to(receiverId).emit('receive file', {
+            event: 'receive file',
+            senderID: senderId,
+            fileId: fileId,
+            timestamp: new Date().toISOString(),
+        });
 
         return receiverId;
     };
