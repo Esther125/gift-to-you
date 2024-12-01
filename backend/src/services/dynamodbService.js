@@ -162,7 +162,7 @@ class DynamodbService {
                 },
                 KeyConditionExpression: 'pk = :pk',
                 ScanIndexForward: false,
-                Limit: 2,
+                Limit: 10,
                 Select: 'ALL_ATTRIBUTES',
                 ReturnConsumedCapacity: 'INDEXES',
                 ...(lastEvaluatedKey && { ExclusiveStartKey: lastEvaluatedKey }),
