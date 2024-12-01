@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "mocha",
     "start": "nodemon --env-file=.env index.js"
   },
   "author": "",
@@ -16,11 +16,16 @@
     "crypto": "^1.0.1",
     "express": "^4.21.1",
     "redis": "^4.7.0",
+    "fs": "^0.0.1-security",
+    "express-fileupload": "^1.5.1",
     "uuid": "^11.0.3",
     "winston": "^3.17.0",
-    "express-fileupload": "^1.5.1"
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7"
+    "chai": "^5.1.2",
+    "mocha": "^10.8.2",
+    "nodemon": "^3.1.7",
+    "socket.io-client": "^4.8.1"
   }
 }
