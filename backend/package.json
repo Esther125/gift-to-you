@@ -1,28 +1,26 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "express backend",
-  "main": "index.js",
-  "type": "module",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --env-file=.env index.js"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.699.0",
-    "@aws-sdk/s3-request-presigner": "^3.699.0",
-    "body-parser": "^1.20.3",
-    "cors": "^2.8.5",
-    "crypto": "^1.0.1",
-    "express": "^4.21.1",
-    "express-fileupload": "^1.5.1",
-    "fs": "^0.0.1-security",
-    "redis": "^4.7.0",
-    "uuid": "^11.0.3"
-  },
-  "devDependencies": {
-    "nodemon": "^3.1.7"
-  }
+    "name": "backend",
+    "version": "1.0.0",
+    "description": "express backend",
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "nodemon --env-file=.env index.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "body-parser": "^1.20.3",
+        "cors": "^2.8.5",
+        "crypto": "^1.0.1",
+        "express": "^4.21.1",
+        "redis": "^4.7.0",
+        "express-fileupload": "^1.5.1",
+
+        "uuid": "^11.0.3"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.7"
+    }
 }
