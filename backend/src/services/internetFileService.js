@@ -58,6 +58,23 @@ class InternetFileService {
 
         filestream.pipe(res);
     };
+
+    deleteFile = async (req, res) => {
+        const fileId = req.params.fileId;
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        const rootPath = path.join(__dirname, '../../uploads');
+
+        const files = await fs.promises.readdir(rootPath);
+        const matchedFile = files.find((file) => path.basename(file, path.extname(file)) === fileId);
+        if (!matchedFile) {
+            throw new Error('File not found');
+        }
+
+        const filePath = path.join(rootPath, matchedFile);
+        await fs.promises.unlink(filePath); // 刪除檔案
+        res.send({ message: 'File deleted successfully' });
+    };
 }
 
 export default InternetFileService;

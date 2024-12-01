@@ -28,6 +28,17 @@ class InternetFileController {
             res.status(500).json({ message: 'Failed to download the file.', error: error.message });
         }
     };
+
+    deleteFile = async (req, res) => {
+        console.log('----InternetFileController.deleteFile');
+        try {
+            await this.internetFileService.deleteFile(req, res);
+            console.info('File deleted successfully.');
+        } catch (error) {
+            console.error('Error deleting file: ', error);
+            res.status(500).json({ message: 'Failed to delete the file.', error: error.message });
+        }
+    };
 }
 
 export default InternetFileController;
