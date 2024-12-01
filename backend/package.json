@@ -19,7 +19,8 @@
         "fs": "^0.0.1-security",
         "express-fileupload": "^1.5.1",
         "uuid": "^11.0.3",
-        "socket.io": "^4.8.1"
+        "socket.io": "^4.8.1",
+        "qrcode": "^1.5.4"
     },
     "devDependencies": {
         "chai": "^5.1.2",

@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 import RedisClient from '../clients/redisClient.js';
+import QRCode from 'qrcode';
 
 class RoomService {
     constructor() {
@@ -127,6 +128,26 @@ class RoomService {
         console.log(`[RoomService] User ${userId} have leave the room ${tokenFromRedis}`);
 
         return false;
+    };
+
+    createQRCode = async (url) => {
+        try {
+            const qrCodeDataUrl = await QRCode.toDataURL(url);
+            console.log('qrCode create success');
+            return qrCodeDataUrl;
+        } catch (err) {
+            console.error('qrCode create error: ', err);
+            return null;
+        }
+    };
+
+    getMembers = async (token) => {
+        try {
+            await this._redis.connect();
+            let members = await this._redis.sGet(token);
+            await this._redis.quit();
+            return { members };
+        } catch (err) {}
     };
 }
 
