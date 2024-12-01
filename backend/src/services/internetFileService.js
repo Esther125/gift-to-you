@@ -9,6 +9,19 @@ class InternetFileService {
         return `${uuidv4()}${extension}`;
     };
 
+    send = async (req, res) => {
+        const receiverId = req.body.receiverId;
+        const fileId = req.body.fileId; // 假設在上傳檔案成功後前端會存 fileId
+        if (!receiverId) {
+            throw new Error('Receiver ID is required');
+        }
+
+        // TODO: 驗證使用者 ID 確定使用者真的存在
+        // TODO: 用 web socket 將文件資訊發送給 receiver
+
+        return receiverId;
+    };
+
     upload = async (req, res) => {
         // 實現上傳檔案邏輯
         if (!req.files || Object.keys(req.files).length === 0) {

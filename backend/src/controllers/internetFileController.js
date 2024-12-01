@@ -8,10 +8,15 @@ class InternetFileController {
         this.download = this.download.bind(this);
     }
 
-    send = (req, res) => {
+    send = async (req, res) => {
         console.log('----InternetFileController.send');
-        // TODO: 實現傳送邏輯
-        res.status(201).json({ message: 'Send file logic not implemented yet' });
+        try {
+            const receiverId = await this.internetFileService.send(req, res);
+            res.status(200).json({ message: 'File sent successfully.', receiverId: receiverId });
+        } catch (error) {
+            console.log('Error sending file:', error);
+            res.status(500).json({ message: 'Failed to send the file.', error: error.message });
+        }
     };
 
     upload = async (req, res) => {
