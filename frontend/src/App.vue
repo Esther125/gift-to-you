@@ -82,13 +82,13 @@ const handleBackspace = async (index) => {
 const joinRoom = async () => {
     let inputRoomToken = characters.join('');
     if (inputRoomToken.length === 5) {
-        router.push({ path: '/', query: { roomToken: inputRoomToken } });
         store.roomToken = inputRoomToken
         sessionStorage.setItem('roomToken', inputRoomToken);
         const modalInstance = bootstrap.Modal.getInstance(roomModal);
         if (modalInstance) {
             modalInstance.hide();
         }
+        router.push({ path: '/', query: { roomToken: inputRoomToken } });
     } else {
         alert('邀請碼不存在')
     }
@@ -149,11 +149,12 @@ onMounted(async () => {
     });
 
     store.clientSocket.on('room notify', async (res) => {
-        console.log('WebSocket - room notify');
+        alert('WebSocket - room notify');
         console.log(res)
         if (res.roomToken === store.roomToken & res.type === 'join') {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members
+            alert(store.members)
             router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
         }
     });

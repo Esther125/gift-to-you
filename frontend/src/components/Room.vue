@@ -20,10 +20,12 @@ watchEffect(async () => {
         const needJoinRoom = route.query.needJoinRoom
 
         if (needJoinRoom !== 'false') {
+            console.log("Need Join Room")
             const { data } = await axios.post(`${apiUrl}/rooms/${store.roomToken}/join`, { user: store.user });
             // 更新 store 的數據
             store.members = data.members;
             store.qrCodeSrc = data.qrCodeDataUrl;
+            sessionStorage.setItem('qrCodeSrc', store.qrCodeSrc);
             store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
         }
     } catch (error) {
