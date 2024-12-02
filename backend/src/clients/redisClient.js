@@ -2,30 +2,51 @@ import { createClient } from 'redis';
 
 class RedisClient {
     constructor() {
-        console.debug('[RedisClient] Initializing Redis client');
-        this.client = createClient({
-            socket: {
-                reconnectStrategy: function (retries) {
-                    if (retries > 5) {
-                        return new Error('Too many attempts to reconnect. Redis connection was terminated');
-                    } else {
-                        return retries * 500;
-                    }
+        if (!RedisClient.instance) {
+            console.debug('[RedisClient] Initializing Redis client');
+            this.client = createClient({
+                socket: {
+                    reconnectStrategy: function (retries) {
+                        if (retries > 5) {
+                            return new Error('Too many attempts to reconnect. Redis connection was terminated');
+                        } else {
+                            return retries * 500;
+                        }
+                    },
                 },
-            },
-        });
-        this.client.on('error', (err) => {
-            console.error('[RedisClient] Redis Client Error', err);
-        });
+            });
+
+            this.client.on('error', (err) => {
+                console.error('[RedisClient] Redis Client Error', err);
+            });
+
+            RedisClient.instance = this;
+        }
+
+        return RedisClient.instance;
     }
 
     connect = async () => {
-        try {
-            await this.client.connect();
-            console.debug('[RedisClient] Connected to Redis');
-        } catch (err) {
-            console.error('[RedisClient] Error connecting to Redis:', err);
-            throw err;
+        if (!this.client.isOpen) {
+            try {
+                await this.client.connect();
+                console.debug('[RedisClient] Connected to Redis');
+            } catch (err) {
+                console.error('[RedisClient] Error connecting to Redis:', err);
+                throw err;
+            }
+        }
+    };
+
+    quit = async () => {
+        if (this.client.isOpen) {
+            try {
+                await this.client.quit();
+                console.debug('[RedisClient] Quit Redis');
+            } catch (err) {
+                console.error('[RedisClient] Error quitting Redis Client', err);
+                throw err;
+            }
         }
     };
 
@@ -123,16 +144,8 @@ class RedisClient {
             throw err;
         }
     };
-
-    quit = async () => {
-        try {
-            await this.client.quit();
-            console.debug('[RedisClient] Quit to Redis');
-        } catch (err) {
-            console.error('[RedisClient] Error quitting Redis Client', err);
-            throw err;
-        }
-    };
 }
 
-export default RedisClient;
+const redisClient = new RedisClient();
+Object.freeze(redisClient);
+export default redisClient;
