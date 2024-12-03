@@ -137,6 +137,8 @@ onMounted(async () => {
          // Use the stored roomToken, qrCodeSrc
         store.roomToken = storedRoomToken;
         store.qrCodeSrc = storedQrCodeSrc;
+        const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
+        store.members = data.members
     }
 
     // Build WebSocket connection
@@ -149,12 +151,10 @@ onMounted(async () => {
     });
 
     store.clientSocket.on('room notify', async (res) => {
-        alert('WebSocket - room notify');
         console.log(res)
         if (res.roomToken === store.roomToken & res.type === 'join') {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members
-            alert(store.members)
             router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
         }
     });
