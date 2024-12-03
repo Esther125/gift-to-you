@@ -1,4 +1,5 @@
 import RoomService from '../services/roomsService.js';
+import { logWithFileInfo } from '../../logger.js';
 
 class RoomsController {
     constructor() {
@@ -6,18 +7,18 @@ class RoomsController {
     }
 
     createRoom = async (req, res) => {
-        console.log('[RoomsController] -----createRoom-----');
+        logWithFileInfo('info', '[RoomsController] -----createRoom-----');
 
         let user;
         try {
             user = req.body.user;
             if (!user) {
-                console.error('[RoomsController] Error when creating room - User object is required');
+                logWithFileInfo('error', '[RoomsController] Error when creating room - User object is required');
                 return res.status(400).json({ message: 'User object is required' });
             }
 
             if (!user.id || user.id.length === 0) {
-                console.error('[RoomsController] Error when creating room - User id is required');
+                logWithFileInfo('error', '[RoomsController] Error when creating room - User id is required');
                 return res.status(400).json({ message: 'User id is required' });
             }
 
@@ -26,13 +27,13 @@ class RoomsController {
             const qrCodeDataUrl = await this.roomService.createQRCode(joinRoomUrl);
             res.status(201).json({ token: roomObj.token, members: roomObj.members, qrCodeDataUrl });
         } catch {
-            console.error(`[RoomsController] Error when creating room for ${user.id}`);
+            logWithFileInfo('error', `[RoomsController] Error when creating room for ${user.id}`);
             res.status(500).json({ message: `Error when creating room for ${user.id}` });
         }
     };
 
     joinRoom = async (req, res) => {
-        console.log('[RoomsController] -----joinRoom-----');
+        logWithFileInfo('info', '[RoomsController] -----joinRoom-----');
 
         let user;
         let token;
@@ -41,12 +42,12 @@ class RoomsController {
             token = req.params.roomToken;
 
             if (!user) {
-                console.error('[RoomsController] Error when joining room - User object is required');
+                logWithFileInfo('error', '[RoomsController] Error when joining room - User object is required');
                 return res.status(400).json({ message: 'User object is required' });
             }
 
             if (!user.id || user.id.length === 0) {
-                console.error('[RoomsController] Error when joining room - User id is required');
+                logWithFileInfo('error', '[RoomsController] Error when joining room - User id is required');
                 return res.status(400).json({ message: 'User id is required' });
             }
 
@@ -55,13 +56,13 @@ class RoomsController {
             const qrCodeDataUrl = await this.roomService.createQRCode(joinRoomUrl);
             res.status(200).json({ message: joinRoomObj.message, members: joinRoomObj.members, qrCodeDataUrl });
         } catch {
-            console.error(`[RoomsController] Error when joining room ${token} for user ${user.id}`);
+            logWithFileInfo('error', `[RoomsController] Error when joining room ${token} for user ${user.id}`);
             res.status(500).json({ message: `Error when when joining room ${token} for user ${user.id}` });
         }
     };
 
     getMembers = async (req, res) => {
-        console.log('[RoomsController] -----getMembers-----');
+        logWithFileInfo('info', '[RoomsController] -----getMembers-----');
 
         let token;
         try {
@@ -72,7 +73,7 @@ class RoomsController {
             }
             return res.status(400).json({ message: 'RoomToken is required' });
         } catch {
-            console.error(`[RoomsController] Error when getting members of room ${token}`);
+            logWithFileInfo('error', `[RoomsController] Error when getting members of room ${token}`);
             res.status(500).json({ message: `Error when getting members of room ${token}` });
         }
     };
