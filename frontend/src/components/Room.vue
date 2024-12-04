@@ -2,10 +2,11 @@
 import { ref, watchEffect } from 'vue';
 import axios from 'axios';
 import { useGlobalStore } from '../stores/globals.js';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const store = useGlobalStore();
 const route = useRoute();
+const router = useRouter();
 const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
 
 const messageInput = ref('');
@@ -20,13 +21,19 @@ watchEffect(async () => {
         const needJoinRoom = route.query.needJoinRoom
 
         if (needJoinRoom !== 'false') {
-            console.log("Need Join Room")
             const { data } = await axios.post(`${apiUrl}/rooms/${store.roomToken}/join`, { user: store.user });
             // 更新 store 的數據
-            store.members = data.members;
-            store.qrCodeSrc = data.qrCodeDataUrl;
-            sessionStorage.setItem('qrCodeSrc', store.qrCodeSrc);
-            store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
+            if (data.members.length !== 0) {
+                store.members = data.members;
+                store.qrCodeSrc = data.qrCodeDataUrl;
+                sessionStorage.setItem('qrCodeSrc', store.qrCodeSrc);
+                store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
+            } else {
+                store.roomToken = ''
+                sessionStorage.setItem('roomToken', '');
+                router.push({ path: '/'});
+                alert("邀請碼不存在")
+            }
         }
     } catch (error) {
         console.error('Error joining the room:', error);

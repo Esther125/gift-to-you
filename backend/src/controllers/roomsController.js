@@ -52,9 +52,15 @@ class RoomsController {
             }
 
             const joinRoomObj = await this.roomService.joinRoom(user.id, token);
-            const joinRoomUrl = `${process.env.FRONTEND_BASE_URL}/?roomToken=${token}`;
-            const qrCodeDataUrl = await this.roomService.createQRCode(joinRoomUrl);
-            res.status(200).json({ message: joinRoomObj.message, members: joinRoomObj.members, qrCodeDataUrl });
+            if (joinRoomObj.members.length !== 0) {
+                const joinRoomUrl = `${process.env.FRONTEND_BASE_URL}/?roomToken=${token}`;
+                const qrCodeDataUrl = await this.roomService.createQRCode(joinRoomUrl);
+                return res
+                    .status(200)
+                    .json({ message: joinRoomObj.message, members: joinRoomObj.members, qrCodeDataUrl });
+            }
+
+            return res.status(200).json({ message: joinRoomObj.message, members: joinRoomObj.members });
         } catch {
             logWithFileInfo('error', `[RoomsController] Error when joining room ${token} for user ${user.id}`);
             res.status(500).json({ message: `Error when when joining room ${token} for user ${user.id}` });
