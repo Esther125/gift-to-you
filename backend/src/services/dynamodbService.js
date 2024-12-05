@@ -78,11 +78,11 @@ class DynamodbService {
                     console.log(
                         `[dynamodbService] fail to get user's name for user ${userID} since user does not exist`
                     );
-                    return null;
                 default:
                     console.error(`[dynamodbService] fail to get user's name for user ${userID} since ${error}`);
             }
         }
+        return null;
     };
 
     getUserInfoFromEmail = async (email) => {
@@ -90,27 +90,23 @@ class DynamodbService {
         console.log(`[dynamodbService] try to get user info from email ${email}`);
 
         try {
-            let lastEvaluatedKey = null;
-            do {
-                const command = new QueryCommand({
-                    TableName: this._tableName,
-                    IndexName: 'userEmail',
-                    ExpressionAttributeValues: {
-                        ':email': email,
-                    },
-                    KeyConditionExpression: 'email = :email',
-                    Select: 'ALL_PROJECTED_ATTRIBUTES',
-                    ReturnConsumedCapacity: 'INDEXES',
-                    ...(lastEvaluatedKey && { ExclusiveStartKey: lastEvaluatedKey }),
-                });
+            const command = new QueryCommand({
+                TableName: this._tableName,
+                IndexName: 'userEmail',
+                ExpressionAttributeValues: {
+                    ':email': email,
+                },
+                KeyConditionExpression: 'email = :email',
+                Limit: 1,
+                Select: 'ALL_PROJECTED_ATTRIBUTES',
+                ReturnConsumedCapacity: 'INDEXES',
+            });
 
-                const response = await this._docClient.send(command);
-                lastEvaluatedKey = response.LastEvaluatedKey;
-                if (response.Items.length > 0) {
-                    console.log(`[dynamodbService] successfully get user info from email ${email}`);
-                    return response.Items[0];
-                }
-            } while (lastEvaluatedKey);
+            const response = await this._docClient.send(command);
+            if (response.Items.length > 0) {
+                console.log(`[dynamodbService] successfully get user info from email ${email}`);
+                return response.Items[0];
+            }
 
             console.log(`[dynamodbService] fail to get user info from email ${email} since user does not exist`);
             return null;

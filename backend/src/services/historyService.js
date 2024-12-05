@@ -41,10 +41,9 @@ class HistoryService {
     };
 
     _reformatItems = (items) => {
-        let sk, pk, receiver, sender, fileNames;
         let reformatedItems = [];
         for (const item of items) {
-            ({ sk, pk, receiver, sender, fileNames } = item);
+            const { sk, receiver, sender, fileNames } = item;
             let reformatedItem = {};
             reformatedItem['timestamp'] = sk;
             reformatedItem['sender'] = this._interpretLabel(sender);
