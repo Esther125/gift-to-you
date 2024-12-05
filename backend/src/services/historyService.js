@@ -8,6 +8,12 @@ class HistoryService {
     history = async (userID, lastKey = null) => {
         console.log(`[HistoryService] user ${userID} try to get history transfer records`);
 
+        // check userID
+        if (!(await this._dynamodbService.isUserIDExisted(userID))) {
+            console.log(`[HistoryService] user ${userID} fail to get history transfer records since invalid userID`);
+            return { fail: 'invalid userID' };
+        }
+
         // decode lastKey
         let decodedLastKey;
         try {
@@ -17,7 +23,7 @@ class HistoryService {
             }
         } catch (SyntaxError) {
             console.log(`[HistoryService] user ${userID} fail to get history transfer records since invalid lastKey`);
-            return null;
+            return { fail: 'invalid lastKey' };
         }
 
         // get transfer records from DB

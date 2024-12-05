@@ -20,6 +20,7 @@ class DynamodbService {
         - passwordSalt
         - passwordHash
         - userName
+        - transferCount
         */
         try {
             const command = new PutCommand({
@@ -31,6 +32,7 @@ class DynamodbService {
                     passwordSalt,
                     passwordHash,
                     userName,
+                    transferCount: 0,
                 },
                 ConditionExpression: 'attribute_not_exists(pk)',
                 ReturnValues: 'ALL_OLD',
@@ -78,11 +80,12 @@ class DynamodbService {
                     console.log(
                         `[dynamodbService] fail to get user's name for user ${userID} since user does not exist`
                     );
+                    return null;
                 default:
                     console.error(`[dynamodbService] fail to get user's name for user ${userID} since ${error}`);
+                    return null;
             }
         }
-        return null;
     };
 
     getUserInfoFromEmail = async (email) => {
@@ -115,6 +118,10 @@ class DynamodbService {
         }
     };
 
+    isUserIDExisted = async (userID) => {
+        return (await this.getUserNameFromID(userID)) !== null;
+    };
+
     /* -------- for transfer records -------- */
     createTransferRecords = async (sender, receiver, fileNames) => {
         console.log(
@@ -139,11 +146,24 @@ class DynamodbService {
             return;
         }
 
-        // create transfer record for individual 'user'
         let successCounter = 0;
         let success;
-
         const transferTime = new Date().toISOString();
+
+        // create if user existed
+        for (const label of [senderLabel, receiverLabel]) {
+            const [type, identifier] = label.split('#');
+            if (type === 'USER') {
+                if (!this.isUserIDExisted(identifier)) {
+                    console.error(
+                        `[dynamodbService] fail to create transfer records ${JSON.stringify({ sender, receiver, fileNames })} since with invalid userID`
+                    );
+                    return;
+                }
+            }
+        }
+
+        // create transfer record for individual 'user'
         for (const label of [senderLabel, receiverLabel]) {
             const [type, identifier] = label.split('#');
             if (type === 'USER') {
@@ -288,6 +308,7 @@ class DynamodbService {
             return { Items, LastEvaluatedKey };
         } catch {
             console.error(`[dynamodbService] fail to get user's transfer records for user ${userID}`);
+            return null;
         }
     };
 

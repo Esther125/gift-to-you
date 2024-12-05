@@ -23,8 +23,8 @@ class HistoryController {
 
         try {
             const records = await this.historyService.history(userID, lastKey);
-            if (records === null) {
-                res.status(400).json({ message: 'invalid lastKey' });
+            if (records.fail) {
+                res.status(400).json({ message: records.fail });
             } else {
                 res.status(200).json({ message: 'History success', ...records });
             }
