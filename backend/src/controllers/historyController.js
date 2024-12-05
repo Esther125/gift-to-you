@@ -7,8 +7,8 @@ class HistoryController {
 
     _reqWithMissingValue = (res, requiredValues) => {
         const missingValues = Object.entries(requiredValues)
-            .filter(([key, value]) => value === undefined)
-            .map(([key, value]) => key);
+            .filter(([_, value]) => value === undefined)
+            .map(([key, _]) => key);
         res.status(400).json({ message: `${missingValues.join(', ')} is required` });
         console.log('[HistoryController] bad request with missing values');
     };

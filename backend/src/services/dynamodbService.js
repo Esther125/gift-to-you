@@ -14,10 +14,18 @@ class DynamodbService {
             `[dynamodbService] try to create transfer records ${JSON.stringify({ sender, receiver, fileNames })}`
         );
 
-        // check sender and receiver format and type
+        /* check sender and receiver format and type
+        結構（依本身所屬的類別判斷）:
+        1. user
+            { type: "USER", identifier: userID }
+        2. temp (user without login)
+            { type: "TEMP", identifier: tempName }
+        3. room
+            { type: "ROOM", identifier: roomToken }
+        */
         const senderLabel = this._createLabel(sender);
         const receiverLabel = this._createLabel(receiver);
-        if (!senderLabel || !receiverLabel || fileNames.length < 1) {
+        if (!senderLabel || !receiverLabel || !Array.isArray(fileNames) || fileNames.length < 1) {
             console.error(
                 `[dynamodbService] fail to create transfer records ${JSON.stringify({ sender, receiver, fileNames })} since invalid format`
             );
@@ -99,8 +107,9 @@ class DynamodbService {
                 ReturnItemCollectionMetrics: 'SIZE',
             });
 
-            const response = await this._docClient.send(command);
+            await this._docClient.send(command);
             await this._updateUserTransferCount(userID);
+
             console.log(
                 `[dynamodbService] successfully create transfer record ${JSON.stringify({ sender: senderLabel, receiver: receiverLabel, fileNames })} for user ${userID}`
             );
