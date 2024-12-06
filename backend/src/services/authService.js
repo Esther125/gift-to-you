@@ -1,4 +1,3 @@
-import { userInfo } from 'os';
 import DynamodbService from './dynamodbService.js';
 import crypto from 'crypto';
 import { logWithFileInfo } from '../../logger.js';
@@ -7,22 +6,6 @@ class AuthService {
     constructor() {
         this._dynamodbService = new DynamodbService();
     }
-
-    _hashPassword = (password, passwordSalt) => {
-        return crypto.pbkdf2Sync(password, passwordSalt, 1000, 64, 'sha512').toString('hex');
-    };
-
-    _getUserIDFromLabel = (label) => {
-        return label.split('#')[1];
-    };
-
-    _hidePasswordInfo = (userInfo) => {
-        return {
-            userID: this._getUserIDFromLabel(userInfo.pk),
-            email: userInfo.email,
-            userName: userInfo.userName,
-        };
-    };
 
     register = async (userID, email, password, userName) => {
         logWithFileInfo('info', `${email} try to register`);
@@ -50,6 +33,22 @@ class AuthService {
         return {
             create,
             data: this._hidePasswordInfo(userInfo),
+        };
+    };
+
+    _hashPassword = (password, passwordSalt) => {
+        return crypto.pbkdf2Sync(password, passwordSalt, 1000, 64, 'sha512').toString('hex');
+    };
+
+    _getUserIDFromLabel = (label) => {
+        return label.split('#')[1];
+    };
+
+    _hidePasswordInfo = (userInfo) => {
+        return {
+            userID: this._getUserIDFromLabel(userInfo.pk),
+            email: userInfo.email,
+            userName: userInfo.userName,
         };
     };
 

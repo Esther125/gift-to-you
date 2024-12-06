@@ -116,6 +116,7 @@ class DynamodbService {
             return null;
         } catch (error) {
             logWithFileInfo('error', `fail to get user info from email ${email} since ${error}`, error);
+            return null;
         }
     };
 
