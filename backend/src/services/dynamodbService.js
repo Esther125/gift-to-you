@@ -1,5 +1,6 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient, PutCommand, GetCommand, QueryCommand, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { logWithFileInfo } from '../../logger.js';
 
 class DynamodbService {
     constructor() {
@@ -11,7 +12,7 @@ class DynamodbService {
     /* -------- for user info -------- */
     createUserInfo = async (userID, email, passwordSalt, passwordHash, userName) => {
         // create a user
-        console.log(`[dynamodbService] try to create user info for user ${userID}`);
+        logWithFileInfo('info', `try to create user info for user ${userID}`);
         /*
         user info
         - pk: USER#[userID]#INFO
@@ -41,23 +42,25 @@ class DynamodbService {
             });
 
             const response = await this._docClient.send(command);
-            console.log(`[dynamodbService] successfully create user info for user ${userID}`);
+            logWithFileInfo('info', `successfully create user info for user ${userID}`);
         } catch (error) {
             switch (error.name) {
                 case 'ConditionalCheckFailedException':
-                    console.error(
-                        `[dynamodbService] fail to create user info for user ${userID} since user info already exists`
+                    logWithFileInfo(
+                        'error',
+                        `fail to create user info for user ${userID} since user info already exists`,
+                        error
                     );
                     break;
                 default:
-                    console.error(`[dynamodbService] fail to create user info for user ${userID} since ${error}`);
+                    logWithFileInfo('error', `fail to create user info for user ${userID} since ${error}`, error);
             }
         }
     };
 
     getUserNameFromID = async (userID) => {
         // get userName from userID
-        console.log(`[dynamodbService] try to get user's name for user ${userID}`);
+        logWithFileInfo('info', `try to get user's name for user ${userID}`);
 
         try {
             const command = new GetCommand({
@@ -72,17 +75,15 @@ class DynamodbService {
 
             const response = await this._docClient.send(command);
             const userName = response.Item.userName;
-            console.log(`[dynamodbService] successfully get user's name for user ${userID}`);
+            logWithFileInfo('info', `successfully get user's name for user ${userID}`);
             return userName;
         } catch (error) {
             switch (error.name) {
                 case 'TypeError':
-                    console.log(
-                        `[dynamodbService] fail to get user's name for user ${userID} since user does not exist`
-                    );
+                    logWithFileInfo('info', `fail to get user's name for user ${userID} since user does not exist`);
                     return null;
                 default:
-                    console.error(`[dynamodbService] fail to get user's name for user ${userID} since ${error}`);
+                    logWithFileInfo('error', `fail to get user's name for user ${userID} since ${error}`, error);
                     return null;
             }
         }
@@ -90,7 +91,7 @@ class DynamodbService {
 
     getUserInfoFromEmail = async (email) => {
         // get user info from email (for login)
-        console.log(`[dynamodbService] try to get user info from email ${email}`);
+        logWithFileInfo('info', `try to get user info from email ${email}`);
 
         try {
             const command = new QueryCommand({
@@ -107,14 +108,14 @@ class DynamodbService {
 
             const response = await this._docClient.send(command);
             if (response.Items.length > 0) {
-                console.log(`[dynamodbService] successfully get user info from email ${email}`);
+                logWithFileInfo('info', `successfully get user info from email ${email}`);
                 return response.Items[0];
             }
 
-            console.log(`[dynamodbService] fail to get user info from email ${email} since user does not exist`);
+            logWithFileInfo('info', `fail to get user info from email ${email} since user does not exist`);
             return null;
         } catch (error) {
-            console.error(`[dynamodbService] fail to get user info from email ${email} since ${error}`);
+            logWithFileInfo('error', `fail to get user info from email ${email} since ${error}`, error);
         }
     };
 
@@ -124,9 +125,7 @@ class DynamodbService {
 
     /* -------- for transfer records -------- */
     createTransferRecords = async (sender, receiver, fileNames) => {
-        console.log(
-            `[dynamodbService] try to create transfer records ${JSON.stringify({ sender, receiver, fileNames })}`
-        );
+        logWithFileInfo('info', `try to create transfer records ${JSON.stringify({ sender, receiver, fileNames })}`);
 
         /* check sender and receiver format and type
         結構（依本身所屬的類別判斷）:
@@ -140,8 +139,10 @@ class DynamodbService {
         const senderLabel = this._createLabel(sender);
         const receiverLabel = this._createLabel(receiver);
         if (!senderLabel || !receiverLabel || !Array.isArray(fileNames) || fileNames.length < 1) {
-            console.error(
-                `[dynamodbService] fail to create transfer records ${JSON.stringify({ sender, receiver, fileNames })} since invalid format`
+            logWithFileInfo(
+                'error',
+                `fail to create transfer records ${JSON.stringify({ sender, receiver, fileNames })} since invalid format`,
+                error
             );
             return;
         }
@@ -155,8 +156,10 @@ class DynamodbService {
             const [type, identifier] = label.split('#');
             if (type === 'USER') {
                 if (!this.isUserIDExisted(identifier)) {
-                    console.error(
-                        `[dynamodbService] fail to create transfer records ${JSON.stringify({ sender, receiver, fileNames })} since with invalid userID`
+                    logWithFileInfo(
+                        'error',
+                        `fail to create transfer records ${JSON.stringify({ sender, receiver, fileNames })} since with invalid userID`,
+                        error
                     );
                     return;
                 }
@@ -180,8 +183,9 @@ class DynamodbService {
             }
         }
 
-        console.log(
-            `[dynamodbService] create ${successCounter} transfer records for ${JSON.stringify({ sender, receiver, fileNames })}`
+        logWithFileInfo(
+            'info',
+            `create ${successCounter} transfer records for ${JSON.stringify({ sender, receiver, fileNames })}`
         );
     };
 
@@ -204,8 +208,9 @@ class DynamodbService {
     };
 
     _createTransferRecordForUser = async (userID, timestamp, senderLabel, receiverLabel, fileNames) => {
-        console.log(
-            `[dynamodbService] try to create transfer record ${JSON.stringify({ sender: senderLabel, receiver: receiverLabel, fileNames })} for user ${userID}`
+        logWithFileInfo(
+            'info',
+            `try to create transfer record ${JSON.stringify({ sender: senderLabel, receiver: receiverLabel, fileNames })} for user ${userID}`
         );
 
         /*
@@ -236,13 +241,16 @@ class DynamodbService {
             await this._docClient.send(command);
             await this._updateUserTransferCount(userID);
 
-            console.log(
-                `[dynamodbService] successfully create transfer record ${JSON.stringify({ sender: senderLabel, receiver: receiverLabel, fileNames })} for user ${userID}`
+            logWithFileInfo(
+                'info',
+                `successfully create transfer record ${JSON.stringify({ sender: senderLabel, receiver: receiverLabel, fileNames })} for user ${userID}`
             );
             return true;
         } catch (error) {
-            console.error(
-                `[dynamodbService] fail to create transfer record ${JSON.stringify({ sender: senderLabel, receiver: receiverLabel, fileNames })} for user ${userID}`
+            logWithFileInfo(
+                'error',
+                `fail to create transfer record ${JSON.stringify({ sender: senderLabel, receiver: receiverLabel, fileNames })} for user ${userID}`,
+                error
             );
             return false;
         }
@@ -269,17 +277,19 @@ class DynamodbService {
 
             const response = await this._docClient.send(command);
             const transferCount = response.Attributes.transferCount;
-            console.log(`[dynamodbService] update transferCount to ${transferCount} for user ${userID}`);
+            logWithFileInfo('info', `update transferCount to ${transferCount} for user ${userID}`);
             return transferCount;
         } catch (error) {
             switch (error.name) {
                 case 'ConditionalCheckFailedException':
-                    console.error(
-                        `[dynamodbService] fail to update transferCount for user ${userID} since user info not exists`
+                    logWithFileInfo(
+                        'error',
+                        `fail to update transferCount for user ${userID} since user info not exists`,
+                        error
                     );
                     break;
                 default:
-                    console.error(`[dynamodbService] fail to create user info for user ${userID} since ${error}`);
+                    logWithFileInfo('error', `fail to create user info for user ${userID} since ${error}`, error);
             }
             return null;
         }
@@ -287,7 +297,7 @@ class DynamodbService {
 
     getUserTransferRecords = async (userID, lastEvaluatedKey = null) => {
         // get user transfer records from userID
-        console.log(`[dynamodbService] try to get user's transfer records for user ${userID}`);
+        logWithFileInfo('info', `try to get user's transfer records for user ${userID}`);
 
         try {
             const command = new QueryCommand({
@@ -304,17 +314,17 @@ class DynamodbService {
             });
 
             const { Items, LastEvaluatedKey } = await this._docClient.send(command);
-            console.log(`[dynamodbService] successfully get user's transfer records for user ${userID}`);
+            logWithFileInfo('info', `successfully get user's transfer records for user ${userID}`);
             return { Items, LastEvaluatedKey };
         } catch {
-            console.error(`[dynamodbService] fail to get user's transfer records for user ${userID}`);
+            logWithFileInfo('error', `fail to get user's transfer records for user ${userID}`, error);
             return null;
         }
     };
 
     getUserTransferCount = async (userID) => {
         // get transferCount from userID
-        console.log(`[dynamodbService] try to get user's transferCount for user ${userID}`);
+        logWithFileInfo('info', `try to get user's transferCount for user ${userID}`);
 
         try {
             const command = new GetCommand({
@@ -329,18 +339,21 @@ class DynamodbService {
 
             const response = await this._docClient.send(command);
             const transferCount = response.Item.transferCount;
-            console.log(`[dynamodbService] successfully get user's transferCount ${transferCount} for user ${userID}`);
+            logWithFileInfo('info', `successfully get user's transferCount ${transferCount} for user ${userID}`);
             return transferCount;
         } catch (error) {
             switch (error.name) {
                 case 'TypeError':
-                    console.log(
-                        `[dynamodbService] fail to get user's transferCount for user ${userID} since user does not exist`
+                    logWithFileInfo(
+                        'info',
+                        `fail to get user's transferCount for user ${userID} since user does not exist`
                     );
                     break;
                 default:
-                    console.error(
-                        `[dynamodbService] fail to get user's transferCount for user ${userID} since ${error}`
+                    logWithFileInfo(
+                        'error',
+                        `fail to get user's transferCount for user ${userID} since ${error}`,
+                        error
                     );
             }
             return null;

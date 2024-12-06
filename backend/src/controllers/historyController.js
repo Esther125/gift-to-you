@@ -1,4 +1,5 @@
 import HistoryService from '../services/historyService.js';
+import { logWithFileInfo } from '../../logger.js';
 
 class HistoryController {
     constructor() {
@@ -10,11 +11,11 @@ class HistoryController {
             .filter(([_, value]) => value === undefined)
             .map(([key, _]) => key);
         res.status(400).json({ message: `${missingValues.join(', ')} is required` });
-        console.log('[HistoryController] bad request with missing values');
+        logWithFileInfo('info', 'bad request with missing values');
     };
 
     history = async (req, res) => {
-        console.log('[HistoryController] ----- history -----');
+        logWithFileInfo('info', '----- history -----');
         const { userID, lastKey } = req.body;
         if (!userID) {
             this._reqWithMissingValue(res, { userID });
@@ -29,7 +30,7 @@ class HistoryController {
                 res.status(200).json({ message: 'History success', ...records });
             }
         } catch (err) {
-            console.error(`[HistoryController] error when user ${userID} try to get history transfer records, ${err}`);
+            logWithFileInfo('error', `error when user ${userID} try to get history transfer records, ${err}`, err);
             res.status(500).json({ message: `Error when user ${userID} try to get history transfer records` });
         }
     };

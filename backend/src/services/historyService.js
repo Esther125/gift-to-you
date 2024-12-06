@@ -1,4 +1,5 @@
 import DynamodbService from './dynamodbService.js';
+import { logWithFileInfo } from '../../logger.js';
 
 class HistoryService {
     constructor() {
@@ -6,11 +7,11 @@ class HistoryService {
     }
 
     history = async (userID, lastKey = null) => {
-        console.log(`[HistoryService] user ${userID} try to get history transfer records`);
+        logWithFileInfo('info', `user ${userID} try to get history transfer records`);
 
         // check userID
         if (!(await this._dynamodbService.isUserIDExisted(userID))) {
-            console.log(`[HistoryService] user ${userID} fail to get history transfer records since invalid userID`);
+            logWithFileInfo('info', `user ${userID} fail to get history transfer records since invalid userID`);
             return { fail: 'invalid userID' };
         }
 
@@ -22,7 +23,7 @@ class HistoryService {
                 decodedLastKey = null;
             }
         } catch (SyntaxError) {
-            console.log(`[HistoryService] user ${userID} fail to get history transfer records since invalid lastKey`);
+            logWithFileInfo('info', `user ${userID} fail to get history transfer records since invalid lastKey`);
             return { fail: 'invalid lastKey' };
         }
 
