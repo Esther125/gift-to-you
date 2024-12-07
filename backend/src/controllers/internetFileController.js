@@ -11,9 +11,11 @@ class InternetFileController {
     upload = async (req, res) => {
         logWithFileInfo('info', '----InternetFileController.upload');
         try {
-            const filename = await this.internetFileService.upload(req, res);
-            const fileId = path.basename(filename, path.extname(filename));
-            res.status(200).json({ message: 'File uploaded successfully.', fileId: fileId });
+            if (!req.file) {
+                throw new Error('No file was uploaded.');
+            }
+            const filename = req.file.filename; // 從 multer middleware 抓文件名
+            res.status(200).json({ message: 'File uploaded successfully.', filename: filename });
         } catch (error) {
             logWithFileInfo('info', '----InternetFileController.download');
             res.status(500).json({ message: 'Failed to upload the file.', error: error.message });
@@ -23,8 +25,15 @@ class InternetFileController {
     download = async (req, res) => {
         console.log('----InternetFileController.download');
         try {
-            await this.internetFileService.download(req, res);
-            console.info('File donwloaded successfully.');
+            const downloadDetails = await this.internetFileService.download(req);
+            if (downloadDetails.stream) {
+                res.setHeader('Content-Disposition', `attachment; filename="${downloadDetails.filename}"`);
+                res.setHeader('Content-Type', 'application/octet-stream');
+                downloadDetails.stream.pipe(res);
+            } else {
+                res.json(downloadDetails);
+            }
+            console.info('File downloaded successfully.');
         } catch (error) {
             console.error('Error downloading file: ', error);
             res.status(500).json({ message: 'Failed to download the file.', error: error.message });
