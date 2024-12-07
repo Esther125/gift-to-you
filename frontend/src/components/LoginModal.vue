@@ -3,7 +3,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header pt-3 pb-2 border-0">
-                    <h5 class="modal-title b" id="loginModalLabel">註冊登入</h5>
+                    <h5 class="modal-title b" id="loginModalLabel">用戶登入</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
