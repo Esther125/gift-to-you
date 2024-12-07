@@ -3,6 +3,7 @@ import { RouterLink, RouterView } from 'vue-router';
 import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue';
 import axios from 'axios';
 import Login from './components/LoginModal.vue';
+import Logout from './components/LogoutModal.vue';
 
 const isDarkTheme = ref(false);
 const icon = ref();
@@ -88,6 +89,11 @@ onBeforeUnmount(() => {
                                 <i class="bi bi-clock-history h5 icon"></i> History
                             </RouterLink>
                         </li>
+                        <li>
+                            <RouterLink to="/logout" class="dropdown-item">
+                                <i class="bi bi-box-arrow-left h5 icon"></i> Logout
+                            </RouterLink>
+                        </li>
                     </ul>
                 </li>
             </div>
@@ -115,6 +121,7 @@ onBeforeUnmount(() => {
         </div>
 
         <Login />
+        <Logout />
     </div>
 
     <nav class="navbar navbar-expand-md fixed-bottom d-flex justify-content-center navbar-bottom">
