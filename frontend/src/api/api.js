@@ -12,8 +12,8 @@ api.interceptors.response.use(
     },
     (error) => {
         if (error.response && error.response.status === 401) {
-            alert('未登入，重新導向');
-            window.location.href = '/login';
+            window.dispatchEvent(new CustomEvent('show-login-modal'));
+            return new Promise(() => {});
         }
         return Promise.reject(error);
     }

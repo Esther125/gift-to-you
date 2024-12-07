@@ -2,6 +2,7 @@
 import { RouterLink, RouterView } from 'vue-router';
 import { ref, reactive, onMounted, onBeforeUnmount, watch } from 'vue';
 import axios from 'axios';
+import Login from './components/LoginModal.vue';
 
 const isDarkTheme = ref(false);
 const icon = ref();
@@ -108,12 +109,12 @@ onBeforeUnmount(() => {
                             {{ letter }}
                         </div>
                     </div>
-                    <div class="modal-footer">
-
-                    </div>
+                    <div class="modal-footer"></div>
                 </div>
             </div>
         </div>
+
+        <Login />
     </div>
 
     <nav class="navbar navbar-expand-md fixed-bottom d-flex justify-content-center navbar-bottom">
@@ -178,7 +179,8 @@ li {
     background-color: var(--color-card-background);
 }
 
-.modal-header, .modal-footer {
+.modal-header,
+.modal-footer {
     border-bottom: 0px;
     border-top: 0px;
 }
@@ -198,15 +200,15 @@ li {
 }
 
 .letter-box {
-  height: 100%;
-  width: 6%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* border: 1px solid #000; */
-  border-radius: 10px;
-  background-color: var(--color-modal-text-background);
-  font-weight: bolder;
-  margin: 0 3px;
+    height: 100%;
+    width: 6%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* border: 1px solid #000; */
+    border-radius: 10px;
+    background-color: var(--color-modal-text-background);
+    font-weight: bolder;
+    margin: 0 3px;
 }
 </style>
