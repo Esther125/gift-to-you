@@ -15,15 +15,15 @@ class InternetFileService {
             return `${uuidv4()}_${originalName}${extension}`; // 檔案格式：uuid_原檔名.附檔名
         };
 
-        const __filename = fileURLToPath(import.meta.url); // 當前檔名
-        const __dirname = path.dirname(__filename); // 當前目錄名
-        const uploadPath = path.join(__dirname, '../../uploads');
+        this.__filename = fileURLToPath(import.meta.url); // 當前檔名
+        this.__dirname = path.dirname(this.__filename); // 當前目錄名
+        this.uploadPath = path.join(this.__dirname, '../../uploads');
 
         const storage = multer.diskStorage({
-            destination: function (req, file, cb) {
-                cb(null, uploadPath);
+            destination: (req, file, cb) => {
+                cb(null, this.uploadPath);
             },
-            filename: function (req, file, cb) {
+            filename: (req, file, cb) => {
                 cb(null, _generateUniqueFilename(file.originalname));
             },
         });
@@ -40,9 +40,15 @@ class InternetFileService {
     };
 
     _localDownload = async (filePath) => {
-        const fileHandle = await fs.promises.open(filePath, 'r');
-        const filestream = fs.createReadStream(null, { fd: fileHandle.fd, autoClose: true });
-        return { stream: filestream, filename: path.basename(filePath) };
+        let fileHandle = null;
+        try {
+            fileHandle = await fs.promises.open(filePath, 'r');
+            const filestream = fs.createReadStream(filePath, { fd: fileHandle.fd, autoClose: false });
+            return { stream: filestream, filename: path.basename(filePath) };
+        } catch (error) {
+            console.error('Failed to open or stream the file:', error);
+            throw error;
+        }
     };
 
     _stagingAreaDownload = async (filePath, filename, userId) => {
@@ -52,7 +58,9 @@ class InternetFileService {
             name: filename,
         };
         const uploadResult = await s3Service.uploadFile(file, filename, 'user', userId);
-        return { filename: uploadResult.filename, url: uploadResult.location };
+        const [fileId, encodedFilename] = uploadResult.filename.split('_');
+        const originalFilename = decodeURIComponent(encodedFilename);
+        return { fileId: fileId, filename: originalFilename, url: uploadResult.location };
     };
 
     download = async (req, res) => {
@@ -60,21 +68,19 @@ class InternetFileService {
         const way = req.params.way;
         const fileId = req.params.fileId;
 
-        const __filename = fileURLToPath(import.meta.url); // current filename
-        const __dirname = path.dirname(__filename); // current directory name
-        const rootPath = path.join(__dirname, '../../uploads');
-        const files = await fs.promises.readdir(rootPath);
-        const matchedFile = files.find((file) => path.basename(file, path.extname(file)) === fileId);
+        const files = await fs.promises.readdir(this.uploadPath);
+        const matchedFile = files.find((file) => file.startsWith(fileId + '_')); // 只比對檔名前面的 fileId
         if (!matchedFile) {
             throw new Error('File not found');
         }
-        const filePath = path.join(rootPath, matchedFile);
+        const safeFileName = encodeURIComponent(matchedFile);
+        const filePath = path.join(this.uploadPath, matchedFile);
 
         // 根據不同 ways 提供不同下載方式
         if (way === 'local') {
             return this._localDownload(filePath);
         } else if (way === 'staging-area') {
-            return this._stagingAreaDownload(filePath, matchedFile, userId);
+            return this._stagingAreaDownload(filePath, safeFileName, userId);
         } else if (way === 'google-cloud') {
             // TODO: Integrate Google drive
         } else {
