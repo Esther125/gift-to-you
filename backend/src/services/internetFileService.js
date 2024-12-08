@@ -7,23 +7,26 @@ import S3Service from './s3Service.js';
 
 class InternetFileService {
     constructor() {
-        // 產生唯一的檔案名稱
-        const _generateUniqueFilename = (filename) => {
-            const extension = path.extname(filename);
-            const originalName = path.basename(filename, extension);
-            return `${uuidv4()}_${originalName}${extension}`; // 檔案格式：uuid_原檔名.附檔名
-        };
-
         this.__filename = fileURLToPath(import.meta.url); // 當前檔名
         this.__dirname = path.dirname(this.__filename); // 當前目錄名
         this.uploadPath = path.join(this.__dirname, '../../uploads');
+        this.setupUploader();
+    }
 
+    // 產生唯一的檔案名稱
+    _generateUniqueFilename = (filename) => {
+        const extension = path.extname(filename);
+        const originalName = path.basename(filename, extension);
+        return `${uuidv4()}_${originalName}${extension}`; // 檔案格式：uuid_原檔名.附檔名
+    };
+
+    setupUploader = () => {
         const storage = multer.diskStorage({
             destination: (req, file, cb) => {
                 cb(null, this.uploadPath);
             },
             filename: (req, file, cb) => {
-                cb(null, _generateUniqueFilename(file.originalname));
+                cb(null, this._generateUniqueFilename(file.originalname));
             },
         });
 
@@ -31,7 +34,7 @@ class InternetFileService {
             storage: storage, // 設定檔案儲存位置與檔名
             limits: { fileSize: 5 * 1024 * 1024 }, // 設定檔案大小限制為 5 MB
         });
-    }
+    };
 
     // 使用 multer middleware 協助上傳
     getUploadMiddleware = () => {
