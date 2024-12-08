@@ -1,7 +1,7 @@
 <template>
-    <div class="register mt-5 d-flex flex-column">
+    <div class="register my-5 d-flex flex-column w-100">
         <h3 class="text-center w-100">用戶註冊</h3>
-        <form @submit.prevent="registerHandler" class="w-100">
+        <form @submit.prevent="registerHandler" class="w-75">
             <div class="m-3 d-flex justify-content-around">
                 <label for="userName" class="w-25">用戶名稱</label>
                 <input id="userName" class="w-75" type="text" v-model="userName" required />
@@ -67,7 +67,6 @@ const registerHandler = async () => {
 
 <style scoped>
 .register {
-    min-height: 100vh;
     display: flex;
     align-items: center;
 }
