@@ -121,6 +121,7 @@ const particlesUrl = computed(() => {
 onMounted(async () => {
     // check theme
     isDarkTheme.value = window.matchMedia('(prefers-color-scheme: dark').matches;
+    particlesUrl.value = isDarkTheme.value ? particlesPath.dark : particlesPath.light;
     // add event listener
     window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', themeChangeHandler);
     // init icon
