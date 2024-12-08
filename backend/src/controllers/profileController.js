@@ -10,7 +10,7 @@ class ProfileController {
     getStagingFile = async (req, res) => {
         logWithFileInfo('info', '----ProfileController.getStagingFile');
 
-        const userId = req.query.userId;
+        const userId = req.params.userId;
         if (!userId) {
             return res.status(400).json({ error: 'Missing userId query parameter' });
         }
