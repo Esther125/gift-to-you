@@ -11,12 +11,13 @@ class ProfileController {
         logWithFileInfo('info', '----ProfileController.getStagingFile');
 
         const userId = req.params.userId;
-        if (!userId) {
-            return res.status(400).json({ error: 'Missing userId query parameter' });
-        }
 
         try {
             const fileList = await this.s3Service.getFileList(userId);
+            if (fileList.length === 0) {
+                return res.status(404).json({ message: 'No files found for this user.' });
+            }
+            
             return res.status(200).json({ file: fileList });
         } catch (error) {
             logWithFileInfo('error', 'Error fetching staging file:', error.message);
