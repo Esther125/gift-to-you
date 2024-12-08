@@ -70,6 +70,12 @@ const showModal = () => {
 onMounted(() => {
     initModal();
     window.addEventListener('show-login-modal', showModal);
+    const modalElement = document.getElementById('loginModal');
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            window.location.href = '/';
+        });
+    }
 });
 </script>
 
