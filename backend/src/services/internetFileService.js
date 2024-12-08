@@ -3,7 +3,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import multer from 'multer';
 import fs from 'fs';
-import { logWithFileInfo } from '../../logger.js';
 import S3Service from './s3Service.js';
 
 class InternetFileService {
@@ -41,14 +40,9 @@ class InternetFileService {
 
     _localDownload = async (filePath) => {
         let fileHandle = null;
-        try {
-            fileHandle = await fs.promises.open(filePath, 'r');
-            const filestream = fs.createReadStream(filePath, { fd: fileHandle.fd, autoClose: false });
-            return { stream: filestream, filename: path.basename(filePath) };
-        } catch (error) {
-            console.error('Failed to open or stream the file:', error);
-            throw error;
-        }
+        fileHandle = await fs.promises.open(filePath, 'r');
+        const filestream = fs.createReadStream(filePath, { fd: fileHandle.fd, autoClose: false });
+        return { stream: filestream, filename: path.basename(filePath) };
     };
 
     _stagingAreaDownload = async (filePath, filename, userId) => {
