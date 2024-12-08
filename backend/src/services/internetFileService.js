@@ -2,33 +2,30 @@ import { v4 as uuidv4 } from 'uuid';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import ChatService from './chatService';
 
 class InternetFileService {
+    constructor() {
+        this.chatService = new ChatService();
+    }
+
     _generateUniqueFilename = (originalName) => {
         // 產生一個包含唯一識別碼(uuid)的檔案名稱
         const extension = path.extname(originalName);
         return `${uuidv4()}${extension}`;
     };
 
-    send = async (req, res) => {
-        const senderId = req.body.senderId;
+    send = async (req, res, socket, roomToken, chatNameSpace) => {
         const receiverId = req.body.receiverId;
         const fileId = req.body.fileId;
         if (!receiverId) {
             throw new Error('Receiver ID is required');
         }
-
-        // TODO: 驗證使用者 ID 確定使用者真的存在
-
+        if (!fileId) {
+            throw new Error('File ID is required');
+        }
         // 用 web socket 將檔案資訊發送給 receiver
-        io.to(receiverId).emit('receive file', {
-            event: 'receive file',
-            senderID: senderId,
-            fileId: fileId,
-            timestamp: new Date().toISOString(),
-        });
-
-        return receiverId;
+        this.chatService.requestFileTransfer(socket, roomToken, receiverId, fileId, chatNameSpace);
     };
 
     upload = async (req, res) => {

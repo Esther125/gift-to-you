@@ -1,10 +1,56 @@
 import InternetFileService from '../services/internetFileService.js';
+import ChatService from '../services/chatService.js';
 import path from 'path';
 
 class InternetFileController {
     constructor() {
         this.internetFileService = new InternetFileService();
+        this.chatService = new ChatService();
     }
+
+    connect = (socket) => {
+        // connect to server (/file)
+        console.log('[InternetFileController] -----connect-----');
+
+        try {
+            const userID = socket.handshake.auth?.user?.id || null;
+            if (userID === null) {
+                this.chatService.eventWithMissingValues(socket, 'connect', { userID });
+            } else {
+                this.chatService.connect(socket, userID);
+            }
+        } catch {
+            console.error(`[InternetFileController] Error when connecting chat websocket`);
+        }
+    };
+
+    requestFileTransfer = (socket, payload, chatNameSpace) => {
+        console.log('[InternetFileController] -----requestFileTransfer-----');
+        const userID = socket.handshake.auth.user.id;
+
+        try {
+            const roomToken = payload?.roomToken || null;
+            const receiverID = payload?.receiverID || null;
+            if (roomToken === null) {
+                this.chatService.eventWithMissingValues(socket, 'file transfer notify', { roomToken });
+            } else {
+                this.chatService.requestFileTransfer(socket, roomToken, receiverID, chatNameSpace);
+            }
+        } catch {
+            console.error(`[InternetFileController] Error when user ${userID} request file transfer`);
+            this.chatService.systemMessage(socket, 'file transfer notify', 'error', 'error');
+        }
+    };
+
+    disconnect = (socket, reason) => {
+        console.log('[InternetFileController] -----disconnect-----');
+        this.chatService.disconnect(socket, reason);
+    };
+
+    invalidEvent = (socket) => {
+        console.log('[InternetFileController] -----invalid event-----');
+        this.chatService.systemMessage(socket, 'invalid event', 'fail', 'invalid event');
+    };
 
     send = async (req, res) => {
         console.log('----InternetFileController.send');

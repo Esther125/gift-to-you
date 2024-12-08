@@ -4,7 +4,7 @@ import pkg from 'body-parser';
 import homeRouter from './src/routes/homeRouter.js';
 import sampleRouters from './src/routes/sampleRoutes.js';
 import authRouters from './src/routes/authRoutes.js';
-import internetFileRouter from './src/routes/internetFileRoutes.js';
+import { internetFileRouter, setupFileWebSocket } from './src/routes/internetFileRouter.js';
 import roomsRouter from './src/routes/roomsRouter.js';
 import profileRouter from './src/routes/ProfileRoutes.js';
 import fileUpload from 'express-fileupload';
@@ -45,20 +45,10 @@ const io = new Server(httpServer, {
     },
 });
 
-io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
-
-    socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.id);
-    });
-
-    socket.on('register', (userId) => {
-        // socket 綁 userId
-        socket.join(userId);
-    });
-});
-
 // use routes
+const fileNamespace = io.of('/file');
+setupFileWebSocket(fileNamespace);
+
 const chatNameSpace = io.of('/chat');
 chatRouter(chatNameSpace);
 

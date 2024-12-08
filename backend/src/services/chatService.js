@@ -211,6 +211,65 @@ class ChatService {
             );
         }
     };
+
+    // For file transfer notification
+    requestFileTransfer = (socket, roomToken, receiverID, fileId, chatNameSpace) => {
+        const userID = socket.handshake.auth.user.id;
+        const senderID = userID;
+        const res = {
+            event: 'file transfer notify',
+            senderID: senderID,
+            roomToken: roomToken,
+            fileId: fileId,
+            timestamp: new Date().toISOString(),
+        };
+
+        // 檢查 sender 是否在該 chatroom 內
+        const senderInRoom = this._checkUserInRoom(socket, senderID, roomToken);
+        if (!senderInRoom) {
+            this.systemMessage(socket, 'file transfer notify', 'fail', `sender not in room ${roomToken}`);
+            console.log(`[chatService] sender ${userID} is not in room ${roomToken}`);
+            return;
+        }
+
+        if (receiverID) {
+            // 傳輸對象: user
+            console.log(`[chatService] user ${userID} ask to transfer file to user ${receiverID}`);
+
+            // 檢查 receiver 是否在該 chatroom 內
+            const receiverInRoom = this._checkUserInRoom(socket, receiverID, roomToken);
+            if (!receiverInRoom) {
+                this.systemMessage(socket, 'file transfer notify', 'fail', `receiver not in room ${roomToken}`);
+                console.log(`[chatService] receiver ${userID} is not in room ${roomToken}`);
+                return;
+            }
+
+            // 檢查 sender、receiver 是否相同
+            if (senderID === receiverID) {
+                this.systemMessage(socket, 'file transfer notify', 'fail', `sender and receiver are the same`);
+                console.log(`[chatService] user ${userID} ask to transfer to himself`);
+                return;
+            }
+
+            // 通知 receiver，sender 要傳檔案給他
+            chatNameSpace.to(receiverID).emit('file transfer notify', res);
+            console.log(
+                `[chatService] send transfer notification requested from user ${senderID} to user ${receiverID}`
+            );
+        } else {
+            // 傳輸對象: room
+            console.log(`[chatService] user ${userID} ask to transfer file to room ${roomToken}`);
+
+            // 通知 chatroom 中的所有 user，sender 要傳檔案給他
+            socket.to(roomToken).emit('file transfer notify', res);
+            console.log(
+                `[chatService] send transfer notification requested from user ${senderID} to room ${roomToken}`
+            );
+        }
+
+        // 回傳處理結果通知
+        this.systemMessage(socket, 'file transfer notify', 'success', 'success');
+    };
 }
 
 export default ChatService;
