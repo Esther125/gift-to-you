@@ -60,7 +60,7 @@ class InternetFileService {
         const uploadResult = await s3Service.uploadFile(file, filename, 'user', userId);
         const [fileId, encodedFilename] = uploadResult.filename.split('_');
         const originalFilename = decodeURIComponent(encodedFilename);
-        return { fileId: fileId, filename: originalFilename, url: uploadResult.location };
+        return { fileId: fileId, filename: originalFilename, location: uploadResult.location };
     };
 
     download = async (req, res) => {

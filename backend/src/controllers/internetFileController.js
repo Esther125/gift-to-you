@@ -1,6 +1,4 @@
 import InternetFileService from '../services/internetFileService.js';
-import path from 'path';
-
 import { logWithFileInfo } from '../../logger.js';
 
 class InternetFileController {
@@ -22,7 +20,8 @@ class InternetFileController {
                 fileName: fileName,
             });
         } catch (error) {
-            logWithFileInfo('info', '----InternetFileController.download');
+            logWithFileInfo('info', '----InternetFileController.upload');
+
             res.status(500).json({ message: 'Failed to upload the file.', error: error.message });
         }
     };

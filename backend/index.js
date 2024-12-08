@@ -26,9 +26,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// Middleware：file upload
-// app.use(fileUpload());
-
 // use routes
 app.use('/api/v1', homeRouter);
 app.use('/api/v1', sampleRouters);
