@@ -19,7 +19,7 @@ class HistoryService {
         let decodedLastKey;
         try {
             decodedLastKey = this._decodeLastKey(lastKey);
-            if (decodedLastKey && (!decodedLastKey.pk || !decodedLastKey)) {
+            if (decodedLastKey && (!decodedLastKey.pk || !decodedLastKey.sk)) {
                 decodedLastKey = null;
             }
         } catch (SyntaxError) {
