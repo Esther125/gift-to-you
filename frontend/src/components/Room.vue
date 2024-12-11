@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, watchEffect, nextTick, onMounted } from 'vue';
+import { ref, reactive, watchEffect, nextTick, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { useGlobalStore } from '@/stores/globals.js';
 import { useRoute, useRouter } from 'vue-router';
@@ -13,6 +13,75 @@ const messagesContainer = ref(null); // for scroll down when new message add
 const messageInput = ref('');
 const messages = reactive([]); // to store chat messages
 let enterPressedOnce = false; // send message if pressing enter key twice
+
+const showChat = ref(true);
+const switchBtnText = computed(() => {
+  return showChat.value ? "See Files" : "See Chat";
+});
+
+// data to test whether the layout will broken or not
+const files = reactive([
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    },
+    {
+        sender: "000000",
+        fileName: "text1.txt",
+        timestamp: "09:00"
+    }
+])
 
 watchEffect(async () => {
     // 如果沒有 roomToken 或 user.id，直接退出
@@ -115,6 +184,10 @@ const handleEnter = (event) => {
     }
 };
 
+const handleSwitch = () => {
+    showChat.value = !showChat.value
+}
+
 onMounted(async () => {
     const storedMessages = sessionStorage.getItem('messages'); // get stored messages when page is refresh
     if (storedMessages) {
@@ -135,7 +208,7 @@ onMounted(async () => {
 <template>
     <div class="row container-fluid m-0 p-0 h-100">
         <!-- Left Content -->
-        <div class="col-9 d-flex align-items-center justify-content-center">
+        <div class="col-9 d-flex flex-column align-items-center justify-content-center">
             <div class="row d-flex justify-content-center">
                 <div class="col-auto d-flex align-items-center mb-3" v-for="(userId, index) in store.members">
                     <!-- computer card -->
@@ -151,6 +224,9 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
+            <div class="row d-flex justify-content-center mt-3">
+                <button class="btn" @click="handleSwitch">{{ switchBtnText }}</button>
+            </div>
         </div>
         <!-- Right Content - ChatRoom -->
         <div class="col-3 chat-room p-0 d-flex flex-column">
@@ -158,7 +234,7 @@ onMounted(async () => {
                 <!-- Chat messages -->
                 <div class="messages-container px-3 py-2 overflow-auto" ref="messagesContainer">
                     <transition-group name="fade" tag="div">
-                        <div class="message d-flex flex-column" v-for="(message, index) in messages" :key="index">
+                        <div v-if="showChat" class="message d-flex flex-column" v-for="(message, index) in messages" :key="index">
                             <div v-if="message.userId === store.user.id.slice(0, 8)" class="d-flex justify-content-end mb-3">
                                 <div class="message-body p-2 rounded text-end float-end">
                                     {{ message.content }}
@@ -174,11 +250,24 @@ onMounted(async () => {
                                 </div>
                             </div>
                         </div>
+                        <div v-else-if="!showChat && files.length === 0" class="d-flex flex-column align-items-center mt-5">
+                            No file now
+                        </div>
+                        <div v-else class="message d-flex flex-column" v-for="(file, fileIndex) in files" :key="fileIndex">
+                            <div class="d-flex flex-column justify-content-start mb-3">
+                                <div class="message-header justify-content-between mb-1">
+                                    <strong>{{ file.sender }}</strong> send at {{ file.timestamp }}
+                                </div>
+                                <div class="message-body p-2 rounded">
+                                    {{ file.fileName }}
+                                </div>
+                            </div>
+                        </div>
                     </transition-group>
                 </div>
 
                 <!-- Message input and send button -->
-                <div class="input-group p-2">
+                <div v-if="showChat" class="input-group p-2">
                     <input 
                         type="text"
                         v-model="messageInput"
@@ -187,6 +276,9 @@ onMounted(async () => {
                         @keyup="handleEnter"
                         @input="resizeTextarea"/>
                     <button class="btn" @click="sendMessage">Send</button>
+                </div>
+                <div v-else class="input-group p-2 justify-content-center">
+                    <button class="btn" @click="">Send To Room</button>
                 </div>
             </div>
         </div>
