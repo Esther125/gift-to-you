@@ -43,12 +43,13 @@ class SocketController {
         const userID = socket.handshake.auth.user.id;
 
         try {
+            const fileId = payload?.fileId || null;
             const roomToken = payload?.roomToken || null;
             const receiverID = payload?.receiverID || null;
             if (roomToken === null) {
                 this.socketService.eventWithMissingValues(socket, 'request transfer', { roomToken });
             } else {
-                this.socketService.requestTransfer(socket, roomToken, receiverID, socketNameSpace);
+                this.socketService.requestTransfer(socket, fileId, roomToken, receiverID, socketNameSpace);
             }
         } catch {
             console.error(`[socketController] Error when user ${userID} request transfer`);
