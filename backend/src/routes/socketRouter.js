@@ -1,9 +1,9 @@
-import socketController from '../controllers/socketController.js';
+import SocketController from '../controllers/socketController.js';
 
 const VALID_EVENTS = ['join chatroom', 'request transfer', 'chat message', 'leave chatroom'];
 
 const socketRouter = (socketNameSpace) => {
-    const socketController = new socketController();
+    const socketController = new SocketController();
 
     // connect to server (/socket)
     socketNameSpace.on('connection', (socket) => {

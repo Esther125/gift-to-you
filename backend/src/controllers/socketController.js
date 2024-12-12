@@ -1,6 +1,6 @@
 import SocketService from '../services/socketService.js';
 
-class socketController {
+class SocketController {
     constructor() {
         this.socketService = new SocketService();
     }
@@ -102,4 +102,4 @@ class socketController {
     };
 }
 
-export default socketController;
+export default SocketController;
