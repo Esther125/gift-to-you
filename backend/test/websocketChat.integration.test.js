@@ -42,7 +42,7 @@ expected response structure
     }
 */
 
-const CHAT_SERVER_URL = `http://localhost:3000/chat`;
+const CHAT_SERVER_URL = `http://localhost:3000/socket`;
 const AUTH_OPTIONS = (userID) => ({
     auth: {
         user: {
@@ -51,7 +51,7 @@ const AUTH_OPTIONS = (userID) => ({
     },
 });
 
-describe('Test: connect and disconnect to server for /chat', () => {
+describe('Test: connect and disconnect to server for /socket', () => {
     let clientSocket;
 
     afterEach(async () => {
@@ -63,7 +63,7 @@ describe('Test: connect and disconnect to server for /chat', () => {
         });
     });
 
-    it('Test: connect and disconnect to server for /chat (with correct connection format)', (done) => {
+    it('Test: connect and disconnect to server for /socket (with correct connection format)', (done) => {
         // connect to server
         clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0001'));
 
@@ -77,7 +77,7 @@ describe('Test: connect and disconnect to server for /chat', () => {
         });
     });
 
-    it('Test: connect and disconnect to server for /chat (with wrong connection format, without auth)', (done) => {
+    it('Test: connect and disconnect to server for /socket (with wrong connection format, without auth)', (done) => {
         // connect to server
         clientSocket = ioc(CHAT_SERVER_URL);
 
