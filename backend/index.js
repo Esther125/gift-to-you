@@ -66,6 +66,6 @@ const PORT = process.env.PORT;
 httpServer.listen(PORT, () => {
     logWithFileInfo('info', `Server is running on port ${PORT}`);
     // Error example log:
-    // const exampleError = new Error('This is an example error log');
-    // logWithFileInfo('error', 'An example error occurred', exampleError);
+    const exampleError = new Error('This is an example error log');
+    logWithFileInfo('error', 'An example error occurred', exampleError);
 });
