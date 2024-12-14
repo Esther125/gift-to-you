@@ -3,6 +3,7 @@ import { ref, reactive, watchEffect, nextTick, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { useGlobalStore } from '@/stores/globals.js';
 import { useRoute, useRouter } from 'vue-router';
+import uploadModal from './Modals/uploadModal.vue';
 
 const store = useGlobalStore();
 const route = useRoute();
@@ -19,69 +20,7 @@ const switchBtnText = computed(() => {
   return showChat.value ? "See Files" : "See Chat";
 });
 
-// data to test whether the layout will broken or not
-const files = reactive([
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    },
-    {
-        sender: "000000",
-        fileName: "text1.txt",
-        timestamp: "09:00"
-    }
-])
+const files = reactive([])
 
 watchEffect(async () => {
     // 如果沒有 roomToken 或 user.id，直接退出
@@ -212,7 +151,13 @@ onMounted(async () => {
             <div class="row d-flex justify-content-center">
                 <div class="col-auto d-flex align-items-center mb-3" v-for="(userId, index) in store.members">
                     <!-- computer card -->
-                    <div class="card bg-transparent border-0 text-center" style="width: 120px">
+                    <div 
+                        class="card bg-transparent border-0 text-center"
+                        style="width: 120px"
+                        data-bs-toggle="modal"
+                        v-if="userId !== store.user.id"
+                        data-bs-target="#uploadModal"
+                    >
                         <!-- icon -->
                         <div class="card-body d-flex justify-content-center align-items-center p-0">
                             <i class="bi bi-laptop display-1 p-0 icon"></i>
@@ -283,6 +228,11 @@ onMounted(async () => {
             </div>
         </div>
     </div>
+
+    <!-- uploadModal -->
+    <uploadModal
+        :showUploadModal="showUploadModal"
+    />
 </template>
 
 <style scoped>
