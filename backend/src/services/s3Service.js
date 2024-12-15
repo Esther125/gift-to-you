@@ -109,7 +109,7 @@ class S3Service {
         const params = {
             Bucket: this._bucket,
             Prefix: prefix,
-            MaxKeys: 5, // 最多顯示 5 筆
+            MaxKeys: 10, // 最多顯示 10 筆
             ContinuationToken: lastKey // 根據 key 查後續筆數
         };
 
