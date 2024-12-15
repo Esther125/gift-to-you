@@ -78,6 +78,7 @@ class ChatService {
         if (roomExist) {
             // 加入聊天室
             socket.join(roomToken);
+            socket.roomToken = roomToken;
 
             // 通知 room 內其他人
             this._sendRoomNotify(socket, roomToken, userID, 'join');
@@ -205,6 +206,11 @@ class ChatService {
         const userID = socket.handshake.auth?.user?.id || null;
         if (userID) {
             console.log(`[chatService] user ${userID} disconnect with /chat websocket server because of ${reason}`);
+
+            if (socket.roomToken !== undefined) {
+                // 通知 room 內其他人
+                this._sendRoomNotify(socket, socket.roomToken, userID, 'leave');
+            }
         } else {
             console.log(
                 `[chatService] user with missing userID disconnect with /chat websocket server because of ${reason}`

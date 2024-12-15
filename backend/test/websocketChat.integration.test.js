@@ -539,6 +539,23 @@ describe('Test: other (after joining chatroom)', () => {
         });
     });
 
+    describe('Test: notify when room member disconnect', () => {
+        it('notify when room member disconnect', async () => {
+            clientSocket2.disconnect();
+
+            await new Promise((resolve, reject) => {
+                clientSocket3.on('room notify', (res) => {
+                    console.log(res);
+                    expect(res.event).to.be.equal('room notify');
+                    expect(res.roomToken).to.be.equal(client2_3RoomToken);
+                    expect(res.userID).to.be.equal('0002');
+                    expect(res.type).to.be.equal('leave');
+                    resolve();
+                });
+            });
+        });
+    });
+
     describe('Test: invalid event', () => {
         it('Test: invalid event', (done) => {
             clientSocket2.emit('xxxxxxxx');
