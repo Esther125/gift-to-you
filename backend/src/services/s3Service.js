@@ -52,7 +52,7 @@ class S3Service {
             console.error("[S3Service] Upload Failed:", err.message);
             throw err;
         }
-    }
+    };
 
     generatePresignedUrl = async (filename, type, id) => {
         console.log(`[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`);
@@ -78,7 +78,7 @@ class S3Service {
             console.log("[S3Service] Failed to generate presigned URL:", err.message)
             throw err;
         }
-    }
+    };
 
     // 轉換檔案大小顯示
     _formatFileSize = (bytes) => {
@@ -122,39 +122,22 @@ class S3Service {
                 return { files: [], lastKey: null };
             }
 
-            const fileList = await Promise.all(
-                listData.Contents.map(async (item) => {
-                    const headParams = {
-                        Bucket: this._bucket,
-                        Key: item.Key,
-                    };
+            const fileList = listData.Contents.map((item) => {
+                const originalName = item.Key.split("/").pop();
+                // 分 uniqueId 跟 Filename
+                const [uniqueId, encodedFilename] = originalName.split("_");
+                // decode Filename to original filename
+                const decodedFilename = decodeURIComponent(encodedFilename);
 
-                    try {
-                        const headCommand = new HeadObjectCommand(headParams);
-                        const headData = await this._s3.send(headCommand);
+                const formattedSize = this._formatFileSize(item.Size);
 
-                        // 確認 metadata 是否存在
-                        if (!headData.Metadata || !headData.Metadata.originalname) {
-                            const metadataError = new Error(`Metadata missing for file: ${item.Key}`);
-                            logWithFileInfo('error', `Failed to fetch metadata for file: ${item.Key}`, metadataError);
-                            throw metadataError; 
-                        }
-                        
-                        // 轉換檔案大小顯示
-                        const formattedSize = this._formatFileSize(item.Size);
-
-                        return {
-                            originalName: headData.Metadata.originalname, // 原始檔案名稱
-                            filename: item.Key.split('/').pop(), // 上傳的檔案名稱
-                            size: formattedSize, // 檔案大小
-                            lastModified: item.LastModified, // 最後修改時間
-                        };
-                    } catch (err) {
-                        logWithFileInfo('error',`Failed to fetch metadata for file: ${item.Key}`,err);
-                        throw err
-                    }
-                })
-            );
+                return {
+                    originalName: originalName, // 原始檔案名稱
+                    filename: decodedFilename, // 上傳的檔案名稱
+                    size: formattedSize, // 檔案大小
+                    lastModified: item.LastModified, // 最後修改時間
+                };
+            });
 
             logWithFileInfo("info", `[File List Success] Fetched ${fileList.length} files for user: ${userId}`);
             return {
@@ -165,7 +148,7 @@ class S3Service {
             logWithFileInfo('error', `Failed to fetch file list for user: ${userId}`, err);
             throw err;
         }        
-    }
+    };
 }
 
 export default S3Service;
