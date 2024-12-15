@@ -53,7 +53,7 @@ class S3Service {
             console.error("[S3Service] Upload Failed:", err.message);
             throw err;
         }
-    }
+    };
 
     generatePresignedUrl = async (filename, type, id) => {
         console.log(`[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`);
@@ -79,7 +79,7 @@ class S3Service {
             console.log("[S3Service] Failed to generate presigned URL:", err.message)
             throw err;
         }
-    }
+    };
 }
 
 export default S3Service;
