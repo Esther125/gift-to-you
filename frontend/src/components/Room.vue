@@ -7,7 +7,7 @@ import { useRoute, useRouter } from 'vue-router';
 const store = useGlobalStore();
 const route = useRoute();
 const router = useRouter();
-const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
+const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
 
 const messagesContainer = ref(null); // for scroll down when new message add
 const messageInput = ref('');
@@ -92,7 +92,7 @@ watchEffect(async () => {
         const needJoinRoom = route.query.needJoinRoom
 
         if (needJoinRoom !== 'false') {
-            const { data } = await axios.post(`${apiUrl}/rooms/${store.roomToken}/join`, { user: store.user });
+            const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/join`, { user: store.user });
             // 更新 store 的數據
             if (data.members.length !== 0) {
                 store.members = data.members;
@@ -297,6 +297,7 @@ onMounted(async () => {
 .chat-room {
     background-color: var(--color-background-soft);
     max-height: 100%;
+    z-index: 1;
 }
 
 .chat-box {
