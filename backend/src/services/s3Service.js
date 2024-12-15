@@ -122,22 +122,26 @@ class S3Service {
                 return { files: [], lastKey: null };
             }
 
-            const fileList = listData.Contents.map((item) => {
-                const originalName = item.Key.split("/").pop();
-                // 分 uniqueId 跟 Filename
-                const [uniqueId, encodedFilename] = originalName.split("_");
-                // decode Filename to original filename
-                const decodedFilename = decodeURIComponent(encodedFilename);
+            const fileList = await Promise.all(
+                listData.Contents.map(async (item) => {
+                    const originalName = item.Key.split("/").pop();
+                    // 分 uniqueId 跟 Filename
+                    const [uniqueId, encodedFilename] = originalName.split("_");
+                    // decode Filename to original filename
+                    const decodedFilename = decodeURIComponent(encodedFilename);
+                    const formattedSize = this._formatFileSize(item.Size);
 
-                const formattedSize = this._formatFileSize(item.Size);
+                    const presignedUrl = await this.generatePresignedUrl(originalName, "user", userId);
 
-                return {
-                    originalName: originalName, // 原始檔案名稱
-                    filename: decodedFilename, // 上傳的檔案名稱
-                    size: formattedSize, // 檔案大小
-                    lastModified: item.LastModified, // 最後修改時間
-                };
-            });
+                    return {
+                        originalName: originalName, // 原始檔案名稱
+                        filename: decodedFilename, // 上傳的檔案名稱
+                        size: formattedSize, // 檔案大小
+                        lastModified: item.LastModified, // 最後修改時間
+                        url: presignedUrl
+                    };
+                })
+            );
 
             logWithFileInfo("info", `[File List Success] Fetched ${fileList.length} files for user: ${userId}`);
             return {
