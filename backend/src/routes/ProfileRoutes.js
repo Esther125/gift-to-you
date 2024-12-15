@@ -6,6 +6,5 @@ const profileController = new ProfileController();
 
 // 定義路由
 profileRouter.get('/staging-area/:userId', profileController.getStagingFile);
-profileRouter.get('/history', profileController.getFileHistory);
 
 export default profileRouter;
