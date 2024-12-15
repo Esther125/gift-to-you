@@ -40,7 +40,7 @@ class InternetFileService {
             const fileHash = this._calculateFileHash(fileBuffer);
 
             // 從 Redis 檢查 hash 是否已存在
-            const cachedFile = await redisClient.get(fileHash);
+            const cachedFile = await redisClient.get(`fileHash:${fileHash}`);
 
             let fullFilename;
             if (cachedFile) {
@@ -57,7 +57,7 @@ class InternetFileService {
 
                 // 把新的 hash 值存入 Redis
                 await redisClient.set(`fileHash:${fileHash}`, fullFilename);
-                await redisClient.setExpire(fileHash, 3600 * 24 * 30); // 30 天後過期
+                await redisClient.setExpire(`fileHash:${fileHash}`, 3600 * 24 * 30); // 30 天後過期
                 logWithFileInfo('info', `File saved as ${fullFilename}`);
             }
             return fullFilename;
