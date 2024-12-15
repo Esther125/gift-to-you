@@ -56,7 +56,7 @@ class InternetFileService {
                 await fs.promises.writeFile(filePath, fileBuffer);
 
                 // 把新的 hash 值存入 Redis
-                await redisClient.set(fileHash, fullFilename);
+                await redisClient.set(`fileHash:${fileHash}`, fullFilename);
                 await redisClient.setExpire(fileHash, 3600 * 24 * 30); // 30 天後過期
                 logWithFileInfo('info', `File saved as ${fullFilename}`);
             }
