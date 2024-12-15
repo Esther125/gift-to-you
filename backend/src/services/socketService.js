@@ -1,3 +1,4 @@
+import redisClient from '../clients/redisClient.js';
 class SocketService {
     systemMessage = (socket, stage, status, content = null) => {
         // 回傳處理結果通知給 client 用
@@ -31,11 +32,23 @@ class SocketService {
         this.systemMessage(socket, stage, 'fail', msg);
     };
 
-    connect = (socket, userID) => {
+    connect = async (socket, userID) => {
         console.log(`[socketService] user ${userID} ask to connect to /socket websocket server`);
 
         // 加入以 userID 命名的聊天室
         socket.join(userID);
+
+        // 判斷以前是不是有加入過房間了
+        try {
+            await redisClient.connect();
+            const roomToken = await redisClient.get(`userId:${userID}`);
+            if (roomToken !== null && this._checkUserInRoom(socket, userID, roomToken) === false) {
+                console.log(`[socketService] add user ${userID} back to room ${roomToken}`);
+                this.joinChatroom(socket, roomToken);
+            }
+        } catch (err) {
+            console.log(`[socketService] error when add user ${userID} back to original room`, err);
+        }
 
         // 回傳處理結果通知
         this.systemMessage(socket, 'connect', 'success', 'success');
@@ -89,7 +102,7 @@ class SocketService {
         } else {
             // 回傳處理結果通知
             this.systemMessage(socket, 'join chatroom', 'fail');
-            console.log(`[socketService] user ${userID} can not join non existed room ${roomToken}`);
+            console.log(`[socketService] user ${userID} can not join non-existed room ${roomToken}`);
         }
     };
 
