@@ -39,9 +39,6 @@ class S3Service {
             Bucket: this._bucket,
             Key: key,
             Body: fileStream,
-            Metadata: {
-                originalName: file.name, // let metadata is origin file name
-            },
         };
 
         try {
