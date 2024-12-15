@@ -9,8 +9,8 @@ const testUpload = async () => {
     };
 
     const mockFilename = 'unique-test-file.txt'; // 上傳到 S3 的檔案名稱
-    const mockUserId = '12345'; // user ID
-    const mockRoomId = '12345'; // room ID
+    const mockUserId = '12346'; // user ID
+    const mockRoomId = '12346'; // room ID
 
     try {
         // user
