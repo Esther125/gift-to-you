@@ -10,15 +10,19 @@ class ProfileController {
     getStagingFile = async (req, res) => {
         logWithFileInfo('info', '----ProfileController.getStagingFile');
 
-        const userId = req.params.userId;
+        const { userId, lastKey} = req.body;
 
         try {
-            const fileList = await this.s3Service.getFileList(userId);
-            if (fileList.length === 0) {
+            const { files, lastKey: nextLastKey } = await this.s3Service.getFileList(userId, lastKey);
+
+            if (files.length === 0) {
                 return res.status(404).json({ message: 'No files found for this user.' });
             }
             
-            return res.status(200).json({ file: fileList });
+            return res.status(200).json({ 
+                file: files,
+                lastKey: nextLastKey,
+             });
         } catch (error) {
             logWithFileInfo('error', 'Error fetching staging file:', error.message);
             return res.status(500).json({ message: 'Failed to fetch staging files.', error: error.message });
