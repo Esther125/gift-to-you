@@ -141,7 +141,7 @@ class S3Service {
             logWithFileInfo("info", `[File List Success] Fetched ${fileList.length} files for user: ${userId}`);
             return {
                 files: fileList, 
-                lastKey: listData.NextContinuationToken || null 
+                lastKey: encodeURIComponent(listData.NextContinuationToken) || null 
             };
         } catch (err) {
             logWithFileInfo('error', `Failed to fetch file list for user: ${userId}`, err);
