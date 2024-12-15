@@ -97,7 +97,7 @@ class S3Service {
         return `${size.toFixed(2)} ${units[unitIndex]}`;
     };
 
-    getFileList = async (userId) => {
+    getFileList = async (userId, lastKey = null) => {
         logWithFileInfo('info', '----S3server.getFileList');
 
         if (!userId) {
@@ -112,6 +112,8 @@ class S3Service {
         const params = {
             Bucket: this._bucket,
             Prefix: prefix,
+            MaxKeys: 5, // 最多顯示 5 筆
+            ContinuationToken: lastKey // 根據 key 查後續筆數
         };
 
         try {
@@ -120,7 +122,7 @@ class S3Service {
 
             if (!listData.Contents || listData.Contents.length === 0) {
                 logWithFileInfo('info', `[File List Success] No files found for user: ${userId}`);
-                return [];
+                return { files: [], lastKey: null };
             }
 
             const fileList = await Promise.all(
@@ -158,7 +160,10 @@ class S3Service {
             );
 
             logWithFileInfo("info", `[File List Success] Fetched ${fileList.length} files for user: ${userId}`);
-            return fileList;
+            return {
+                files: fileList, 
+                lastKey: listData.NextContinuationToken || null 
+            };
         } catch (err) {
             logWithFileInfo('error', `Failed to fetch file list for user: ${userId}`, err);
             throw err;
