@@ -54,7 +54,7 @@ class S3Service {
         }
     };
 
-    generatePresignedUrl = async (filename, type, id) => {
+    _generatePresignedUrl = async (filename, type, id) => {
         console.log(`[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`);
 
         // S3 file key
@@ -131,7 +131,7 @@ class S3Service {
                     const decodedFilename = decodeURIComponent(encodedFilename);
                     const formattedSize = this._formatFileSize(item.Size);
 
-                    const presignedUrl = await this.generatePresignedUrl(originalName, "user", userId);
+                    const presignedUrl = await this._generatePresignedUrl(originalName, "user", userId);
 
                     return {
                         originalName: originalName, // 原始檔案名稱
