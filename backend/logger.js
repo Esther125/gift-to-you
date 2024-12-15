@@ -3,7 +3,7 @@ import path from 'path';
 import chalk from 'chalk';
 const { format, transports } = winston;
 
-// 自定義格式
+// 自定義 console output 格式
 const normalFormat = format.printf(({ timestamp, level, message }) => {
     const regex = /\(.*?\)/g;
     const formattedMessage = message.replace(regex, (match) => chalk.cyanBright(match));
@@ -15,6 +15,15 @@ const errorFormat = format.printf(({ timestamp, level, message, error }) => {
     const formattedMessage = message.replace(regex, (match) => chalk.cyanBright(match));
     const formattedStack = error?.stack ? `\n${chalk.red(error.stack)}` : '';
     return `${timestamp} [${level}]: ${formattedMessage} ${formattedStack}`;
+});
+
+// 自定義 output log file 的格式 (不包含顏色)
+const LogFileFormat = format.printf(({ timestamp, level, message }) => {
+    return `${timestamp} [${level}]: ${message} `;
+});
+
+const ErrorLogFileFormat = format.printf(({ timestamp, level, message, error }) => {
+    return `${timestamp} [${level}]: ${message} ${error.stack || ''}`;
 });
 
 const infoLogger = winston.createLogger({
@@ -32,7 +41,7 @@ const infoLogger = winston.createLogger({
         // output log to file
         new transports.File({
             filename: 'logs/app.log',
-            format: format.combine(format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), normalFormat),
+            format: format.combine(format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), LogFileFormat),
         }),
     ],
 });
@@ -52,13 +61,13 @@ const errorLogger = winston.createLogger({
         // output log to file
         new transports.File({
             filename: 'logs/app.log',
-            format: format.combine(format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), errorFormat),
+            format: format.combine(format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), ErrorLogFileFormat),
         }),
         // error log 再獨立出來一份方便 debug
         new transports.File({
             filename: 'logs/error.log',
             level: 'error',
-            format: format.combine(format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), errorFormat),
+            format: format.combine(format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }), ErrorLogFileFormat),
         }),
     ],
 });
