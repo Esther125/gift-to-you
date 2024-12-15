@@ -46,8 +46,8 @@ class SocketController {
             const fileId = payload?.fileId || null;
             const roomToken = payload?.roomToken || null;
             const receiverID = payload?.receiverID || null;
-            if (roomToken === null) {
-                this.socketService.eventWithMissingValues(socket, 'request transfer', { roomToken });
+            if (fileId === null || roomToken === null) {
+                this.socketService.eventWithMissingValues(socket, 'request transfer', { fileId, roomToken });
             } else {
                 this.socketService.requestTransfer(socket, fileId, roomToken, receiverID, socketNameSpace);
             }

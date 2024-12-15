@@ -111,6 +111,7 @@
             ```js
             {
                 event: 'transfer notify',
+                fileId,
                 roomToken,
                 senderID,
                 timestamp: new Date().toISOString(),
