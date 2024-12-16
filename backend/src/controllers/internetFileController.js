@@ -61,9 +61,9 @@ class InternetFileController {
     deleteAllFiles = async (req, res) => {
         logWithFileInfo('info', '----InternetFileController.deleteAllFiles');
         try {
-            await this.internetFileService.deleteAllFiles();
+            const response = await this.internetFileService.deleteAllFiles();
             logWithFileInfo('info', 'All files deleted successfully.');
-            res.send({ message: 'All files deleted successfully.' });
+            res.send(response);
         } catch (error) {
             logWithFileInfo('error', 'Error deleting all the files.', error);
             res.status(500).send({ message: 'Failed to delete all the files.', error: error.message });

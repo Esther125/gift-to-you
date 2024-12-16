@@ -130,6 +130,25 @@ class RedisClient {
             throw err;
         }
     };
+
+    deleteByPattern = async (pattern) => {
+        let cursor = 0;
+        do {
+            try {
+                const reply = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', '100');
+                cursor = reply['cursor'];
+                const keys = reply['keys'];
+
+                if (keys.length > 0) {
+                    await this.client.del(keys);
+                    logWithFileInfo('info', `[RedisClient] Deleted keys: ${keys.join(', ')}`);
+                }
+            } catch (err) {
+                logWithFileInfo('error', `[RedisClient] Error flushing keys by pattern ${pattern}`, err);
+                throw err;
+            }
+        } while (cursor !== 0);
+    };
 }
 
 const redisClient = new RedisClient();

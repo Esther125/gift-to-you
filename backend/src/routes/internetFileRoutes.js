@@ -31,7 +31,7 @@ internetFileRouter.post(
     multerErrorHandling
 );
 internetFileRouter.get('/:userId/download/:way/:fileId', internetFileController.download);
-internetFileRouter.delete('/delete/:fileId', internetFileController.deleteFile);
+internetFileRouter.delete('/delete/file/:fileId', internetFileController.deleteFile);
 internetFileRouter.delete('/delete/all-files', internetFileController.deleteAllFiles);
 
 export default internetFileRouter;
