@@ -128,7 +128,7 @@ class InternetFileService {
         await fs.promises.unlink(filePath);
         // 刪除 Redis 中的 hash 紀錄
         await redisClient.connect();
-        await redisClient.del(`fileHash:${fileId}`);
+        await redisClient.deleteHashByFileId(fileId);
         const response = { message: 'File deleted successfully' };
         return response;
     };
