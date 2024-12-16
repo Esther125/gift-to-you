@@ -42,7 +42,7 @@ expected response structure
     }
 */
 
-const CHAT_SERVER_URL = `http://localhost:3000/chat`;
+const CHAT_SERVER_URL = `http://localhost:3000/socket`;
 const AUTH_OPTIONS = (userID) => ({
     auth: {
         user: {
@@ -51,7 +51,7 @@ const AUTH_OPTIONS = (userID) => ({
     },
 });
 
-describe('Test: connect and disconnect to server for /chat', () => {
+describe('Test: connect and disconnect to server for /socket', () => {
     let clientSocket;
 
     afterEach(async () => {
@@ -63,7 +63,7 @@ describe('Test: connect and disconnect to server for /chat', () => {
         });
     });
 
-    it('Test: connect and disconnect to server for /chat (with correct connection format)', (done) => {
+    it('Test: connect and disconnect to server for /socket (with correct connection format)', (done) => {
         // connect to server
         clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS('0001'));
 
@@ -77,7 +77,7 @@ describe('Test: connect and disconnect to server for /chat', () => {
         });
     });
 
-    it('Test: connect and disconnect to server for /chat (with wrong connection format, without auth)', (done) => {
+    it('Test: connect and disconnect to server for /socket (with wrong connection format, without auth)', (done) => {
         // connect to server
         clientSocket = ioc(CHAT_SERVER_URL);
 
@@ -286,6 +286,7 @@ describe('Test: other (after joining chatroom)', () => {
         it('Test: request transfer (對象: user + receiver 有存在該 room 內)', async () => {
             clientSocket2.emit('request transfer', {
                 roomToken: client2_3RoomToken,
+                fileId: '12345',
                 receiverID: '0003',
             }); // user 0002 和 0003 都在 room client2_3RoomToken = 'ABCDE'
 
@@ -317,6 +318,7 @@ describe('Test: other (after joining chatroom)', () => {
         it('Test: request transfer (對象: user + receiver 不存在該 room 內)', (done) => {
             clientSocket2.emit('request transfer', {
                 roomToken: client2_3RoomToken,
+                fileId: '12345',
                 receiverID: '0005',
             }); // userID 0005 的 user 在 room client5RoomToken = 'OPELG'
 
@@ -333,6 +335,7 @@ describe('Test: other (after joining chatroom)', () => {
         it('Test: request transfer (對象: user + 傳給自己)', (done) => {
             clientSocket2.emit('request transfer', {
                 roomToken: client2_3RoomToken,
+                fileId: '12345',
                 receiverID: '0002',
             }); // user 0002 和 0003 都在 room client2_3RoomToken = 'ABCDE'
 
@@ -348,6 +351,7 @@ describe('Test: other (after joining chatroom)', () => {
 
         it('Test: request transfer (對象: room + sender 有在該 room 內)', async () => {
             clientSocket2.emit('request transfer', {
+                fileId: '12345',
                 roomToken: client2_3RoomToken,
             });
 
@@ -379,6 +383,7 @@ describe('Test: other (after joining chatroom)', () => {
 
         it('Test: request transfer (sender 不在該 room 中)', (done) => {
             clientSocket2.emit('request transfer', {
+                fileId: '12345',
                 roomToken: client5RoomToken,
             });
 
@@ -533,6 +538,23 @@ describe('Test: other (after joining chatroom)', () => {
                     expect(res.message.stage).to.be.equal('leave chatroom');
                     expect(res.message.status).to.be.equal('fail');
                     expect(res.message.content).to.be.equal(`roomToken required`);
+                    resolve();
+                });
+            });
+        });
+    });
+
+    describe('Test: notify when room member disconnect', () => {
+        it('notify when room member disconnect', async () => {
+            clientSocket2.disconnect();
+
+            await new Promise((resolve, reject) => {
+                clientSocket3.on('room notify', (res) => {
+                    console.log(res);
+                    expect(res.event).to.be.equal('room notify');
+                    expect(res.roomToken).to.be.equal(client2_3RoomToken);
+                    expect(res.userID).to.be.equal('0002');
+                    expect(res.type).to.be.equal('leave');
                     resolve();
                 });
             });
