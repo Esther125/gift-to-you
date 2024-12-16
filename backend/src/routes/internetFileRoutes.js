@@ -32,5 +32,6 @@ internetFileRouter.post(
 );
 internetFileRouter.get('/:userId/download/:way/:fileId', internetFileController.download);
 internetFileRouter.delete('/delete/:fileId', internetFileController.deleteFile);
+internetFileRouter.delete('/delete/all-files', internetFileController.deleteAllFiles);
 
 export default internetFileRouter;

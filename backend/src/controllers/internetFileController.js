@@ -44,7 +44,8 @@ class InternetFileController {
     deleteFile = async (req, res) => {
         logWithFileInfo('info', '----InternetFileController.deleteFile');
         try {
-            await this.internetFileService.deleteFile(req, res);
+            const response = await this.internetFileService.deleteFile(req, res);
+            res.send(response);
             logWithFileInfo('info', 'File deleted successfully.');
         } catch (error) {
             logWithFileInfo('error', 'Error deleting file. ', error);
@@ -54,6 +55,18 @@ class InternetFileController {
             } else {
                 res.status(500).send(errorMsg);
             }
+        }
+    };
+
+    deleteAllFiles = async (req, res) => {
+        logWithFileInfo('info', '----InternetFileController.deleteAllFiles');
+        try {
+            await this.internetFileService.deleteAllFiles();
+            logWithFileInfo('info', 'All files deleted successfully.');
+            res.send({ message: 'All files deleted successfully.' });
+        } catch (error) {
+            logWithFileInfo('error', 'Error deleting all the files.', error);
+            res.status(500).send({ message: 'Failed to delete all the files.', error: error.message });
         }
     };
 }
