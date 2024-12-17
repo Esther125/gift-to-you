@@ -94,12 +94,12 @@ class RoomsController {
             token = req.params.roomToken;
 
             if (!user) {
-                logWithFileInfo('error', '[RoomsController] Error when joining room - User object is required');
+                logWithFileInfo('error', '[RoomsController] Error when leaving room - User object is required');
                 return res.status(400).json({ message: 'User object is required' });
             }
 
             if (!user.id || user.id.length === 0) {
-                logWithFileInfo('error', '[RoomsController] Error when joining room - User id is required');
+                logWithFileInfo('error', '[RoomsController] Error when leaving room - User id is required');
                 return res.status(400).json({ message: 'User id is required' });
             }
 
