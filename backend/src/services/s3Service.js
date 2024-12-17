@@ -52,7 +52,7 @@ class S3Service {
         }
     };
 
-    _generatePresignedUrl = async (filename, type, id) => {
+    generatePresignedUrl = async (filename, type, id) => {
         console.log(`[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`);
 
         // S3 file key
