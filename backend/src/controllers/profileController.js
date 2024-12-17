@@ -11,7 +11,7 @@ class ProfileController {
         logWithFileInfo('info', '----ProfileController.getStagingFile');
 
         const { userId, lastKey} = req.query;
-
+        
         try {
             const { files, lastKey: nextLastKey } = await this.s3Service.getFileList(userId, lastKey);
 

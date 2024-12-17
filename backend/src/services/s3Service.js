@@ -76,7 +76,76 @@ class S3Service {
             console.log('[S3Service] Failed to generate presigned URL:', err.message);
             throw err;
         }
-    }
+    };
+
+    // 轉換檔案大小顯示
+    _formatFileSize = (bytes) => {
+        const units = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        let size = bytes;
+        let unitIndex = 0;
+    
+        while (size >= 1024 && unitIndex < units.length - 1) {
+            size /= 1024;
+            unitIndex++;
+        }
+    
+        return `${size.toFixed(2)} ${units[unitIndex]}`;
+    };
+
+    getFileList = async (userId, lastKey = null) => {
+        logWithFileInfo('info', '----S3server.getFileList');
+
+        if (!userId) {
+            const userIderror = new Error("User ID is required to fetch the file list");
+            logWithFileInfo('error', 'Failed to fetch file list: Missing User ID', userIderror);
+            throw userIderror;
+        }
+
+        const prefix = `user/${userId}/`; 
+        logWithFileInfo('info', `Fetching file list for user: ${userId}, prefix: ${prefix}`);
+
+        const params = {
+            Bucket: this._bucket,
+            Prefix: prefix,
+            MaxKeys: 10, // 最多顯示 10 筆
+            ContinuationToken: lastKey // 根據 key 查後續筆數
+        };
+
+        try {
+            const listCommand = new ListObjectsV2Command(params);
+            const listData = await this._s3.send(listCommand);
+
+            if (!listData.Contents || listData.Contents.length === 0) {
+                logWithFileInfo('info', `[File List Success] No files found for user: ${userId}`);
+                return { files: [], lastKey: null };
+            }
+
+            const fileList = listData.Contents.map((item) => {
+                    const originalName = item.Key.split("/").pop();
+                    // 分 uniqueId 跟 Filename
+                    const [uniqueId, encodedFilename] = originalName.split("_");
+                    // decode Filename to original filename
+                    const decodedFilename = decodeURIComponent(encodedFilename);
+                    const formattedSize = this._formatFileSize(item.Size);
+
+                    return {
+                        originalName: originalName, // 原始檔案名稱
+                        filename: decodedFilename, // 上傳的檔案名稱
+                        size: formattedSize, // 檔案大小
+                        lastModified: item.LastModified // 最後修改時間
+                    };
+                });
+
+            logWithFileInfo("info", `[File List Success] Fetched ${fileList.length} files for user: ${userId}`);
+            return {
+                files: fileList, 
+                lastKey: encodeURIComponent(listData.NextContinuationToken) || null 
+            };
+        } catch (err) {
+            logWithFileInfo('error', `Failed to fetch file list for user: ${userId}`, err);
+            throw err;
+        }        
+    };
 }
 
 export default S3Service;
