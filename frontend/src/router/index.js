@@ -40,16 +40,17 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-    if (to.meta.requireAuth) {
-        try {
-            await api.get('/auth-check');
-        } catch (error) {
-            if (!error.response || error.response.status !== 401) {
-                next(false);
-            }
-        }
+    if (!to.meta.requireAuth) {
+        next();
+        return;
     }
-    next();
+
+    try {
+        await api.get('/auth-check', { params: { toPath: to.path } });
+        next();
+    } catch (error) {
+        next(false);
+    }
 });
 
 export default router;

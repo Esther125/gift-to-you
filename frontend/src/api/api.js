@@ -12,7 +12,8 @@ api.interceptors.response.use(
     },
     (error) => {
         if (error.response && error.response.status === 401) {
-            window.dispatchEvent(new CustomEvent('show-login-modal'));
+            const toPath = error.response.config?.params?.toPath || '/';
+            window.dispatchEvent(new CustomEvent('show-login-modal', { detail: { toPath } }));
             return new Promise(() => {});
         }
         return Promise.reject(error);

@@ -8,6 +8,9 @@ const password = ref();
 const loginStatus = ref('default');
 
 const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
+const toPath = ref('');
+
+let modalInstance;
 
 const loginHandler = async () => {
     try {
@@ -17,20 +20,29 @@ const loginHandler = async () => {
             { withCredentials: true }
         );
         loginStatus.value = 'success';
+        setTimeout(() => {
+            modalInstance.hide();
+
+            if (window.location.pathname !== toPath.value && toPath.value !== '/logout') {
+                window.location.href = toPath.value;
+            }
+        }, 3000);
     } catch (error) {
         console.error('Error login: ', error);
         loginStatus.value = 'fail';
+        setTimeout(() => {
+            loginStatus.value = 'default';
+        }, 3000);
     }
 };
-
-let modalInstance;
 
 const initModal = () => {
     const modalElement = document.getElementById('loginModal');
     modalInstance = new bootstrap.Modal(modalElement);
 };
 
-const showModal = () => {
+const showModal = (event) => {
+    toPath.value = event.detail.toPath;
     if (modalInstance) {
         loginStatus.value = 'default';
         modalInstance.show();
@@ -40,10 +52,13 @@ const showModal = () => {
 onMounted(() => {
     initModal();
     window.addEventListener('show-login-modal', showModal);
+
     const modalElement = document.getElementById('loginModal');
     if (modalElement) {
         modalElement.addEventListener('hidden.bs.modal', () => {
-            window.location.href = '/';
+            if (window.location.pathname !== '/') {
+                window.location.href = '/';
+            }
         });
     }
 });
@@ -67,8 +82,17 @@ onMounted(() => {
                             <input id="password" class="w-75" type="password" v-model="password" required />
                         </div>
                         <button type="submit" class="btn btn-primary" v-if="loginStatus === 'default'">登入</button>
-                        <p class="text-success" v-else-if="loginStatus === 'success'">登入成功</p>
-                        <p class="text-danger" v-else-if="loginStatus === 'fail'">登入失敗</p>
+                        <div
+                            class="text-success d-flex gap-2 justify-content-center"
+                            v-else-if="loginStatus === 'success'"
+                        >
+                            <i class="bi bi-check-circle"></i>
+                            <span>登入成功</span>
+                        </div>
+                        <div class="text-danger d-flex gap-2 justify-content-center" v-else-if="loginStatus === 'fail'">
+                            <i class="bi bi-x-circle"></i>
+                            <span>登入失敗</span>
+                        </div>
                     </form>
                     <div class="m-3 d-flex justify-content-around">
                         <a href="\register" class="text-secondary">立即註冊</a>
