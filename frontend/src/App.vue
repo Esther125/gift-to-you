@@ -110,6 +110,7 @@ const clearData = () => {
     store.members = [];
     sessionStorage.removeItem('roomToken');
     sessionStorage.removeItem('qrCodeSrc');
+    sessionStorage.removeItem('messages');
 }
 
 const AUTH_OPTIONS = (userID) => ({
