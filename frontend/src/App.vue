@@ -91,7 +91,7 @@ onBeforeUnmount(() => {
                         </li>
                         <li>
                             <RouterLink to="/logout" class="dropdown-item">
-                                <i class="bi bi-box-arrow-left h5 icon"></i> Logout
+                                <i class="bi bi-door-open h5 icon"></i> Login / Logout
                             </RouterLink>
                         </li>
                     </ul>

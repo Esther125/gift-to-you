@@ -18,7 +18,7 @@ import chatRouter from './src/routes/chatRouter.js';
 const app = express();
 app.use(
     cors({
-        origin: process.env.FE_SOURCE,
+        origin: process.env.FRONTEND_BASE_URL,
         credentials: true,
     })
 );
