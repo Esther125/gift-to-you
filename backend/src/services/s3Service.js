@@ -22,7 +22,6 @@ class S3Service {
         console.log(`[S3Service] uploadFile() called with type: ${type}, id: ${id}, filename: ${filename}`);
 
         const key = this._generateS3Key(type, id, filename); // S3 file key
-
         // 驗證檔案是否存在
         if (!fs.existsSync(file.tempFilePath)) {
             throw new Error(`[S3Service] File not found: ${file.tempFilePath}`);

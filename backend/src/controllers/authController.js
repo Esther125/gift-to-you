@@ -15,7 +15,7 @@ class AuthController {
     };
 
     register = async (req, res) => {
-        logWithFileInfo('info', '----- register -----');
+        logWithFileInfo('info', '-----register-----');
         const { userID, email, password, userName } = req.body;
         if (!userID || !email || !password || !userName) {
             this._reqWithMissingValue(res, { userID, email, password, userName });
@@ -36,7 +36,7 @@ class AuthController {
     };
 
     login = async (req, res) => {
-        logWithFileInfo('info', '----- login -----');
+        logWithFileInfo('info', '-----login-----');
         const { email, password } = req.body;
         if (!email || !password) {
             this._reqWithMissingValue(res, { email, password });
@@ -59,7 +59,7 @@ class AuthController {
     };
 
     logout = async (req, res) => {
-        logWithFileInfo('info', '----- logout -----');
+        logWithFileInfo('info', '-----logout-----');
         res.clearCookie('accessToken');
         res.clearCookie('refreshToken');
         logWithFileInfo('info', `user ${req.user.userID} logout`);

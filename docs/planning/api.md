@@ -42,7 +42,7 @@
 -   建立連線：
 
     ```js
-    const socket = io(`${serverURL}/chat`, {
+    const socket = io(`${serverURL}/socket`, {
         auth: {
             user: {
                 id: userID;
@@ -111,6 +111,7 @@
             ```js
             {
                 event: 'transfer notify',
+                fileId,
                 roomToken,
                 senderID,
                 timestamp: new Date().toISOString(),
