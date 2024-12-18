@@ -1,8 +1,11 @@
 <script setup>
 import { ref } from 'vue';
+import { useGlobalStore } from '../stores/globals.js';
 import axios from 'axios';
 
-const userID = ref();
+const store = useGlobalStore();
+
+const userID = store.user.id;
 const userName = ref();
 const email = ref();
 const password = ref();
@@ -11,22 +14,12 @@ const registerStatus = ref('default');
 
 const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
 
-const getUserID = async () => {
-    try {
-        const response = await axios.get(apiUrl + '/');
-        userID.value = response.data.userId;
-    } catch (error) {
-        console.error('Error getting userID: ', error);
-    }
-};
-
 const registerHandler = async () => {
     try {
-        await getUserID();
         const response = await axios.post(
             apiUrl + '/register',
             {
-                userID: userID.value,
+                userID: userID,
                 email: email.value,
                 password: password.value,
                 userName: userName.value,

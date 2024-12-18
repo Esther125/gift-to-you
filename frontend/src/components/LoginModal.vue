@@ -1,30 +1,61 @@
 <script setup>
 import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useGlobalStore } from '../stores/globals.js';
 import * as bootstrap from 'bootstrap';
 import axios from 'axios';
+import { io as ioc } from 'socket.io-client';
 
-const email = ref();
-const password = ref();
+const store = useGlobalStore();
+const router = useRouter();
+
+const toPath = ref('');
+
+const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
+const CHAT_SERVER_URL = import.meta.env.VITE_CHAT_SERVER_URL;
+
+const email = ref('');
+const password = ref('');
 const loginStatus = ref('default');
 
-const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
-const toPath = ref('');
+const AUTH_OPTIONS = (userID) => ({
+    auth: {
+        user: {
+            id: userID,
+        },
+    },
+});
 
 let modalInstance;
 
 const loginHandler = async () => {
     try {
         const response = await axios.post(
-            apiUrl + '/login',
+            `${BE_API_BASE_URL}/login`,
             { email: email.value, password: password.value },
             { withCredentials: true }
         );
         loginStatus.value = 'success';
+
+        // change userId
+        const userId = response.data.data.userID;
+        sessionStorage.setItem('userId', userId);
+        store.user.id = sessionStorage.getItem('userId');
+
+        // clean out roomToken
+        sessionStorage.removeItem('roomToken');
+        store.roomToken = '';
+
+        // use new userId to connect to websocket
+        store.clientSocket.disconnect();
+        store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
+
+        // make modal disappear after 3 seconds and go to next page
         setTimeout(() => {
             modalInstance.hide();
 
             if (window.location.pathname !== toPath.value && toPath.value !== '/logout') {
-                window.location.href = toPath.value;
+                router.push({ path: toPath.value });
             }
         }, 3000);
     } catch (error) {
@@ -45,6 +76,11 @@ const showModal = (event) => {
     toPath.value = event.detail.toPath;
     if (modalInstance) {
         loginStatus.value = 'default';
+
+        // clean out input
+        email.value = '';
+        password.value = '';
+
         modalInstance.show();
     }
 };
@@ -52,15 +88,6 @@ const showModal = (event) => {
 onMounted(() => {
     initModal();
     window.addEventListener('show-login-modal', showModal);
-
-    const modalElement = document.getElementById('loginModal');
-    if (modalElement) {
-        modalElement.addEventListener('hidden.bs.modal', () => {
-            if (window.location.pathname !== '/') {
-                window.location.href = '/';
-            }
-        });
-    }
 });
 </script>
 

@@ -2,6 +2,7 @@
 import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick, computed } from 'vue';
 import axios from 'axios';
+import api from '@/api/api';
 import { useGlobalStore } from './stores/globals.js';
 import { io as ioc } from 'socket.io-client';
 import Login from './components/LoginModal.vue';
@@ -136,10 +137,18 @@ onMounted(async () => {
     if (storedUserId) {
         store.user.id = storedUserId; // Use the stored userId
     } else {
-        // Fetch new userId and save to SessionStorage
-        const response = await axios.get(`${BE_API_BASE_URL}/`);
-        store.user.id = response.data.userId;
-        sessionStorage.setItem('userId', response.data.userId); // Save to SessionStorage
+        let userId;
+        try {
+            // check if already login
+            const response = await api.get('/auth-check');
+            userId = response.data.userID;
+        } catch (err) {
+            // Fetch new userId and save to SessionStorage
+            const response = await axios.get(`${BE_API_BASE_URL}/`);
+            userId = response.data.userId;
+        }
+        store.user.id = userId;
+        sessionStorage.setItem('userId', userId); // Save to SessionStorage
     }
 
     // Build WebSocket connection
@@ -169,6 +178,21 @@ onMounted(async () => {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members;
             router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
+        }
+    });
+
+    // !!!! TODO: 暫用，待解決
+    document.addEventListener('hidden.bs.modal', function () {
+        const openModals = document.querySelectorAll('.modal.show');
+        if (openModals.length === 0) {
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+        const backdrops = Array.from(document.querySelectorAll('.modal-backdrop'));
+        if (backdrops.length > 0) {
+            backdrops.forEach((backdrop) => {
+                backdrop.remove();
+            });
         }
     });
 });
@@ -271,6 +295,7 @@ onBeforeUnmount(() => {
     </div>
 
     <Login />
+    <!-- <Login :isOpen="variable" /> -->
     <Logout />
 
     <nav class="navbar navbar-expand-md fixed-bottom justify-content-center navbar-bottom">

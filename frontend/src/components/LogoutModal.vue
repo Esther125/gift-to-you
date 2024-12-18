@@ -1,3 +1,78 @@
+<script setup>
+import { onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useGlobalStore } from '../stores/globals.js';
+import * as bootstrap from 'bootstrap';
+import api from '@/api/api';
+import axios from 'axios';
+import { io as ioc } from 'socket.io-client';
+
+const store = useGlobalStore();
+const router = useRouter();
+
+const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
+const CHAT_SERVER_URL = import.meta.env.VITE_CHAT_SERVER_URL;
+
+const AUTH_OPTIONS = (userID) => ({
+    auth: {
+        user: {
+            id: userID,
+        },
+    },
+});
+
+let modalInstance;
+
+const initModal = () => {
+    const modalElement = document.getElementById('logoutModal');
+    modalInstance = new bootstrap.Modal(modalElement);
+};
+
+const showModal = () => {
+    if (modalInstance) {
+        modalInstance.show();
+    }
+};
+
+const logoutHandler = async () => {
+    try {
+        await api.post('/logout');
+
+        // change userId
+        const response = await axios.get(`${BE_API_BASE_URL}/`);
+        const userId = response.data.userId;
+        sessionStorage.setItem('userId', userId);
+        store.user.id = userId;
+
+        // clean out roomToken
+        sessionStorage.removeItem('roomToken');
+        store.roomToken = '';
+
+        // use new userId to connect to websocket
+        store.clientSocket.disconnect();
+        store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
+
+        // redirection to home page
+        router.push({ path: '/' });
+    } catch (error) {
+        console.error('Error logout: ', error);
+    }
+};
+
+onMounted(() => {
+    initModal();
+    window.addEventListener('show-logout-modal', showModal);
+    const modalElement = document.getElementById('logoutModal');
+    if (modalElement) {
+        modalElement.addEventListener('hidden.bs.modal', () => {
+            if (window.location.pathname === '/logout') {
+                router.push({ path: '/' });
+            }
+        });
+    }
+});
+</script>
+
 <template>
     <div class="modal fade" id="logoutModal" tabindex="-1" aria-labelledby="logoutModalLabel" aria-hidden="true">
         <div class="modal-dialog">
@@ -18,44 +93,6 @@
         </div>
     </div>
 </template>
-
-<script setup>
-import { onMounted, ref } from 'vue';
-import * as bootstrap from 'bootstrap';
-import api from '@/api/api';
-
-const logoutHandler = async () => {
-    try {
-        const response = await api.post('/logout');
-    } catch (error) {
-        console.error('Error logout: ', error);
-    }
-};
-
-let modalInstance;
-
-const initModal = () => {
-    const modalElement = document.getElementById('logoutModal');
-    modalInstance = new bootstrap.Modal(modalElement);
-};
-
-const showModal = () => {
-    if (modalInstance) {
-        modalInstance.show();
-    }
-};
-
-onMounted(() => {
-    initModal();
-    window.addEventListener('show-logout-modal', showModal);
-    const modalElement = document.getElementById('logoutModal');
-    if (modalElement) {
-        modalElement.addEventListener('hidden.bs.modal', () => {
-            window.location.href = '/';
-        });
-    }
-});
-</script>
 
 <style>
 .modal-header,
