@@ -48,18 +48,18 @@ const registerHandler = async () => {
 <template>
     <div class="register my-5 d-flex flex-column w-100">
         <h3 class="text-center w-100">用戶註冊</h3>
-        <form @submit.prevent="registerHandler" class="w-75">
-            <div class="m-3 d-flex justify-content-around">
-                <label for="userName" class="w-25">用戶名稱</label>
-                <input id="userName" class="w-75" type="text" v-model="userName" required />
+        <form @submit.prevent="registerHandler" class="w-75" style="max-width: 20rem">
+            <div class="my-3 d-flex justify-content-center gap-3 w-100">
+                <label for="userName" style="text-align: right">用戶名稱</label>
+                <input id="userName" class="flex-fill" type="text" v-model="userName" required />
             </div>
-            <div class="m-3 d-flex justify-content-around">
-                <label for="email" class="w-25">電子郵件</label>
-                <input id="email" class="w-75" type="email" v-model="email" required />
+            <div class="my-3 d-flex justify-content-center gap-3 w-100">
+                <label for="email" style="text-align: right">電子郵件</label>
+                <input id="email" class="flex-fill" type="email" v-model="email" required />
             </div>
-            <div class="m-3 d-flex justify-content-around">
-                <label for="password" class="w-25">密碼</label>
-                <input id="password" class="w-75" type="password" v-model="password" required />
+            <div class="my-3 d-flex justify-content-center gap-3 w-100">
+                <label for="password" style="text-align: right">密　　碼</label>
+                <input id="password" class="flex-fill" type="password" v-model="password" required />
             </div>
             <div class="d-flex justify-content-center">
                 <button type="submit" class="btn btn-primary" v-if="registerStatus === 'default'">註冊</button>
