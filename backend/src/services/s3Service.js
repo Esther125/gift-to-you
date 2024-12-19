@@ -125,8 +125,9 @@ class S3Service {
             const fileList = await Promise.all(
                 listData.Contents.map(async (item) => {
                     const originalName = item.Key.split("/").pop();
-                    const [uniqueId, encodedFilename] = originalName.split("_"); // 分 uniqueId 跟 Filename
-                    const decodedFilename = decodeURIComponent(encodedFilename); // decode Filename to original filename
+                    const splitIndex = originalName.indexOf('_');
+                    const fileName = originalName.substring(splitIndex + 1); 
+                    const decodedFilename = decodeURIComponent(fileName); // decode Filename to original filename
                     const formattedSize = this._formatFileSize(item.Size);
 
                     const fileData = {
