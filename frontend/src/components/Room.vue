@@ -138,6 +138,8 @@ onMounted(async () => {
         } catch (error) {
             console.error('Error parsing stored messages:', error);
         }
+    } else {
+        messages.splice(0);
     }
     await nextTick();
     scrollToBottom();
@@ -230,9 +232,7 @@ onMounted(async () => {
     </div>
 
     <!-- uploadModal -->
-    <uploadModal
-        :showUploadModal="showUploadModal"
-    />
+    <uploadModal />
 </template>
 
 <style scoped>
