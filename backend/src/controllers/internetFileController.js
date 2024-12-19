@@ -17,7 +17,7 @@ class InternetFileController {
                 fileName: fileName,
             });
         } catch (error) {
-            logWithFileInfo('info', '----InternetFileController.upload');
+            logWithFileInfo('error', 'Error uploading file.', error);
             res.status(500).json({ message: 'Failed to upload the file.', error: error.message });
         }
     };

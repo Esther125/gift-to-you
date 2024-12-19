@@ -7,6 +7,7 @@ import { logWithFileInfo } from '../../logger.js';
 import pkg from 'bloom-filters';
 const { CountingBloomFilter } = pkg;
 import dotenv from 'dotenv';
+import redisClient from '../clients/redisClient.js';
 
 class InternetFileService {
     constructor() {
@@ -14,11 +15,30 @@ class InternetFileService {
         this.__filename = fileURLToPath(import.meta.url); // 當前檔名
         this.__dirname = path.dirname(this.__filename); // 當前目錄名
         this.uploadPath = path.join(this.__dirname, '../../uploads');
-        this.bloomFilter = new CountingBloomFilter.create(
-            process.env.BLOOM_FILTER_ESTIMATED_FILE_COUNT,
-            process.env.BLOOM_FILTER_ERROR_RATE
-        );
+        this.initFilter(); // 初始化 bloomFilter
     }
+
+    async initFilter() {
+        this.bloomFilter = await this._loadFilter();
+    }
+
+    _loadFilter = async () => {
+        await redisClient.connect();
+        const parseData = await redisClient.loadBloomFilter();
+        if (!parseData) {
+            // 原本沒有 bloomFilter
+            const filter = new CountingBloomFilter.create(
+                process.env.BLOOM_FILTER_ESTIMATED_FILE_COUNT,
+                process.env.BLOOM_FILTER_ERROR_RATE
+            );
+            // 將初始化的 bloomFilter 存入 Redis
+            await redisClient.saveBloomFilter(filter);
+            return filter;
+        }
+        // 原本就有 bloomFilter，從 Redis 取出轉換
+        const filter = CountingBloomFilter.fromJSON(parseData);
+        return filter;
+    };
 
     _generateUniqueFilename = (filename, file) => {
         const extension = path.extname(filename);
@@ -52,12 +72,17 @@ class InternetFileService {
                 // 將檔案存入 uploads 資料夾
                 const filePath = path.join(this.uploadPath, fullFilename);
                 await fs.promises.writeFile(filePath, fileBuffer);
+
                 // 將 file 加到 bloomFilter
                 this.bloomFilter.add(fileBuffer);
                 logWithFileInfo('info', `File saved as ${fullFilename}`);
+
+                // 更新 bloomFilter 到 Redis
+                await redisClient.connect();
+                await redisClient.saveBloomFilter(this.bloomFilter);
+                logWithFileInfo('info', `Bloom filter saved to Redis`);
             }
             return fullFilename;
-            // TODO: bloomFilter 序列反序列化 -> 用 redis 資料持久
         } catch (err) {
             throw new Error(err);
         }
@@ -127,8 +152,15 @@ class InternetFileService {
         // 刪除檔案的 bloomFilter 紀錄
         const fileBuffer = await fs.promises.readFile(filePath);
         this.bloomFilter.remove(fileBuffer);
+
         // 刪除 /upload 中的檔案
         await fs.promises.unlink(filePath);
+
+        // 更新 bloomFilter 到 Redis
+        await redisClient.connect();
+        await redisClient.saveBloomFilter(this.bloomFilter);
+        logWithFileInfo('info', `Bloom filter saved to Redis`);
+
         const response = { message: 'File deleted successfully' };
         return response;
     };
@@ -144,6 +176,11 @@ class InternetFileService {
             process.env.BLOOM_FILTER_ESTIMATED_FILE_COUNT,
             process.env.BLOOM_FILTER_ERROR_RATE
         );
+        // 更新 bloomFilter 到 Redis
+        await redisClient.connect();
+        await redisClient.saveBloomFilter(this.bloomFilter);
+        logWithFileInfo('info', `Bloom filter saved to Redis`);
+
         const response = { message: 'All files deleted successfully' };
         return response;
     };
