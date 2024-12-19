@@ -57,9 +57,7 @@ class InternetFileService {
                 logWithFileInfo('info', `File saved as ${fullFilename}`);
             }
             return fullFilename;
-            // TODO: 刪除檔案的時候要把 bloomFilter 裡的 filehash 刪掉
-            // TODO: 假性錯誤怎麼處理
-            // TODO: bloomFilter 序列反序列化 -> 用 redis 資料持久話
+            // TODO: bloomFilter 序列反序列化 -> 用 redis 資料持久
         } catch (err) {
             throw new Error(err);
         }
@@ -126,11 +124,11 @@ class InternetFileService {
         }
 
         const filePath = path.join(this.uploadPath, matchedFile);
+        // 刪除檔案的 bloomFilter 紀錄
+        const fileBuffer = await fs.promises.readFile(filePath);
+        this.bloomFilter.remove(fileBuffer);
         // 刪除 /upload 中的檔案
         await fs.promises.unlink(filePath);
-        // 刪除 Redis 中的 hash 紀錄
-        await redisClient.connect();
-        await redisClient.deleteHashByFileId(fileId);
         const response = { message: 'File deleted successfully' };
         return response;
     };
@@ -141,9 +139,11 @@ class InternetFileService {
             const filePath = path.join(this.uploadPath, file);
             await fs.promises.unlink(filePath);
         }
-        // 刪除 Redis 中所有 file hash 的紀錄
-        await redisClient.connect();
-        await redisClient.deleteByPattern('fileHash:*');
+        // 創一個新的空的 bloomFilter
+        this.bloomFilter = new CountingBloomFilter.create(
+            process.env.BLOOM_FILTER_ESTIMATED_FILE_COUNT,
+            process.env.BLOOM_FILTER_ERROR_RATE
+        );
         const response = { message: 'All files deleted successfully' };
         return response;
     };
