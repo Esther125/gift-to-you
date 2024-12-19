@@ -3,7 +3,6 @@ import { fileURLToPath } from 'url';
 import fs from 'fs';
 import crypto from 'crypto';
 import S3Service from './s3Service.js';
-import redisClient from '../clients/redisClient.js';
 import { logWithFileInfo } from '../../logger.js';
 import pkg from 'bloom-filters';
 const { CountingBloomFilter } = pkg;
@@ -58,7 +57,9 @@ class InternetFileService {
                 logWithFileInfo('info', `File saved as ${fullFilename}`);
             }
             return fullFilename;
-            // TODO: 不用 Redis 以後要怎麼定時刪掉 filehashs
+            // TODO: 刪除檔案的時候要把 bloomFilter 裡的 filehash 刪掉
+            // TODO: 假性錯誤怎麼處理
+            // TODO: bloomFilter 序列反序列化 -> 用 redis 資料持久話
         } catch (err) {
             throw new Error(err);
         }
