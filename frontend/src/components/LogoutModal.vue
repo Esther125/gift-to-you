@@ -39,19 +39,18 @@ const logoutHandler = async () => {
         await api.post('/logout');
 
         // change userId
-        const response = await axios.get(`${BE_API_BASE_URL}/`);
-        const userId = response.data.userId;
-        sessionStorage.setItem('userId', userId);
-        store.user.id = userId;
+        // const response = await axios.get(`${BE_API_BASE_URL}/`);
+        // const userId = response.data.userId;
+        // sessionStorage.setItem('userId', userId);
+        // store.user.id = userId;
 
-        // clean out roomToken
-        sessionStorage.removeItem('roomToken');
-        store.roomToken = '';
+        // // clean out roomToken
+        // sessionStorage.removeItem('roomToken');
+        // store.roomToken = '';
 
-        // use new userId to connect to websocket
-        store.clientSocket.disconnect();
-        store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
-
+        // // use new userId to connect to websocket
+        // store.clientSocket.disconnect();
+        // store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
         // redirection to home page
         router.push({ path: '/' });
     } catch (error) {

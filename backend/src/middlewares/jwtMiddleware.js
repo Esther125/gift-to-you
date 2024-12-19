@@ -7,10 +7,13 @@ const authService = new AuthService();
 const jwtMiddleware = (req, res, next) => {
     logWithFileInfo('info', '----- JWT -----');
 
+    const { routerQuery } = req.query;
+    const toPath = req.query.toPath;
+
     const { accessToken, refreshToken } = req.cookies;
     if (!accessToken || !refreshToken) {
-        logWithFileInfo('info', 'missing accessToken or refreshToken');
-        return res.status(401).json({ error: 'unauthorized' });
+        logWithFileInfo('info', `missing accessToken or refreshToken when go to ${toPath}`);
+        return res.status(401).json({ error: 'unauthorized', toPath, routerQuery });
     }
 
     let userData;
@@ -23,8 +26,8 @@ const jwtMiddleware = (req, res, next) => {
             jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
                 if (err) {
                     // invalid refreshToken
-                    logWithFileInfo('info', 'invalid refreshToken');
-                    return res.status(401).json({ error: 'unauthorized' });
+                    logWithFileInfo('info', `invalid refreshToken when go to ${toPath}`);
+                    return res.status(401).json({ error: 'unauthorized', toPath, routerQuery });
                 }
 
                 userData = _extractUserDataFromJwt(user);
@@ -36,6 +39,7 @@ const jwtMiddleware = (req, res, next) => {
 
         // add userData to req
         req.user = userData;
+        logWithFileInfo('info', `user ${req.user.userID} pass jwtMiddleware when go to ${toPath}`);
         next();
     });
 };

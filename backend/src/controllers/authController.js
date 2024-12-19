@@ -67,7 +67,12 @@ class AuthController {
     };
 
     authCheck = async (req, res) => {
-        res.status(200).json({ message: 'pass authentication check', userID: req.user.userID });
+        res.status(200).json({
+            message: 'pass authentication check',
+            userID: req.user.userID,
+            toPath: req.query.toPath,
+            routerQuery: req.query.routerQuery,
+        });
     };
 }
 

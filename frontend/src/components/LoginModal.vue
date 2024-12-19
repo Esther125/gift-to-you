@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router';
 import { useGlobalStore } from '../stores/globals.js';
 import * as bootstrap from 'bootstrap';
 import axios from 'axios';
+import api from '@/api/api';
+
 import { io as ioc } from 'socket.io-client';
 
 const store = useGlobalStore();
@@ -38,25 +40,25 @@ const loginHandler = async () => {
         loginStatus.value = 'success';
 
         // change userId
-        const userId = response.data.data.userID;
-        sessionStorage.setItem('userId', userId);
-        store.user.id = sessionStorage.getItem('userId');
+        // const userId = response.data.data.userID;
+        // sessionStorage.setItem('userId', userId);
+        // store.user.id = sessionStorage.getItem('userId');
 
-        // clean out roomToken
-        sessionStorage.removeItem('roomToken');
-        store.roomToken = '';
+        // // clean out roomToken
+        // sessionStorage.removeItem('roomToken');
+        // store.roomToken = '';
 
-        // use new userId to connect to websocket
-        store.clientSocket.disconnect();
-        store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
+        // // use new userId to connect to websocket
+        // store.clientSocket.disconnect();
+        // store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
 
         // make modal disappear after 3 seconds and go to next page
+        if (window.location.pathname !== toPath.value && toPath.value !== '/logout') {
+            router.push({ path: toPath.value });
+        }
+
         setTimeout(() => {
             modalInstance.hide();
-
-            if (window.location.pathname !== toPath.value && toPath.value !== '/logout') {
-                router.push({ path: toPath.value });
-            }
         }, 3000);
     } catch (error) {
         console.error('Error login: ', error);
@@ -65,6 +67,11 @@ const loginHandler = async () => {
             loginStatus.value = 'default';
         }, 3000);
     }
+};
+
+const registerHandler = () => {
+    modalInstance.hide();
+    router.push({ path: '/register' });
 };
 
 const initModal = () => {
@@ -122,7 +129,7 @@ onMounted(() => {
                         </div>
                     </form>
                     <div class="m-3 d-flex justify-content-around">
-                        <a href="\register" class="text-secondary">立即註冊</a>
+                        <a class="text-secondary" @click="registerHandler">立即註冊</a>
                     </div>
                 </div>
             </div>
@@ -154,5 +161,6 @@ onMounted(() => {
 a:hover {
     text-decoration: underline;
     background-color: unset;
+    cursor: pointer;
 }
 </style>

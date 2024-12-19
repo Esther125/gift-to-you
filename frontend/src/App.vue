@@ -47,7 +47,7 @@ const roomModalHandler = async () => {
         const storedQrCodeSrc = sessionStorage.getItem('qrCodeSrc');
         console.log('storedRoomToken: ' + storedRoomToken);
         console.log('global RoomToken: ' + store.roomToken);
-        if (!storedRoomToken) {
+        if (!storedRoomToken || !storedQrCodeSrc) {
             // call room create api
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms`, { user: store.user });
             store.roomToken = data.token;
@@ -65,6 +65,7 @@ const roomModalHandler = async () => {
             store.roomToken = storedRoomToken;
             store.qrCodeSrc = storedQrCodeSrc;
         }
+        router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
     } catch (error) {
         console.error('Error creating room: ', error);
     }
@@ -109,9 +110,118 @@ const AUTH_OPTIONS = (userID) => ({
     },
 });
 
+const homeHandler = () => {
+    router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
+};
+
+const loginStatusChangeHandler = async (event) => {
+    // set userId
+    const isLogin = event.detail.login;
+    let userId = '';
+
+    // change userId
+    if (isLogin === true) {
+        console.log('login');
+        const response = await api.get('/auth-check');
+        userId = response.data.userID;
+    } else {
+        console.log('logout');
+        if (store.loginStatus === '' && sessionStorage.getItem('userId')) {
+            // refresh page
+            userId = sessionStorage.getItem('userId');
+        } else {
+            const response = await axios.get(`${BE_API_BASE_URL}/`);
+            userId = response.data.userId;
+        }
+    }
+
+    store.loginStatus = isLogin;
+    store.user.id = userId;
+    sessionStorage.setItem('userId', userId);
+
+    // rebuild WebSocket connection
+    if (store.clientSocket) {
+        store.clientSocket.removeAllListeners();
+        store.clientSocket.disconnect();
+    }
+    store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
+
+    // get old roomToken if exists
+    await new Promise((resolve, reject) => {
+        store.clientSocket.once('system message', async (res) => {
+            console.log('WebSocket - system message');
+            console.log(res);
+            store.roomToken = res.roomToken;
+            resolve();
+        });
+    });
+
+    // setup websocket listener
+    store.clientSocket.on('system message', async (res) => {
+        console.log('WebSocket - system message');
+        console.log(res);
+        store.roomToken = res.roomToken;
+    });
+
+    store.clientSocket.on('room notify', async (res) => {
+        console.log(res);
+        if ((res.roomToken === store.roomToken) & (res.type === 'join')) {
+            const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
+            store.members = data.members;
+            router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
+        }
+    });
+
+    // reset session storage
+    if (store.roomToken !== null) {
+        sessionStorage.setItem('roomToken', store.roomToken);
+    } else {
+        sessionStorage.removeItem('roomToken');
+        sessionStorage.removeItem('qrCodeSrc');
+        store.roomToken = undefined;
+        store.qrCodeSrc = undefined;
+    }
+};
+
+const initHandler = async (event) => {
+    // Check if roomToken exists in SessionStorage
+    const storedRoomToken = sessionStorage.getItem('roomToken');
+    const storedQrCodeSrc = sessionStorage.getItem('qrCodeSrc');
+
+    if (storedRoomToken) {
+        // Use the stored roomToken, qrCodeSrc
+        store.roomToken = storedRoomToken;
+        store.qrCodeSrc = storedQrCodeSrc;
+        const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
+        store.members = data.members;
+        // console.log(store.members);
+
+        // websocket: join room
+        // store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
+    }
+
+    console.log('socket: ', store.clientSocket);
+
+    // !!!! TODO: 暫用，待解決
+    document.addEventListener('hidden.bs.modal', function () {
+        const openModals = document.querySelectorAll('.modal.show');
+        if (openModals.length === 0) {
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+        const backdrops = Array.from(document.querySelectorAll('.modal-backdrop'));
+        if (backdrops.length > 0) {
+            backdrops.forEach((backdrop) => {
+                backdrop.remove();
+            });
+        }
+    });
+    // !!!
+};
+
 /* ------------------------------
    Watchers, Computed
--------------------------------- */
+   -------------------------------- */
 watch(isDarkTheme, iconChange);
 
 const particlesUrl = computed(() => {
@@ -129,72 +239,21 @@ onMounted(async () => {
     // init icon
     iconChange(isDarkTheme.value);
 
-    const storedUserId = sessionStorage.getItem('userId');
-    const storedRoomToken = sessionStorage.getItem('roomToken');
-    const storedQrCodeSrc = sessionStorage.getItem('qrCodeSrc');
-
-    // check if userId exists in SessionStorage
-    if (storedUserId) {
-        store.user.id = storedUserId; // Use the stored userId
-    } else {
-        let userId;
-        try {
-            // check if already login
-            const response = await api.get('/auth-check');
-            userId = response.data.userID;
-        } catch (err) {
-            // Fetch new userId and save to SessionStorage
-            const response = await axios.get(`${BE_API_BASE_URL}/`);
-            userId = response.data.userId;
+    // change id when login status change
+    window.addEventListener('login-check-result', async (event) => {
+        console.log(event.detail.login, store.loginStatus);
+        if (event.detail.login !== store.loginStatus) {
+            await loginStatusChangeHandler(event);
         }
-        store.user.id = userId;
-        sessionStorage.setItem('userId', userId); // Save to SessionStorage
-    }
-
-    // Build WebSocket connection
-    store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
-
-    // Check if roomToken exists in SessionStorage
-    if (storedRoomToken) {
-        // Use the stored roomToken, qrCodeSrc
-        store.roomToken = storedRoomToken;
-        store.qrCodeSrc = storedQrCodeSrc;
-        const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
-        store.members = data.members;
-
-        // websocket: join room
-        store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
-    }
-
-    // Listen websocket
-    store.clientSocket.on('system message', async (res) => {
-        console.log('WebSocket - system message');
-        console.log(res);
+        window.dispatchEvent(new CustomEvent('login-check-result-done'));
     });
 
-    store.clientSocket.on('room notify', async (res) => {
-        console.log(res);
-        if ((res.roomToken === store.roomToken) & (res.type === 'join')) {
-            const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
-            store.members = data.members;
-            router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
-        }
+    window.addEventListener('login-check-result-done', async () => {
+        await initHandler();
     });
 
-    // !!!! TODO: 暫用，待解決
-    document.addEventListener('hidden.bs.modal', function () {
-        const openModals = document.querySelectorAll('.modal.show');
-        if (openModals.length === 0) {
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        }
-        const backdrops = Array.from(document.querySelectorAll('.modal-backdrop'));
-        if (backdrops.length > 0) {
-            backdrops.forEach((backdrop) => {
-                backdrop.remove();
-            });
-        }
-    });
+    // check login status
+    // await router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
 });
 
 onBeforeUnmount(() => {
@@ -207,7 +266,7 @@ onBeforeUnmount(() => {
     <vue-particles id="tsparticles" :url="particlesUrl" :key="particlesUrl" />
     <nav class="navbar navbar-expand-md fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="/">
+            <a class="navbar-brand" @click="homeHandler">
                 <img :src="icon" width="30" height="24" class="d-inline-block align-text-top" />
                 CloudDrop
             </a>
@@ -298,7 +357,7 @@ onBeforeUnmount(() => {
     <!-- <Login :isOpen="variable" /> -->
     <Logout />
 
-    <nav class="navbar navbar-expand-md fixed-bottom justify-content-center navbar-bottom">
+    <nav class="navbar navbar-expand-md fixed-bottom justify-content-center navbar-bottom" :key="store.user.id">
         <div class="d-flex justify-content-center align-items-center mb-2">
             <p class="mx-1 mb-0 p-1">裝置名稱：{{ store.user.id.slice(0, 8) }}</p>
             <p class="mb-0 p-1" v-if="store.roomToken">|</p>
@@ -320,6 +379,7 @@ onBeforeUnmount(() => {
 .icon:hover,
 .link:hover {
     background-color: var(--color-background-soft);
+    cursor: pointer;
 }
 
 .icon {
@@ -395,6 +455,10 @@ li {
     max-height: calc(100vh - 116px);
     height: calc(100vh - 116px);
     margin-top: 58px;
+}
+
+a:hover {
+    cursor: pointer;
 }
 
 #tsparticles {
