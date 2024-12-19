@@ -39,6 +39,8 @@ class InternetFileService {
 
     uploadFile = async (req, res, next) => {
         try {
+            await redisClient.connect();
+
             if (!req.file) {
                 throw new Error('No file was uploaded.');
             }
@@ -72,22 +74,22 @@ class InternetFileService {
         return { stream: filestream, filename: path.basename(filePath) };
     };
 
-    _stagingAreaDownload = async (filePath, filename, userId) => {
+    _stagingAreaDownload = async (type, filePath, filename, id) => {
         const s3Service = new S3Service();
         const file = {
             tempFilePath: filePath,
             name: filename,
         };
-        const uploadResult = await s3Service.uploadFile(file, filename, 'user', userId);
+        const uploadResult = await s3Service.uploadFile(file, filename, type, id);
         const [fileId, encodedFilename] = uploadResult.filename.split('_');
         const originalFilename = decodeURIComponent(encodedFilename);
         return { fileId: fileId, filename: originalFilename, location: uploadResult.location };
     };
 
     download = async (req, res) => {
-        const userId = req.params.userId;
         const way = req.params.way;
         const fileId = req.params.fileId;
+        const { type, id } = req.query;
 
         const files = await fs.promises.readdir(this.uploadPath);
         const matchedFile = files.find((file) => file.startsWith(fileId + '_')); // 只比對檔名前面的 fileId
@@ -101,7 +103,10 @@ class InternetFileService {
         if (way === 'local') {
             return this._localDownload(filePath);
         } else if (way === 'staging-area') {
-            return this._stagingAreaDownload(filePath, safeFileName, userId);
+            if (!type || !id) {
+                throw new Error('Type and id query parameters are required for staging-area download.');
+            }
+            return this._stagingAreaDownload(type, filePath, safeFileName, id);
         } else if (way === 'google-cloud') {
             // TODO: Integrate Google drive
         } else {
