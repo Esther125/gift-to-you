@@ -28,8 +28,8 @@ class InternetFileService {
         if (!parseData) {
             // 原本沒有 bloomFilter
             const filter = new CountingBloomFilter.create(
-                process.env.BLOOM_FILTER_ESTIMATED_FILE_COUNT,
-                process.env.BLOOM_FILTER_ERROR_RATE
+                parseInt(process.env.BLOOM_FILTER_ESTIMATED_FILE_COUNT),
+                parseFloat(process.env.BLOOM_FILTER_ERROR_RATE)
             );
             // 將初始化的 bloomFilter 存入 Redis
             await redisClient.saveBloomFilter(filter);
@@ -173,8 +173,8 @@ class InternetFileService {
         }
         // 創一個新的空的 bloomFilter
         this.bloomFilter = new CountingBloomFilter.create(
-            process.env.BLOOM_FILTER_ESTIMATED_FILE_COUNT,
-            process.env.BLOOM_FILTER_ERROR_RATE
+            parseInt(process.env.BLOOM_FILTER_ESTIMATED_FILE_COUNT),
+            parseFloat(process.env.BLOOM_FILTER_ERROR_RATE)
         );
         // 更新 bloomFilter 到 Redis
         await redisClient.connect();

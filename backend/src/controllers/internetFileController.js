@@ -10,7 +10,9 @@ class InternetFileController {
         logWithFileInfo('info', '----InternetFileController.upload');
         try {
             const fullFilename = await this.internetFileService.uploadFile(req, res);
-            const [fileId, fileName] = fullFilename.split('_');
+            const splitIndex = fullFilename.indexOf('_');
+            const fileId = fullFilename.substring(0, splitIndex);
+            const fileName = fullFilename.substring(splitIndex + 1);
             res.status(200).json({
                 message: 'File uploaded successfully.',
                 fileId: fileId,
