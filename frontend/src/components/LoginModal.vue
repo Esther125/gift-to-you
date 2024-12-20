@@ -26,8 +26,10 @@ const loginHandler = async () => {
         loginStatus.value = 'success';
 
         // make modal disappear after 3 seconds and go to next page
-        if (window.location.pathname !== toPath.value && toPath.value !== '/logout') {
+        if (toPath.value !== '/logout') {
             router.push({ path: toPath.value });
+        } else {
+            router.push({ path: '/' });
         }
 
         setTimeout(() => {
