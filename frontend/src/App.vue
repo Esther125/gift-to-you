@@ -105,6 +105,7 @@ const leaveRoom = async () => {
     await router.push({ path: '/' });
     clearData();
     if (roomModalInstance) {
+        console.log('here');
         roomModalInstance.hide();
     }
 };
@@ -147,6 +148,7 @@ const homeHandler = () => {
 };
 
 const loginStatusChangeHandler = async (event) => {
+    console.log('===== login status change =====');
     // set userId
     const isLogin = event.detail.login;
     let userId = '';
@@ -219,6 +221,7 @@ const loginStatusChangeHandler = async (event) => {
 };
 
 const initHandler = async (event) => {
+    console.log('===== init =====');
     // Check if roomToken exists in SessionStorage
     const storedUserId = sessionStorage.getItem('userId');
     const storedRoomToken = sessionStorage.getItem('roomToken');
@@ -241,8 +244,6 @@ const initHandler = async (event) => {
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
         store.members = data.members;
     }
-
-    console.log('socket: ', store.clientSocket);
 };
 
 /* ------------------------------
@@ -278,6 +279,7 @@ onMounted(async () => {
     });
 
     initRoomModal();
+    initHandler();
 });
 
 onBeforeUnmount(() => {
