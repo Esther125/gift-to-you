@@ -56,6 +56,7 @@ const roomModalHandler = async () => {
                 store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
             }
         }
+        showRoomModal();
         router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
     } catch (error) {
         console.error('Error creating room: ', error);
@@ -84,10 +85,10 @@ const joinRoom = async () => {
         store.roomToken = inputRoomToken;
         sessionStorage.setItem('roomToken', inputRoomToken);
         const modalInstance = bootstrap.Modal.getInstance(roomModal);
+        router.push({ path: '/', query: { roomToken: inputRoomToken } });
         if (modalInstance) {
             modalInstance.hide();
         }
-        router.push({ path: '/', query: { roomToken: inputRoomToken } });
     } else {
         alert('邀請碼不存在');
     }
@@ -98,14 +99,14 @@ const leaveRoom = async () => {
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/leave`, { user: store.user });
         if (data.message === 'success') {
             store.clientSocket.emit('leave chatroom', { roomToken: store.roomToken });
-            const modalInstance = bootstrap.Modal.getInstance(roomModal);
-            if (modalInstance) {
-                modalInstance.hide();
-            }
         }
     }
+
+    await router.push({ path: '/' });
     clearData();
-    router.push({ path: '/', query: { roomToken: store.roomToken } });
+    if (roomModalInstance) {
+        roomModalInstance.hide();
+    }
 };
 
 const clearData = () => {
@@ -124,6 +125,18 @@ const AUTH_OPTIONS = (userID) => ({
         },
     },
 });
+
+let roomModalInstance = ref();
+const initRoomModal = () => {
+    const modalElement = document.getElementById('roomModal');
+    roomModalInstance = new bootstrap.Modal(modalElement);
+};
+
+const showRoomModal = () => {
+    if (roomModalInstance) {
+        roomModalInstance.show();
+    }
+};
 
 const onModalHide = () => {
     characters.splice(0, characters.length, ...new Array(5).fill(''));
@@ -230,22 +243,6 @@ const initHandler = async (event) => {
     }
 
     console.log('socket: ', store.clientSocket);
-
-    // !!!! TODO: 暫用，待解決
-    document.addEventListener('hidden.bs.modal', function () {
-        const openModals = document.querySelectorAll('.modal.show');
-        if (openModals.length === 0) {
-            document.body.style.overflow = '';
-            document.body.style.paddingRight = '';
-        }
-        const backdrops = Array.from(document.querySelectorAll('.modal-backdrop'));
-        if (backdrops.length > 0) {
-            backdrops.forEach((backdrop) => {
-                backdrop.remove();
-            });
-        }
-    });
-    // !!!
 };
 
 /* ------------------------------
@@ -279,6 +276,8 @@ onMounted(async () => {
     window.addEventListener('login-check-result-done', async () => {
         await initHandler();
     });
+
+    initRoomModal();
 });
 
 onBeforeUnmount(() => {
@@ -296,7 +295,7 @@ onBeforeUnmount(() => {
                 CloudDrop
             </a>
             <div class="d-flex justify-content-end align-items-center">
-                <div class="mx-1" data-bs-toggle="modal" data-bs-target="#roomModal">
+                <div class="mx-1">
                     <i class="bi bi-people-fill h3 icon" @click="roomModalHandler"></i>
                 </div>
 
@@ -389,10 +388,13 @@ onBeforeUnmount(() => {
     <Login />
     <Logout />
 
-    <nav class="navbar navbar-expand-md fixed-bottom justify-content-center navbar-bottom" :key="store.user.id">
+    <nav
+        class="navbar navbar-expand-md fixed-bottom justify-content-center navbar-bottom"
+        :key="`${store.user.id}_${store.roomToken}`"
+    >
         <div class="d-flex justify-content-center align-items-center mb-2">
             <p class="mx-1 mb-0 p-1">裝置名稱：{{ store.user.id.slice(0, 8) }}</p>
-            <p class="mb-0 p-1" v-if="store.roomToken">|</p>
+            <p class="mb-0 p-1" v-if="store.roomToken || ''">|</p>
             <p class="mx-1 mb-0 p-1" v-if="store.roomToken">可見於 {{ store.roomToken }} 房間中</p>
         </div>
     </nav>
