@@ -41,7 +41,7 @@ const registerHandler = async () => {
 <template>
     <div class="register my-5 d-flex flex-column w-100">
         <h3 class="text-center w-100">用戶註冊</h3>
-        <form @submit.prevent="registerHandler" class="w-75" style="max-width: 20rem">
+        <form @submit.prevent="registerHandler" class="w-75" style="max-width: 30rem">
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="userName" style="text-align: right">用戶名稱</label>
                 <input id="userName" class="flex-fill" type="text" v-model="userName" required />
@@ -54,7 +54,7 @@ const registerHandler = async () => {
                 <label for="password" style="text-align: right">密　　碼</label>
                 <input id="password" class="flex-fill" type="password" v-model="password" required />
             </div>
-            <div class="d-flex justify-content-center">
+            <div class="d-flex justify-content-center my-4">
                 <button type="submit" class="btn btn-primary" v-if="registerStatus === 'default'">註冊</button>
                 <div
                     class="text-success d-flex gap-2 justify-content-center"
