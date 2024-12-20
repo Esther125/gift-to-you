@@ -2,7 +2,6 @@ import express from 'express';
 import cors from 'cors';
 import pkg from 'body-parser';
 import homeRouter from './src/routes/homeRouter.js';
-import sampleRouters from './src/routes/sampleRoutes.js';
 import authRouters from './src/routes/authRoutes.js';
 import internetFileRouter from './src/routes/internetFileRoutes.js';
 import roomsRouter from './src/routes/roomsRouter.js';
@@ -30,7 +29,6 @@ app.use((req, res, next) => {
 
 // use routes
 app.use('/api/v1', homeRouter);
-app.use('/api/v1', sampleRouters);
 app.use('/api/v1', authRouters);
 app.use('/api/v1', internetFileRouter);
 app.use('/api/v1', roomsRouter);
@@ -51,11 +49,11 @@ socketRouter(socketNameSpace);
 
 // Quit Redis
 process.on('SIGINT', async () => {
-    console.debug('[App] Shutting down...');
+    logWithFileInfo('info', '[App] Shutting down...');
     try {
         await redisClient.quit();
     } catch (err) {
-        console.error('[App] Error while quitting Redis', err);
+        logWithFileInfo('error', '[App] Error while quitting Redis', err);
     } finally {
         process.exit(0);
     }

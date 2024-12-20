@@ -1,6 +1,12 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, ListObjectsV2Command, HeadObjectCommand } from "@aws-sdk/client-s3";
-import fs from "fs";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import {
+    S3Client,
+    PutObjectCommand,
+    GetObjectCommand,
+    ListObjectsV2Command,
+    HeadObjectCommand,
+} from '@aws-sdk/client-s3';
+import fs from 'fs';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { logWithFileInfo } from '../../logger.js';
 
 class S3Service {
@@ -20,7 +26,7 @@ class S3Service {
     };
 
     uploadFile = async (file, filename, type, id) => {
-        console.log(`[S3Service] uploadFile() called with type: ${type}, id: ${id}, filename: ${filename}`);
+        logWithFileInfo('info', `[S3Service] uploadFile() called with type: ${type}, id: ${id}, filename: ${filename}`);
 
         const key = this._generateS3Key(type, id, filename); // S3 file key
         // 驗證檔案是否存在
@@ -43,19 +49,22 @@ class S3Service {
 
         try {
             const data = await this._s3.send(new PutObjectCommand(uploadParams));
-            console.log('[S3Service] Upload Success:', data);
+            logWithFileInfo('info', `[S3Service] Upload Success: ${data}`);
             return {
                 filename,
                 location: `https://${this._bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
             };
         } catch (err) {
-            console.error('[S3Service] Upload Failed:', err.message);
+            logWithFileInfo('error', '[S3Service] Upload Failed:', err);
             throw err;
         }
     };
 
     generatePresignedUrl = async (filename, type, id) => {
-        console.log(`[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`);
+        logWithFileInfo(
+            'info',
+            `[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`
+        );
 
         // S3 file key
         const key = this._generateS3Key(type, id, filename);
@@ -72,10 +81,10 @@ class S3Service {
         try {
             const url = await getSignedUrl(this._s3, command, { expiresIn: signedUrlExpireSeconds });
 
-            console.log(`[S3Service] Presigned URL generated Successfully`);
+            logWithFileInfo('info', `[S3Service] Presigned URL generated Successfully`);
             return url;
         } catch (err) {
-            console.log('[S3Service] Failed to generate presigned URL:', err.message);
+            logWithFileInfo('error', '[S3Service] Failed to generate presigned URL:', err);
             throw err;
         }
     };
@@ -98,19 +107,19 @@ class S3Service {
         logWithFileInfo('info', '----S3server.getFileList');
 
         if (!id) {
-            const Iderror = new Error("ID is required to fetch the file list");
+            const Iderror = new Error('ID is required to fetch the file list');
             logWithFileInfo('error', 'Failed to fetch file list: Missing ID', Iderror);
             throw Iderror;
         }
 
-        const prefix = `${type}/${id}/`; 
+        const prefix = `${type}/${id}/`;
         logWithFileInfo('info', `Fetching file list for type: ${type}, id: ${id}, prefix: ${prefix}`);
 
         const params = {
             Bucket: this._bucket,
             Prefix: prefix,
             MaxKeys: 10, // 最多顯示 10 筆
-            ContinuationToken: lastKey // 根據 key 查後續筆數
+            ContinuationToken: lastKey, // 根據 key 查後續筆數
         };
 
         try {
@@ -124,9 +133,9 @@ class S3Service {
 
             const fileList = await Promise.all(
                 listData.Contents.map(async (item) => {
-                    const originalName = item.Key.split("/").pop();
+                    const originalName = item.Key.split('/').pop();
                     const splitIndex = originalName.indexOf('_');
-                    const fileName = originalName.substring(splitIndex + 1); 
+                    const fileName = originalName.substring(splitIndex + 1);
                     const decodedFilename = decodeURIComponent(fileName); // decode Filename to original filename
                     const formattedSize = this._formatFileSize(item.Size);
 
@@ -134,7 +143,7 @@ class S3Service {
                         originalName: originalName, // 原始檔案名稱
                         filename: decodedFilename, // 上傳的檔案名稱
                         size: formattedSize, // 檔案大小
-                        lastModified: item.LastModified // 最後修改時間
+                        lastModified: item.LastModified, // 最後修改時間
                     };
 
                     if (type === 'room') {
@@ -143,17 +152,18 @@ class S3Service {
                     }
 
                     return fileData;
-                }));
+                })
+            );
 
-            logWithFileInfo("info", `[File List Success] Fetched ${fileList.length} files for ${type}: ${id}`);
+            logWithFileInfo('info', `[File List Success] Fetched ${fileList.length} files for ${type}: ${id}`);
             return {
-                files: fileList, 
-                lastKey: encodeURIComponent(listData.NextContinuationToken) || null 
+                files: fileList,
+                lastKey: encodeURIComponent(listData.NextContinuationToken) || null,
             };
         } catch (err) {
             logWithFileInfo('error', `Failed to fetch file list for ${type}: ${id}`, err);
             throw err;
-        }        
+        }
     };
 }
 
