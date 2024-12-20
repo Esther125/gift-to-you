@@ -20,7 +20,8 @@ class SocketService {
         } else {
             logWithFileInfo(
                 'error',
-                `[socketService] send system message "${stage}: ${status}" to user with missing userID`
+                `[socketService] send system message "${stage}: ${status}" to user with missing userID`,
+                new Error('Missing userID')
             );
         }
     };
@@ -106,7 +107,11 @@ class SocketService {
         } else {
             // 回傳處理結果通知
             this.systemMessage(socket, 'join chatroom', 'fail');
-            logWithFileInfo('error', `[socketService] user ${userID} can not join non-existed room ${roomToken}`);
+            logWithFileInfo(
+                'error',
+                `[socketService] user ${userID} can not join non-existed room ${roomToken}`,
+                new Error('User can not join non-existed room')
+            );
         }
     };
 
@@ -125,7 +130,11 @@ class SocketService {
         const senderInRoom = this._checkUserInRoom(socket, senderID, roomToken);
         if (!senderInRoom) {
             this.systemMessage(socket, 'request transfer', 'fail', `sender not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] sender ${userID} is not in room ${roomToken}`);
+            logWithFileInfo(
+                'error',
+                `[socketService] sender ${userID} is not in room ${roomToken}`,
+                new Error('Sender not in room')
+            );
             return;
         }
 
@@ -137,14 +146,22 @@ class SocketService {
             const receiverInRoom = this._checkUserInRoom(socket, receiverID, roomToken);
             if (!receiverInRoom) {
                 this.systemMessage(socket, 'request transfer', 'fail', `receiver not in room ${roomToken}`);
-                logWithFileInfo('error', `[socketService] receiver ${userID} is not in room ${roomToken}`);
+                logWithFileInfo(
+                    'error',
+                    `[socketService] receiver ${userID} is not in room ${roomToken}`,
+                    new Error('Receiver not in room')
+                );
                 return;
             }
 
             // 檢查 sender、receiver 是否相同
             if (senderID === receiverID) {
                 this.systemMessage(socket, 'request transfer', 'fail', `sender and receiver are the same`);
-                logWithFileInfo('error', `[socketService] user ${userID} ask to transfer to himself`);
+                logWithFileInfo(
+                    'error',
+                    `[socketService] user ${userID} ask to transfer to himself`,
+                    new Error('Cannot transfer to himself')
+                );
                 return;
             }
 
@@ -178,7 +195,11 @@ class SocketService {
         const inRoom = this._checkUserInRoom(socket, userID, roomToken);
         if (!inRoom) {
             this.systemMessage(socket, 'chat message', 'fail', `sender not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] user ${userID} is not in room ${roomToken}`);
+            logWithFileInfo(
+                'error',
+                `[socketService] user ${userID} is not in room ${roomToken}`,
+                new Error('User not in room')
+            );
             return;
         }
 
@@ -207,7 +228,11 @@ class SocketService {
         const inRoom = this._checkUserInRoom(socket, userID, roomToken);
         if (!inRoom) {
             this.systemMessage(socket, 'leave chatroom', 'fail', `user not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] user ${userID} is not in room ${roomToken}`);
+            logWithFileInfo(
+                'error',
+                `[socketService] user ${userID} is not in room ${roomToken}`,
+                new Error('User not in room')
+            );
             return;
         }
 
