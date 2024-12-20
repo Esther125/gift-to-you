@@ -194,10 +194,6 @@ const initHandler = async (event) => {
         store.qrCodeSrc = storedQrCodeSrc;
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
         store.members = data.members;
-        // console.log(store.members);
-
-        // websocket: join room
-        // store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
     }
 
     console.log('socket: ', store.clientSocket);
@@ -251,9 +247,6 @@ onMounted(async () => {
     window.addEventListener('login-check-result-done', async () => {
         await initHandler();
     });
-
-    // check login status
-    // await router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
 });
 
 onBeforeUnmount(() => {

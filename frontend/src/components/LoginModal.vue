@@ -4,31 +4,17 @@ import { useRouter } from 'vue-router';
 import { useGlobalStore } from '../stores/globals.js';
 import * as bootstrap from 'bootstrap';
 import axios from 'axios';
-import api from '@/api/api';
 
-import { io as ioc } from 'socket.io-client';
-
-const store = useGlobalStore();
 const router = useRouter();
+const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
 
 const toPath = ref('');
 
-const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
-const CHAT_SERVER_URL = import.meta.env.VITE_CHAT_SERVER_URL;
+let modalInstance;
 
 const email = ref('');
 const password = ref('');
 const loginStatus = ref('default');
-
-const AUTH_OPTIONS = (userID) => ({
-    auth: {
-        user: {
-            id: userID,
-        },
-    },
-});
-
-let modalInstance;
 
 const loginHandler = async () => {
     try {
@@ -38,19 +24,6 @@ const loginHandler = async () => {
             { withCredentials: true }
         );
         loginStatus.value = 'success';
-
-        // change userId
-        // const userId = response.data.data.userID;
-        // sessionStorage.setItem('userId', userId);
-        // store.user.id = sessionStorage.getItem('userId');
-
-        // // clean out roomToken
-        // sessionStorage.removeItem('roomToken');
-        // store.roomToken = '';
-
-        // // use new userId to connect to websocket
-        // store.clientSocket.disconnect();
-        // store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
 
         // make modal disappear after 3 seconds and go to next page
         if (window.location.pathname !== toPath.value && toPath.value !== '/logout') {
