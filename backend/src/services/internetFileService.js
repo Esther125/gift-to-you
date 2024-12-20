@@ -115,20 +115,38 @@ class InternetFileService {
 
     deleteFile = async (req, res) => {
         const fileId = req.params.fileId;
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = path.dirname(__filename);
-        const rootPath = path.join(__dirname, '../../uploads');
+        const files = await fs.promises.readdir(this.uploadPath);
+        const matchedFile = files.find((file) => {
+            const filename = path.basename(file);
+            const extractedFileId = filename.split('_')[0];
+            return extractedFileId === fileId;
+        });
 
-        const files = await fs.promises.readdir(rootPath);
-        const matchedFile = files.find((file) => path.basename(file, path.extname(file)) === fileId);
-        // 沒有匹配的檔案
         if (!matchedFile) {
             throw new Error('File not found');
         }
 
-        const filePath = path.join(rootPath, matchedFile);
-        await fs.promises.unlink(filePath); // 刪除檔案
-        res.send({ message: 'File deleted successfully' });
+        const filePath = path.join(this.uploadPath, matchedFile);
+        // 刪除 /upload 中的檔案
+        await fs.promises.unlink(filePath);
+        // 刪除 Redis 中的 hash 紀錄
+        await redisClient.connect();
+        await redisClient.deleteHashByFileId(fileId);
+        const response = { message: 'File deleted successfully' };
+        return response;
+    };
+
+    deleteAllFiles = async (req, res) => {
+        const files = await fs.promises.readdir(this.uploadPath);
+        for (const file of files) {
+            const filePath = path.join(this.uploadPath, file);
+            await fs.promises.unlink(filePath);
+        }
+        // 刪除 Redis 中所有 file hash 的紀錄
+        await redisClient.connect();
+        await redisClient.deleteByPattern('fileHash:*');
+        const response = { message: 'All files deleted successfully' };
+        return response;
     };
 }
 

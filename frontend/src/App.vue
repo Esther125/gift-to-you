@@ -43,27 +43,18 @@ const iconChange = (isDarkTheme) => {
 
 const roomModalHandler = async () => {
     try {
-        const storedRoomToken = sessionStorage.getItem('roomToken');
-        const storedQrCodeSrc = sessionStorage.getItem('qrCodeSrc');
-        console.log('storedRoomToken: ' + storedRoomToken);
-        console.log('global RoomToken: ' + store.roomToken);
-        if (!storedRoomToken || !storedQrCodeSrc) {
+        if (!store.roomToken || !store.qrCodeSrc) {
             // call room create api
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms`, { user: store.user });
             store.roomToken = data.token;
             store.qrCodeSrc = data.qrCodeDataUrl;
-            console.log('roomToken: ' + store.roomToken);
             sessionStorage.setItem('roomToken', store.roomToken);
             sessionStorage.setItem('qrCodeSrc', store.qrCodeSrc);
 
             // websocket join room
             if (store.clientSocket) {
                 store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
-                console.log('websocket join room');
             }
-        } else {
-            store.roomToken = storedRoomToken;
-            store.qrCodeSrc = storedQrCodeSrc;
         }
         router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
     } catch (error) {
@@ -88,7 +79,7 @@ const handleBackspace = async (index) => {
 };
 
 const joinRoom = async () => {
-    let inputRoomToken = characters.join('');
+    let inputRoomToken = characters.join('').toUpperCase();
     if (inputRoomToken.length === 5) {
         store.roomToken = inputRoomToken;
         sessionStorage.setItem('roomToken', inputRoomToken);
@@ -102,6 +93,30 @@ const joinRoom = async () => {
     }
 };
 
+const leaveRoom = async () => {
+    if (store.roomToken) {
+        const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/leave`, { user: store.user });
+        if (data.message === 'success') {
+            store.clientSocket.emit('leave chatroom', { roomToken: store.roomToken });
+            const modalInstance = bootstrap.Modal.getInstance(roomModal);
+            if (modalInstance) {
+                modalInstance.hide();
+            }
+        }
+    }
+    clearData();
+    router.push({ path: '/', query: { roomToken: store.roomToken } });
+};
+
+const clearData = () => {
+    store.roomToken = null;
+    store.qrCodeSrc = null;
+    store.members = [];
+    sessionStorage.removeItem('roomToken');
+    sessionStorage.removeItem('qrCodeSrc');
+    sessionStorage.removeItem('messages');
+};
+
 const AUTH_OPTIONS = (userID) => ({
     auth: {
         user: {
@@ -109,6 +124,10 @@ const AUTH_OPTIONS = (userID) => ({
         },
     },
 });
+
+const onModalHide = () => {
+    characters.splice(0, characters.length, ...new Array(5).fill(''));
+};
 
 const homeHandler = () => {
     router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
@@ -169,6 +188,9 @@ const loginStatusChangeHandler = async (event) => {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members;
             router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
+        } else if ((res.roomToken === store.roomToken) & (res.type === 'leave')) {
+            const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
+            store.members = data.members;
         }
     });
 
@@ -185,8 +207,19 @@ const loginStatusChangeHandler = async (event) => {
 
 const initHandler = async (event) => {
     // Check if roomToken exists in SessionStorage
+    const storedUserId = sessionStorage.getItem('userId');
     const storedRoomToken = sessionStorage.getItem('roomToken');
     const storedQrCodeSrc = sessionStorage.getItem('qrCodeSrc');
+
+    // check if userId exists in SessionStorage
+    if (storedUserId) {
+        store.user.id = storedUserId; // Use the stored userId
+    } else {
+        // Fetch new userId and save to SessionStorage
+        const response = await axios.get(`${BE_API_BASE_URL}/`);
+        store.user.id = response.data.userId;
+        sessionStorage.setItem('userId', response.data.userId); // Save to SessionStorage
+    }
 
     if (storedRoomToken) {
         // Use the stored roomToken, qrCodeSrc
@@ -237,7 +270,6 @@ onMounted(async () => {
 
     // change id when login status change
     window.addEventListener('login-check-result', async (event) => {
-        console.log(event.detail.login, store.loginStatus);
         if (event.detail.login !== store.loginStatus) {
             await loginStatusChangeHandler(event);
         }
@@ -309,7 +341,14 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Room Modal -->
-    <div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="roomModalLabel" aria-hidden="true">
+    <div
+        class="modal fade"
+        id="roomModal"
+        tabindex="-1"
+        aria-labelledby="roomModalLabel"
+        aria-hidden="true"
+        v-on="{ 'hide.bs.modal': onModalHide }"
+    >
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header pt-3 pb-2 border-0">
@@ -340,14 +379,14 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center border-0">
-                    <button class="btn btn-secondary" type="submit" @click="joinRoom">加入</button>
+                    <button class="btn btn-secondary" type="submit" @click="leaveRoom">離開</button>
+                    <button class="btn btn-success" type="submit" @click="joinRoom">加入</button>
                 </div>
             </div>
         </div>
     </div>
 
     <Login />
-    <!-- <Login :isOpen="variable" /> -->
     <Logout />
 
     <nav class="navbar navbar-expand-md fixed-bottom justify-content-center navbar-bottom" :key="store.user.id">
@@ -445,9 +484,10 @@ li {
 
 .router-view-container {
     flex: 1;
-    max-height: calc(100vh - 116px);
-    height: calc(100vh - 116px);
+    max-height: calc(100vh - 111px);
+    height: calc(100vh - 111px);
     margin-top: 58px;
+    background-color: var(--color-background);
 }
 
 a:hover {
@@ -460,7 +500,7 @@ a:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
+    z-index: 0;
     pointer-events: none;
 }
 </style>
