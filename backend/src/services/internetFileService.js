@@ -6,12 +6,10 @@ import S3Service from './s3Service.js';
 import { logWithFileInfo } from '../../logger.js';
 import pkg from 'bloom-filters';
 const { CountingBloomFilter } = pkg;
-import dotenv from 'dotenv';
 import redisClient from '../clients/redisClient.js';
 
 class InternetFileService {
     constructor() {
-        dotenv.config();
         this.__filename = fileURLToPath(import.meta.url); // 當前檔名
         this.__dirname = path.dirname(this.__filename); // 當前目錄名
         this.uploadPath = path.join(this.__dirname, '../../uploads');
