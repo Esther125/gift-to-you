@@ -1,4 +1,5 @@
 import SocketService from '../services/socketService.js';
+import { logWithFileInfo } from '../../logger.js';
 
 class SocketController {
     constructor() {

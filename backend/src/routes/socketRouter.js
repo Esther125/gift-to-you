@@ -1,4 +1,5 @@
 import SocketController from '../controllers/socketController.js';
+import { logWithFileInfo } from '../../logger.js';
 
 const VALID_EVENTS = ['join chatroom', 'request transfer', 'chat message', 'leave chatroom'];
 

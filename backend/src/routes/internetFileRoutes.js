@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import InternetFileController from '../controllers/internetFileController.js';
 import multer from 'multer';
+import { logWithFileInfo } from '../../logger.js';
 
 const internetFileRouter = Router();
 const internetFileController = new InternetFileController();
