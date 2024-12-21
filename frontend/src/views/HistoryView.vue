@@ -175,7 +175,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
                         <i v-else-if="record.sender.type === 'ROOM'" class="bi bi-people-fill" style="font-size: 1rem">
                         </i>
                         <i v-else class="bi bi-person-x" style="font-size: 1rem"> </i>
-                        <span>{{ record.sender.identifier }}</span>
+                        <span>{{ record.sender.name }}</span>
                     </div>
                     <div v-if="record.sender.identifier == userID" class="mt-1 mb-2 d-flex align-items-center gap-2">
                         <span
@@ -195,7 +195,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
                         >
                         </i>
                         <i v-else class="bi bi-person-x" style="font-size: 1rem"> </i>
-                        <span>{{ record.receiver.identifier }}</span>
+                        <span>{{ record.receiver.name }}</span>
                     </div>
                 </div>
                 <div class="vr my-2"></div>

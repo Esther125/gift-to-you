@@ -31,7 +31,7 @@ class HistoryService {
         const { Items, LastEvaluatedKey } = await this._dynamodbService.getUserTransferRecords(userID, decodedLastKey);
 
         // reformat items
-        const items = this._reformatItems(Items);
+        const items = await this._reformatItems(Items);
 
         // encode lastKey
         const encodedLastKey = this._encodeLastKey(LastEvaluatedKey);
@@ -42,19 +42,34 @@ class HistoryService {
         return { totalTransferCount, lastKey: encodedLastKey, items };
     };
 
-    _interpretLabel = (label) => {
-        const [type, identifier] = label.split('#');
-        return { type, identifier };
-    };
-
-    _reformatItems = (items) => {
+    _reformatItems = async (items) => {
         let reformatedItems = [];
+        let userIDtoName = {};
+
+        const _interpretLabel = async (label) => {
+            const [type, identifier] = label.split('#');
+
+            let name;
+            if (type === 'USER') {
+                name = userIDtoName[identifier];
+                if (name === undefined) {
+                    name = await this._dynamodbService.getUserNameFromID(identifier);
+                }
+            } else if (type === 'ROOM') {
+                name = identifier;
+            } else {
+                name = type;
+            }
+
+            return { type, identifier, name };
+        };
+
         for (const item of items) {
             const { sk, receiver, sender, fileNames } = item;
             let reformatedItem = {};
             reformatedItem['timestamp'] = sk;
-            reformatedItem['sender'] = this._interpretLabel(sender);
-            reformatedItem['receiver'] = this._interpretLabel(receiver);
+            reformatedItem['sender'] = await _interpretLabel(sender);
+            reformatedItem['receiver'] = await _interpretLabel(receiver);
             reformatedItem['fileNames'] = fileNames;
             reformatedItems.push(reformatedItem);
         }
