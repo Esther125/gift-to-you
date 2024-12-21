@@ -279,14 +279,12 @@ class SocketService {
             if (socket.roomToken !== undefined) {
                 // 通知 room 內其他人
                 this._sendRoomNotify(socket, socket.roomToken, userID, 'leave');
-                socket.leave(socket.roomToken);
+            } else {
+                logWithFileInfo(
+                    'info',
+                    `User with missing userID disconnect with /socket websocket server because of ${reason}`
+                );
             }
-            socket.leave(socket.id);
-        } else {
-            logWithFileInfo(
-                'info',
-                `User with missing userID disconnect with /socket websocket server because of ${reason}`
-            );
         }
     };
 }
