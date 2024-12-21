@@ -198,7 +198,6 @@ class RedisClient {
             if (data) {
                 const parsedData = JSON.parse(data);
                 return parsedData;
-                // return CountingBloomFilter.fromJSON(parsedData);
             } else {
                 return null;
             }
