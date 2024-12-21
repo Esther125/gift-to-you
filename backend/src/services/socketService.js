@@ -1,6 +1,14 @@
 import redisClient from '../clients/redisClient.js';
+import DynamodbService from './dynamodbService.js';
 import { logWithFileInfo } from '../../logger.js';
+import RoomService from './roomsService.js';
 class SocketService {
+    constructor() {
+        this.db = new DynamodbService();
+        this._roomService = new RoomService();
+        this._disconnectWaitUsers = {}; // userID: roomToken
+    }
+
     systemMessage = (socket, stage, status, content = null) => {
         // 回傳處理結果通知給 client 用
         const userID = socket.handshake.auth?.user?.id || null;
@@ -57,6 +65,13 @@ class SocketService {
             logWithFileInfo('error', `Error when add user ${userID} back to original room`, err);
         }
 
+        // 移出等待清單
+        const roomToken = this._disconnectWaitUsers[userID];
+        if (roomToken !== undefined) {
+            logWithFileInfo('info', `Remove user: ${userID} + room: ${roomToken} from waiting list since reconnect`);
+            delete this._disconnectWaitUsers[userID];
+        }
+
         // 回傳處理結果通知
         this.systemMessage(socket, 'connect', 'success', 'success');
         logWithFileInfo('info', `User ${userID} connect to /socket websocket server`);
@@ -64,18 +79,23 @@ class SocketService {
 
     _checkUserInRoom = (socket, userID, roomToken) => {
         let memberSockets;
-        let userSocket;
+        let userSockets;
         try {
             memberSockets = [...socket.adapter.rooms.get(roomToken)];
-            userSocket = [...socket.adapter.rooms.get(userID)][0];
+            userSockets = [...socket.adapter.rooms.get(userID)];
         } catch {
             return false;
         }
 
-        if (!memberSockets.includes(userSocket)) {
-            return false;
-        }
-        return true;
+        let inRoom = false;
+        userSockets.forEach((userSocket) => {
+            if (memberSockets.includes(userSocket)) {
+                inRoom = true;
+                return;
+            }
+        });
+
+        return inRoom;
     };
 
     _sendRoomNotify = (socket, roomToken, userID, type) => {
@@ -231,21 +251,52 @@ class SocketService {
         logWithFileInfo('info', `User ${userID} leave chatroom ${roomToken}`);
     };
 
-    disconnect = (socket, reason) => {
+    disconnect = async (socket, reason) => {
         const userID = socket.handshake.auth?.user?.id || null;
         if (userID) {
             logWithFileInfo('info', `User ${userID} disconnect with /chat websocket server because of ${reason}`);
-
-            if (socket.roomToken !== undefined) {
+            const roomToken = socket.roomToken;
+            if (roomToken !== undefined) {
                 // 通知 room 內其他人
-                this._sendRoomNotify(socket, socket.roomToken, userID, 'leave');
+                this._sendRoomNotify(socket, roomToken, userID, 'leave');
+
+                // 加入等待清單
+                logWithFileInfo('info', `Put user: ${userID} + room: ${roomToken} in waiting list`);
+                if (this._disconnectWaitUsers[userID] === undefined) {
+                    this._disconnectWaitUsers[userID] = [roomToken];
+                } else {
+                    this._disconnectWaitUsers[userID].push(roomToken);
+                }
+                this._setupExpireTimer(socket, userID, roomToken);
             }
+            socket.leave(userID);
         } else {
             logWithFileInfo(
                 'info',
                 `User with missing userID disconnect with /socket websocket server because of ${reason}`
             );
         }
+    };
+
+    _setupExpireTimer = (socket, userID, roomToken) => {
+        // 設定 timer
+        setTimeout(async () => {
+            if (this._disconnectWaitUsers[userID] !== undefined) {
+                try {
+                    // 清除 redis 紀錄
+                    await this._roomService.leaveTargetRoom(userID, roomToken);
+                    logWithFileInfo(
+                        'info',
+                        `Remove user: ${userID} + room: ${roomToken} from waiting list since time's up`
+                    );
+
+                    // 再通知房間成員
+                    this._sendRoomNotify(socket, roomToken, userID, 'leave');
+                } catch (err) {
+                    logWithFileInfo('error', 'Error in removing userId in redis', err);
+                }
+            }
+        }, 5000);
     };
 }
 
