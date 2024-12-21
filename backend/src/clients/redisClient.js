@@ -4,7 +4,7 @@ import { logWithFileInfo } from '../../logger.js';
 class RedisClient {
     constructor() {
         if (!RedisClient.instance) {
-            logWithFileInfo('info', '[RedisClient] Initializing Redis client');
+            logWithFileInfo('info', '-----Initializing Redis client-----');
             this.client = createClient({
                 socket: {
                     reconnectStrategy: function (retries) {
@@ -18,7 +18,7 @@ class RedisClient {
             });
 
             this.client.on('error', (err) => {
-                logWithFileInfo('error', '[RedisClient] Redis Client Error', err);
+                logWithFileInfo('error', 'Redis Client Error', err);
             });
 
             RedisClient.instance = this;
@@ -32,7 +32,7 @@ class RedisClient {
             try {
                 await this.client.connect();
             } catch (err) {
-                logWithFileInfo('error', '[RedisClient] Error connecting to Redis:', err);
+                logWithFileInfo('error', 'Error connecting to Redis:', err);
                 throw err;
             }
         }
@@ -43,7 +43,7 @@ class RedisClient {
             try {
                 await this.client.quit();
             } catch (err) {
-                logWithFileInfo('error', '[RedisClient] Error quitting Redis Client', err);
+                logWithFileInfo('error', 'Error quitting Redis Client', err);
                 throw err;
             }
         }
@@ -53,7 +53,7 @@ class RedisClient {
         try {
             await this.client.set(key, value);
         } catch (err) {
-            logWithFileInfo('error', `[RedisClient] Error setting value of key ${key}`, err);
+            logWithFileInfo('error', `Error setting value of key ${key}`, err);
             throw err;
         }
     };
@@ -69,7 +69,7 @@ class RedisClient {
             await this.client.expire(key, second);
             return;
         } catch (err) {
-            logWithFileInfo('error', `[RedisClient] Error setting expire of key ${key}`, err);
+            logWithFileInfo('error', `Error setting expire of key ${key}`, err);
             throw err;
         }
     };
@@ -79,7 +79,7 @@ class RedisClient {
             const value = await this.client.get(key);
             return value;
         } catch (err) {
-            logWithFileInfo('error', `[RedisClient] Error getting value of key ${key}`, err);
+            logWithFileInfo('error', `Error getting value of key ${key}`, err);
             throw err;
         }
     };
@@ -88,7 +88,7 @@ class RedisClient {
         try {
             await this.client.del(key);
         } catch (err) {
-            logWithFileInfo('error', `[RedisClient] Error deleting key ${key}`, err);
+            logWithFileInfo('error', `Error deleting key ${key}`, err);
             throw err;
         }
     };
@@ -97,7 +97,7 @@ class RedisClient {
         try {
             await this.client.sAdd(setKey, member);
         } catch (err) {
-            logWithFileInfo('error', '[RedisClient] Error adding member to set', err);
+            logWithFileInfo('error', 'Error adding member to set', err);
             throw err;
         }
     };
@@ -107,7 +107,7 @@ class RedisClient {
             const members = await this.client.sMembers(setKey);
             return members;
         } catch (err) {
-            logWithFileInfo('error', `[RedisClient] Error getting all from set ${setKey}`, err);
+            logWithFileInfo('error', `Error getting all from set ${setKey}`, err);
             throw err;
         }
     };
@@ -116,7 +116,7 @@ class RedisClient {
         try {
             await this.client.sRem(setKey, member);
         } catch (err) {
-            logWithFileInfo('error', `[RedisClient] Error removing member from set ${setKey}`, err);
+            logWithFileInfo('error', `Error removing member from set ${setKey}`, err);
             throw err;
         }
     };
@@ -126,7 +126,7 @@ class RedisClient {
             const exists = await this.client.exists(setKey);
             return exists > 0;
         } catch (err) {
-            logWithFileInfo('error', `[RedisClient] Error checking existence of set ${setKey}`, err);
+            logWithFileInfo('error', `Error checking existence of set ${setKey}`, err);
             throw err;
         }
     };
@@ -141,10 +141,10 @@ class RedisClient {
 
                 if (keys.length > 0) {
                     await this.client.del(keys);
-                    logWithFileInfo('info', `[RedisClient] Deleted keys: ${keys.join(', ')}`);
+                    logWithFileInfo('info', `Deleted keys: ${keys.join(', ')}`);
                 }
             } catch (err) {
-                logWithFileInfo('error', `[RedisClient] Error flushing keys by pattern ${pattern}`, err);
+                logWithFileInfo('error', `Error flushing keys by pattern ${pattern}`, err);
                 throw err;
             }
         } while (cursor !== 0);
@@ -169,12 +169,12 @@ class RedisClient {
                         if (fileId === specifiedFileId) {
                             await this.client.del(key);
                             countDeleted++;
-                            logWithFileInfo('info', `[RedisClient] Deleted key: ${key} with fileId: ${fileId}`);
+                            logWithFileInfo('info', `Deleted key: ${key} with fileId: ${fileId}`);
                         }
                     }
                 }
             } catch (err) {
-                logWithFileInfo('error', `[RedisClient] Error while scanning or deleting keys`, err);
+                logWithFileInfo('error', `Error while scanning or deleting keys`, err);
                 throw err;
             }
         } while (cursor !== 0);

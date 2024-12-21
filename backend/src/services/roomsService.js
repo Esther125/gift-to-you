@@ -19,7 +19,7 @@ class RoomService {
     };
 
     createRoom = async (userId) => {
-        logWithFileInfo('info', `[RoomService] createRoom called with userId: ${userId}`);
+        logWithFileInfo('info', `CreateRoom called with userId: ${userId}`);
 
         await redisClient.connect();
 
@@ -27,7 +27,7 @@ class RoomService {
         let token = await redisClient.get(`userId:${userId}`);
         let members;
         if (token !== null) {
-            logWithFileInfo('info', `[RoomService] User ${userId} has already in the room ${token}`);
+            logWithFileInfo('info', `User ${userId} has already in the room ${token}`);
             members = await redisClient.sGet(token);
             return { token, members };
         }
@@ -37,7 +37,7 @@ class RoomService {
         // make sure the token is unique
         members = await redisClient.sGet(token);
         while (members.length !== 0) {
-            logWithFileInfo('info', '[RoomService] Token collision detected. Generating a new token');
+            logWithFileInfo('info', 'Token collision detected. Generating a new token');
             token = this._createToken();
             members = await redisClient.sGet(token);
         }
@@ -49,12 +49,12 @@ class RoomService {
         await redisClient.setExpire(token, 8 * 3600);
         await redisClient.setExpire(`userId:${userId}`, 8 * 3600);
 
-        logWithFileInfo('info', `[RoomService] Room created successfully with token: ${token}`);
+        logWithFileInfo('info', `Room created successfully with token: ${token}`);
         return { token, members };
     };
 
     joinRoom = async (userId, token) => {
-        logWithFileInfo('info', '[RoomService] joinRoom called with userId:', userId, 'and token:', token);
+        logWithFileInfo('info', 'JoinRoom called with userId:', userId, 'and token:', token);
 
         await redisClient.connect();
 
@@ -65,14 +65,14 @@ class RoomService {
         if (inTargetRoom) {
             message = `already in target room ${token}`;
             members = await redisClient.sGet(token);
-            logWithFileInfo('info', `[RoomService] User ${userId} have already in target room ${token}`);
+            logWithFileInfo('info', `User ${userId} have already in target room ${token}`);
             return { message, members };
         }
 
         const roomExist = await redisClient.sExist(token);
         if (!roomExist) {
             message = `room ${token} has not been created`;
-            logWithFileInfo('info', `[RoomService] Room ${token} has not been created`);
+            logWithFileInfo('info', `Room ${token} has not been created`);
             return { message, members: [] };
         }
 
@@ -83,7 +83,7 @@ class RoomService {
 
         members = await redisClient.sGet(token);
 
-        logWithFileInfo('info', `[RoomService] User ${userId} have join the room ${token}`);
+        logWithFileInfo('info', `User ${userId} have join the room ${token}`);
 
         return { message, members };
     };
@@ -97,17 +97,17 @@ class RoomService {
          * return false: if user not in target room
          */
 
-        logWithFileInfo('info', `[RoomService] Check User ${userId} in target room or not`);
+        logWithFileInfo('info', `Check User ${userId} in target room or not`);
 
         // 1. Check user is in room or not
         const tokenFromRedis = await redisClient.get(`userId:${userId}`);
         if (tokenFromRedis === token) {
             // have already in the target room
-            logWithFileInfo('info', `[RoomService] User ${userId} has already in the room ${token}`);
+            logWithFileInfo('info', `User ${userId} has already in the room ${token}`);
             return true;
         } else if (tokenFromRedis === null) {
             // not in any room now
-            logWithFileInfo('info', `[RoomService] User ${userId} is not in any room now`);
+            logWithFileInfo('info', `User ${userId} is not in any room now`);
             return false;
         }
 
@@ -115,7 +115,7 @@ class RoomService {
         await redisClient.sRem(tokenFromRedis, userId);
         await redisClient.del(`userId:${userId}`);
 
-        logWithFileInfo('info', `[RoomService] User ${userId} have leave the room ${tokenFromRedis}`);
+        logWithFileInfo('info', `User ${userId} have leave the room ${tokenFromRedis}`);
 
         return false;
     };
@@ -123,10 +123,10 @@ class RoomService {
     createQRCode = async (url) => {
         try {
             const qrCodeDataUrl = await QRCode.toDataURL(url);
-            logWithFileInfo('info', 'qrCode create success');
+            logWithFileInfo('info', 'QrCode create success');
             return qrCodeDataUrl;
         } catch (err) {
-            logWithFileInfo('error', 'qrCode create error: ', err);
+            logWithFileInfo('error', 'QrCode create error: ', err);
             return null;
         }
     };
@@ -137,6 +137,18 @@ class RoomService {
             let members = await redisClient.sGet(token);
             return { members };
         } catch (err) {}
+    };
+
+    leaveTargetRoom = async (userId, token) => {
+        await redisClient.connect();
+
+        const tokenFromRedis = await redisClient.get(`userId:${userId}`);
+        if (tokenFromRedis === token) {
+            await redisClient.sRem(token, userId);
+            await redisClient.del(`userId:${userId}`);
+
+            logWithFileInfo('info', `Leave target room: ${userId} and token ${token}`);
+        }
     };
 }
 

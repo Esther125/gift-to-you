@@ -1,4 +1,5 @@
 import SocketController from '../controllers/socketController.js';
+import { logWithFileInfo } from '../../logger.js';
 
 const VALID_EVENTS = ['join chatroom', 'request transfer', 'chat message', 'leave chatroom'];
 
@@ -36,7 +37,7 @@ const socketRouter = (socketNameSpace) => {
 
         socket.on('error', (e) => {
             // error
-            console.log(`Error in websocket for chat: ${e}`);
+            logWithFileInfo('error', `Error in websocket for chat`, e);
         });
 
         socket.onAny((event) => {

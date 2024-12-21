@@ -3,7 +3,7 @@ import { logWithFileInfo } from '../../logger.js';
 
 class HomeService {
     generateUniqueUUID = () => {
-        logWithFileInfo('info', '[HomeService] Generate Unique UUID');
+        logWithFileInfo('info', 'Generate Unique UUID');
         return uuidv4();
     };
 }
