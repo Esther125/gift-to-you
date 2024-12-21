@@ -130,6 +130,7 @@ onMounted(() => {
                     <h5 class="modal-title" id="downloadModalLabel">檔案接收</h5>
                 </div>
                 <div class="modal-body d-flex flex-column">
+                    <h6>{{ filename }}</h6>
                     <!-- 預覽檔案名稱與影像 -->
                     <div class="file-preview">
                         <!-- image -->
