@@ -7,7 +7,7 @@ class HomeController {
     }
 
     index = (req, res) => {
-        logWithFileInfo('info', '[HomeController] index');
+        logWithFileInfo('info', '-----index-----');
         const userId = this.homeService.generateUniqueUUID();
         res.status(200).json({ userId: userId });
     };
