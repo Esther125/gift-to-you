@@ -1,4 +1,5 @@
 import SocketService from '../services/socketService.js';
+import { logWithFileInfo } from '../../logger.js';
 
 class SocketController {
     constructor() {
@@ -7,7 +8,7 @@ class SocketController {
 
     connect = (socket) => {
         // connect to server (/socket)
-        console.log('[socketController] -----connect-----');
+        logWithFileInfo('info', '-----connect-----');
 
         try {
             const userID = socket.handshake.auth?.user?.id || null;
@@ -16,13 +17,13 @@ class SocketController {
             } else {
                 this.socketService.connect(socket, userID);
             }
-        } catch {
-            console.error(`[socketController] Error when connecting chat websocket`);
+        } catch (err) {
+            logWithFileInfo('error', `Error when connecting chat websocket`, err);
         }
     };
 
     joinChatroom = (socket, payload) => {
-        console.log('[socketController] -----joinChatroom-----');
+        logWithFileInfo('info', '-----joinChatroom-----');
         const userID = socket.handshake.auth.user.id;
 
         try {
@@ -32,14 +33,14 @@ class SocketController {
             } else {
                 this.socketService.joinChatroom(socket, roomToken);
             }
-        } catch {
-            console.error(`[socketController] Error when joining chatroom for ${userID}`);
+        } catch (err) {
+            logWithFileInfo('error', `Error when joining chatroom for ${userID}`, err);
             this.socketService.systemMessage(socket, 'join chatroom', 'error', 'error');
         }
     };
 
     requestTransfer = (socket, payload, socketNameSpace) => {
-        console.log('[socketController] -----requestTransfer-----');
+        logWithFileInfo('info', '-----requestTransfer-----');
         const userID = socket.handshake.auth.user.id;
 
         try {
@@ -51,14 +52,14 @@ class SocketController {
             } else {
                 this.socketService.requestTransfer(socket, fileId, roomToken, receiverID, socketNameSpace);
             }
-        } catch {
-            console.error(`[socketController] Error when user ${userID} request transfer`);
+        } catch (err) {
+            logWithFileInfo('error', `Error when user ${userID} request transfer`, err);
             this.socketService.systemMessage(socket, 'request transfer', 'error', 'error');
         }
     };
 
     chatMessage = (socket, payload) => {
-        console.log('[socketController] -----chatMessage-----');
+        logWithFileInfo('info', '-----chatMessage-----');
         const userID = socket.handshake.auth.user.id;
 
         try {
@@ -69,14 +70,14 @@ class SocketController {
             } else {
                 this.socketService.chatMessage(socket, roomToken, message);
             }
-        } catch {
-            console.error(`[socketController] Error when user ${userID} send chat message`);
+        } catch (err) {
+            logWithFileInfo('error', `Error when user ${userID} send chat message`, err);
             this.socketService.systemMessage(socket, 'chat message', 'error', 'error');
         }
     };
 
     leaveChatroom = (socket, payload) => {
-        console.log('[socketController] -----leaveChatroom-----');
+        logWithFileInfo('info', '-----leaveChatroom-----');
         const userID = socket.handshake.auth.user.id;
 
         try {
@@ -86,19 +87,19 @@ class SocketController {
             } else {
                 this.socketService.leaveChatroom(socket, roomToken);
             }
-        } catch {
-            console.error(`[socketController] Error when leaving chatroom for ${userID}`);
+        } catch (err) {
+            logWithFileInfo('error', `Error when leaving chatroom for ${userID}`, err);
             this.socketService.systemMessage(socket, 'leave chatroom', 'error', 'error');
         }
     };
 
     disconnect = (socket, reason) => {
-        console.log('[socketController] -----disconnect-----');
+        logWithFileInfo('info', '-----disconnect-----');
         this.socketService.disconnect(socket, reason);
     };
 
     invalidEvent = (socket) => {
-        console.log('[socketController] -----invalid event-----');
+        logWithFileInfo('info', '-----invalid event-----');
         this.socketService.systemMessage(socket, 'invalid event', 'fail', 'invalid event');
     };
 }

@@ -28,7 +28,7 @@ class ProfileController {
                 lastKey: nextLastKey,
             });
         } catch (error) {
-            logWithFileInfo('error', 'Error fetching staging file:', error.message);
+            logWithFileInfo('error', 'Error fetching staging file:', error);
             return res.status(500).json({ message: 'Failed to fetch staging files.', error: error.message });
         }
     };
@@ -42,7 +42,8 @@ class ProfileController {
         if (!userId || !filename) {
             logWithFileInfo(
                 'error',
-                '[ProfileController] Error when generating presigned URL - filename and id are required'
+                'Error when generating presigned URL - filename and id are required',
+                new Error('Argument is needed but missing')
             );
             return res.status(400).json({ message: 'Filename and userId are required' });
         }
@@ -55,7 +56,7 @@ class ProfileController {
                 url: presignedUrl,
             });
         } catch (error) {
-            logWithFileInfo('error', '[ProfileController] Error when generating presigned URL', error.message);
+            logWithFileInfo('error', 'Error when generating presigned URL', error);
             return res.status(500).json({
                 message: 'Failed to generate presigned URL',
                 error: error.message,
