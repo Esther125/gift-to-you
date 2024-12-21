@@ -10,15 +10,12 @@ const api = axios.create({
 api.interceptors.response.use(
     (response) => {
         window.dispatchEvent(new CustomEvent('login-check-result', { detail: { login: true } }));
-        const toPath = response.data.toPath;
-        console.log(toPath);
         return response;
     },
     (error) => {
         window.dispatchEvent(new CustomEvent('login-check-result', { detail: { login: false } }));
         if (error.response && error.response.status === 401) {
             const toPath = error.response.config?.params?.toPath;
-            console.log(toPath);
             if (toPath && toPath.length !== 1 && toPath.slice(0, 2) !== '/?') {
                 window.dispatchEvent(new CustomEvent('show-login-modal', { detail: { toPath } }));
             } else {

@@ -10,6 +10,8 @@ const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
 
 const toPath = ref('');
 
+const store = useGlobalStore();
+
 let modalInstance;
 
 const email = ref('');
@@ -29,6 +31,8 @@ const loginHandler = async () => {
         if (toPath.value !== '/logout') {
             router.push({ path: toPath.value });
         } else {
+            sessionStorage.removeItem('roomToken');
+            store.roomToken = '';
             router.push({ path: '/' });
         }
 
