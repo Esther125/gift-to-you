@@ -1,6 +1,11 @@
 import redisClient from '../clients/redisClient.js';
+import DynamodbService from './dynamodbService.js';
 import { logWithFileInfo } from '../../logger.js';
 class SocketService {
+    constructor() {
+        this.db = new DynamodbService();
+    }
+
     systemMessage = (socket, stage, status, content = null) => {
         // 回傳處理結果通知給 client 用
         const userID = socket.handshake.auth?.user?.id || null;
@@ -63,18 +68,24 @@ class SocketService {
 
     _checkUserInRoom = (socket, userID, roomToken) => {
         let memberSockets;
-        let userSocket;
+        let userSockets;
         try {
             memberSockets = [...socket.adapter.rooms.get(roomToken)];
-            userSocket = [...socket.adapter.rooms.get(userID)][0];
+            userSockets = [...socket.adapter.rooms.get(userID)];
         } catch {
             return false;
         }
 
-        if (!memberSockets.includes(userSocket)) {
-            return false;
-        }
-        return true;
+        let inRoom = false;
+        userSockets.forEach((userSocket) => {
+            console.log(userSocket, memberSockets.includes(userSocket));
+            if (memberSockets.includes(userSocket)) {
+                inRoom = true;
+                return;
+            }
+        });
+
+        return inRoom;
     };
 
     _sendRoomNotify = (socket, roomToken, userID, type) => {
@@ -108,11 +119,15 @@ class SocketService {
         } else {
             // 回傳處理結果通知
             this.systemMessage(socket, 'join chatroom', 'fail');
-            logWithFileInfo('error', `[socketService] user ${userID} can not join non-existed room ${roomToken}`);
+            logWithFileInfo(
+                'error',
+                `[socketService] user ${userID} can not join non-existed room ${roomToken}`,
+                new Error('test')
+            );
         }
     };
 
-    requestTransfer = (socket, fileId, roomToken, receiverID, socketNameSpace) => {
+    requestTransfer = async (socket, fileId, roomToken, receiverID, socketNameSpace) => {
         const userID = socket.handshake.auth.user.id;
         const senderID = userID;
         const res = {
@@ -127,10 +142,11 @@ class SocketService {
         const senderInRoom = this._checkUserInRoom(socket, senderID, roomToken);
         if (!senderInRoom) {
             this.systemMessage(socket, 'request transfer', 'fail', `sender not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] sender ${userID} is not in room ${roomToken}`);
+            logWithFileInfo('error', `[socketService] sender ${userID} is not in room ${roomToken}`, new Error('test'));
             return;
         }
 
+        let receiverInfo;
         if (receiverID) {
             // 傳輸對象: user
             logWithFileInfo('info', `[socketService] user ${userID} ask to transfer file to user ${receiverID}`);
@@ -139,14 +155,22 @@ class SocketService {
             const receiverInRoom = this._checkUserInRoom(socket, receiverID, roomToken);
             if (!receiverInRoom) {
                 this.systemMessage(socket, 'request transfer', 'fail', `receiver not in room ${roomToken}`);
-                logWithFileInfo('error', `[socketService] receiver ${userID} is not in room ${roomToken}`);
+                logWithFileInfo(
+                    'error',
+                    `[socketService] receiver ${userID} is not in room ${roomToken}`,
+                    new Error('test')
+                );
                 return;
             }
 
             // 檢查 sender、receiver 是否相同
             if (senderID === receiverID) {
                 this.systemMessage(socket, 'request transfer', 'fail', `sender and receiver are the same`);
-                logWithFileInfo('error', `[socketService] user ${userID} ask to transfer to himself`);
+                logWithFileInfo(
+                    'error',
+                    `[socketService] user ${userID} ask to transfer to himself`,
+                    new Error('test')
+                );
                 return;
             }
 
@@ -156,6 +180,12 @@ class SocketService {
                 'info',
                 `[socketService] send transfer notification requested from user ${senderID} to user ${receiverID}`
             );
+
+            // 建立 receiverInfo
+            receiverInfo = {
+                type: await this._getUserType(receiverID),
+                identifier: receiverID,
+            };
         } else {
             // 傳輸對象: room
             logWithFileInfo('info', `[socketService] user ${userID} ask to transfer file to room ${roomToken}`);
@@ -166,10 +196,32 @@ class SocketService {
                 'info',
                 `[socketService] send transfer notification requested from user ${senderID} to room ${roomToken}`
             );
+
+            // 建立 receiverInfo
+            receiverInfo = {
+                type: 'ROOM',
+                identifier: roomToken,
+            };
         }
 
         // 回傳處理結果通知
         this.systemMessage(socket, 'request transfer', 'success', 'success');
+
+        // 建立傳輸紀錄
+        const senderInfo = {
+            type: await this._getUserType(senderID),
+            identifier: senderID,
+        };
+        await this.db.createTransferRecords(senderInfo, receiverInfo, [fileId]);
+    };
+
+    _getUserType = async (userID) => {
+        const userName = await this.db.getUserNameFromID(userID);
+        if (userName !== null) {
+            return 'USER';
+        } else {
+            return 'TEMP';
+        }
     };
 
     chatMessage = (socket, roomToken, message) => {
@@ -180,7 +232,7 @@ class SocketService {
         const inRoom = this._checkUserInRoom(socket, userID, roomToken);
         if (!inRoom) {
             this.systemMessage(socket, 'chat message', 'fail', `sender not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] user ${userID} is not in room ${roomToken}`);
+            logWithFileInfo('error', `[socketService] user ${userID} is not in room ${roomToken}`, new Error('test'));
             return;
         }
 
@@ -209,7 +261,7 @@ class SocketService {
         const inRoom = this._checkUserInRoom(socket, userID, roomToken);
         if (!inRoom) {
             this.systemMessage(socket, 'leave chatroom', 'fail', `user not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] user ${userID} is not in room ${roomToken}`);
+            logWithFileInfo('error', `[socketService] user ${userID} is not in room ${roomToken}`, new Error('test'));
             return;
         }
 
@@ -235,7 +287,9 @@ class SocketService {
             if (socket.roomToken !== undefined) {
                 // 通知 room 內其他人
                 this._sendRoomNotify(socket, socket.roomToken, userID, 'leave');
+                socket.leave(socket.roomToken);
             }
+            socket.leave(socket.id);
         } else {
             logWithFileInfo(
                 'info',
