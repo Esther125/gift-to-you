@@ -53,6 +53,7 @@ const roomModalHandler = async () => {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms`, { user: store.user });
             store.roomToken = data.token;
             store.qrCodeSrc = data.qrCodeDataUrl;
+            console.log('roomToken: ' + store.roomToken);
             sessionStorage.setItem('roomToken', store.roomToken);
             sessionStorage.setItem('qrCodeSrc', store.qrCodeSrc);
 
