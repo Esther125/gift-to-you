@@ -99,7 +99,6 @@ class S3Service {
 
     getFileList = async (type, id, lastKey = null) => {
         logWithFileInfo('info', '----S3server.getFileList');
-        logWithFileInfo('info', )
 
         if (!id) {
             const Iderror = new Error('ID is required to fetch the file list');
