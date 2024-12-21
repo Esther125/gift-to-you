@@ -77,7 +77,9 @@ const handleScroll = async () => {
 
 const unhandleScroll = () => {
     const container = recordsContainer.value;
-    container.removeEventListener('scroll', handleScroll);
+    if (container) {
+        container.removeEventListener('scroll', handleScroll);
+    }
 };
 
 const _checkNotEnoughRecords = () => {
