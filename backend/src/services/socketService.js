@@ -12,6 +12,8 @@ class SocketService {
                 content,
             },
             timestamp: new Date().toISOString(),
+            userID,
+            roomToken: socket.roomToken || null,
         };
         socket.emit('system message', res);
 
