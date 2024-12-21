@@ -309,17 +309,20 @@ onBeforeUnmount(() => {
                     >
                         <li>
                             <RouterLink to="/about" class="dropdown-item">
-                                <i class="bi bi-collection-fill h5 icon me-1"></i> Temporary Storage
+                                <div><i class="bi bi-collection-fill h5 icon me-1"></i> Temporary Storage</div>
                             </RouterLink>
                         </li>
                         <li>
                             <RouterLink to="/history" class="dropdown-item">
-                                <i class="bi bi-clock-history h5 icon me-1"></i> History
+                                <div><i class="bi bi-clock-history h5 icon me-1"></i> History</div>
                             </RouterLink>
                         </li>
                         <li>
                             <RouterLink to="/logout" class="dropdown-item">
-                                <i class="bi bi-door-open h5 icon me-1"></i> Login / Logout
+                                <div v-if="store.loginStatus == true">
+                                    <i class="bi bi-box-arrow-right h5 icon me-1"></i> Logout
+                                </div>
+                                <div v-else><i class="bi bi-box-arrow-in-right h5 icon me-1"></i> Login</div>
                             </RouterLink>
                         </li>
                     </ul>
