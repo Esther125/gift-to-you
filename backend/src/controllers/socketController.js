@@ -8,7 +8,7 @@ class SocketController {
 
     connect = (socket) => {
         // connect to server (/socket)
-        logWithFileInfo('info', '[socketController] -----connect-----');
+        logWithFileInfo('info', '-----connect-----');
 
         try {
             const userID = socket.handshake.auth?.user?.id || null;
@@ -18,12 +18,12 @@ class SocketController {
                 this.socketService.connect(socket, userID);
             }
         } catch (err) {
-            logWithFileInfo('error', `[socketController] Error when connecting chat websocket`, err);
+            logWithFileInfo('error', `Error when connecting chat websocket`, err);
         }
     };
 
     joinChatroom = (socket, payload) => {
-        logWithFileInfo('info', '[socketController] -----joinChatroom-----');
+        logWithFileInfo('info', '-----joinChatroom-----');
         const userID = socket.handshake.auth.user.id;
 
         try {
@@ -34,13 +34,13 @@ class SocketController {
                 this.socketService.joinChatroom(socket, roomToken);
             }
         } catch (err) {
-            logWithFileInfo('error', `[socketController] Error when joining chatroom for ${userID}`, err);
+            logWithFileInfo('error', `Error when joining chatroom for ${userID}`, err);
             this.socketService.systemMessage(socket, 'join chatroom', 'error', 'error');
         }
     };
 
     requestTransfer = (socket, payload, socketNameSpace) => {
-        logWithFileInfo('info', '[socketController] -----requestTransfer-----');
+        logWithFileInfo('info', '-----requestTransfer-----');
         const userID = socket.handshake.auth.user.id;
 
         try {
@@ -53,13 +53,13 @@ class SocketController {
                 this.socketService.requestTransfer(socket, fileId, roomToken, receiverID, socketNameSpace);
             }
         } catch (err) {
-            logWithFileInfo('error', `[socketController] Error when user ${userID} request transfer`, err);
+            logWithFileInfo('error', `Error when user ${userID} request transfer`, err);
             this.socketService.systemMessage(socket, 'request transfer', 'error', 'error');
         }
     };
 
     chatMessage = (socket, payload) => {
-        logWithFileInfo('info', '[socketController] -----chatMessage-----');
+        logWithFileInfo('info', '-----chatMessage-----');
         const userID = socket.handshake.auth.user.id;
 
         try {
@@ -71,13 +71,13 @@ class SocketController {
                 this.socketService.chatMessage(socket, roomToken, message);
             }
         } catch (err) {
-            logWithFileInfo('error', `[socketController] Error when user ${userID} send chat message`, err);
+            logWithFileInfo('error', `Error when user ${userID} send chat message`, err);
             this.socketService.systemMessage(socket, 'chat message', 'error', 'error');
         }
     };
 
     leaveChatroom = (socket, payload) => {
-        logWithFileInfo('info', '[socketController] -----leaveChatroom-----');
+        logWithFileInfo('info', '-----leaveChatroom-----');
         const userID = socket.handshake.auth.user.id;
 
         try {
@@ -88,18 +88,18 @@ class SocketController {
                 this.socketService.leaveChatroom(socket, roomToken);
             }
         } catch (err) {
-            logWithFileInfo('error', `[socketController] Error when leaving chatroom for ${userID}`, err);
+            logWithFileInfo('error', `Error when leaving chatroom for ${userID}`, err);
             this.socketService.systemMessage(socket, 'leave chatroom', 'error', 'error');
         }
     };
 
     disconnect = (socket, reason) => {
-        logWithFileInfo('info', '[socketController] -----disconnect-----');
+        logWithFileInfo('info', '-----disconnect-----');
         this.socketService.disconnect(socket, reason);
     };
 
     invalidEvent = (socket) => {
-        logWithFileInfo('info', '[socketController] -----invalid event-----');
+        logWithFileInfo('info', '-----invalid event-----');
         this.socketService.systemMessage(socket, 'invalid event', 'fail', 'invalid event');
     };
 }
