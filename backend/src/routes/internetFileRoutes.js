@@ -31,7 +31,7 @@ internetFileRouter.post(
     (req, res) => internetFileController.upload(req, res),
     multerErrorHandling
 );
-internetFileRouter.get('/:userId/download/:way/:fileId', internetFileController.download);
+internetFileRouter.get('/download/:way/:fileId', internetFileController.download);
 internetFileRouter.delete('/delete/file/:fileId', internetFileController.deleteFile);
 internetFileRouter.delete('/delete/all-files', internetFileController.deleteAllFiles);
 

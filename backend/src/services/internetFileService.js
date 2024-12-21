@@ -94,22 +94,27 @@ class InternetFileService {
         }
     };
 
-    _localDownload = async (filePath) => {
+    _localDownload = async (filePath, fileId) => {
         let fileHandle = null;
         fileHandle = await fs.promises.open(filePath, 'r');
         const filestream = fs.createReadStream(filePath, { fd: fileHandle.fd, autoClose: false });
-        return { stream: filestream, filename: path.basename(filePath) };
+
+        await redisClient.connect();
+        const originalFilename = await redisClient.get(`file:${fileId}:filename`);
+        return { stream: filestream, filename: originalFilename };
     };
 
-    _stagingAreaDownload = async (type, filePath, filename, id) => {
-        const s3Service = new S3Service();
+    _stagingAreaDownload = async (type, filePath, fileName, fileId, id) => {
+        await redisClient.connect();
+        const originalFilename = await redisClient.get(`file:${fileId}:filename`);
+
+        const safeFilename = encodeURIComponent(originalFilename);
         const file = {
             tempFilePath: filePath,
-            name: filename,
+            name: safeFilename, // S3 metadata (originalName)
         };
-        const uploadResult = await s3Service.uploadFile(file, filename, type, id);
-        const [fileId, encodedFilename] = uploadResult.filename.split('_');
-        const originalFilename = decodeURIComponent(encodedFilename);
+        const s3Service = new S3Service();
+        const uploadResult = await s3Service.uploadFile(file, fileName, type, id);
         return { fileId: fileId, filename: originalFilename, location: uploadResult.location };
     };
 
@@ -118,22 +123,23 @@ class InternetFileService {
         const fileId = req.params.fileId;
         const { type, id } = req.query;
 
+        await redisClient.connect();
+        const fileHash = await redisClient.get(`file:${fileId}:hash`);
         const files = await fs.promises.readdir(this.uploadPath);
-        const matchedFile = files.find((file) => file.startsWith(fileId + '_')); // 只比對檔名前面的 fileId
+        const matchedFile = files.find((file) => file.startsWith(fileHash));
         if (!matchedFile) {
             throw new Error('File not found');
         }
-        const safeFileName = encodeURIComponent(matchedFile);
         const filePath = path.join(this.uploadPath, matchedFile);
 
         // 根據不同 ways 提供不同下載方式
         if (way === 'local') {
-            return this._localDownload(filePath);
+            return this._localDownload(filePath, fileId);
         } else if (way === 'staging-area') {
             if (!type || !id) {
                 throw new Error('Type and id query parameters are required for staging-area download.');
             }
-            return this._stagingAreaDownload(type, filePath, safeFileName, id);
+            return this._stagingAreaDownload(type, filePath, matchedFile, fileId, id);
         } else if (way === 'google-cloud') {
             // TODO: Integrate Google drive
         } else {
