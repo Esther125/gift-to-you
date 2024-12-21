@@ -11,12 +11,13 @@ class HistoryController {
             .filter(([_, value]) => value === undefined)
             .map(([key, _]) => key);
         res.status(400).json({ message: `${missingValues.join(', ')} is required` });
-        logWithFileInfo('info', 'bad request with missing values');
+        logWithFileInfo('info', 'Bad request with missing values');
     };
 
     history = async (req, res) => {
         logWithFileInfo('info', '----- history -----');
         const { userID, lastKey } = req.query;
+
         if (!userID) {
             this._reqWithMissingValue(res, { userID });
             return;
@@ -30,7 +31,7 @@ class HistoryController {
                 res.status(200).json({ message: 'History success', ...records });
             }
         } catch (err) {
-            logWithFileInfo('error', `error when user ${userID} try to get history transfer records, ${err}`, err);
+            logWithFileInfo('error', `Error when user ${userID} try to get history transfer records, ${err}`, err);
             res.status(500).json({ message: `Error when user ${userID} try to get history transfer records` });
         }
     };

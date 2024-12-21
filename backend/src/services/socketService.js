@@ -23,18 +23,19 @@ class SocketService {
         socket.emit('system message', res);
 
         if (userID) {
-            logWithFileInfo('info', `[socketService] send system message "${stage}: ${status}" to user ${userID}`);
+            logWithFileInfo('info', `Send system message "${stage}: ${status}" to user ${userID}`);
         } else {
             logWithFileInfo(
                 'error',
-                `[socketService] send system message "${stage}: ${status}" to user with missing userID`
+                `Send system message "${stage}: ${status}" to user with missing userID`,
+                new Error('Missing userID')
             );
         }
     };
 
     eventWithMissingValues = (socket, stage, requiredValues) => {
         const userID = socket.handshake.auth?.user?.id || null;
-        logWithFileInfo('info', `[socketService] user ${userID} ask to ${stage} with missing values`);
+        logWithFileInfo('info', `User ${userID} ask to ${stage} with missing values`);
 
         const missingValues = Object.entries(requiredValues)
             .filter(([key, value]) => value === null)
@@ -44,7 +45,7 @@ class SocketService {
     };
 
     connect = async (socket, userID) => {
-        logWithFileInfo('info', `[socketService] user ${userID} ask to connect to /socket websocket server`);
+        logWithFileInfo('info', `User ${userID} ask to connect to /socket websocket server`);
 
         // 加入以 userID 命名的聊天室
         socket.join(userID);
@@ -54,16 +55,16 @@ class SocketService {
             await redisClient.connect();
             const roomToken = await redisClient.get(`userId:${userID}`);
             if (roomToken !== null && this._checkUserInRoom(socket, userID, roomToken) === false) {
-                logWithFileInfo('info', `[socketService] add user ${userID} back to room ${roomToken}`);
+                logWithFileInfo('info', `Add user ${userID} back to room ${roomToken}`);
                 this.joinChatroom(socket, roomToken);
             }
         } catch (err) {
-            logWithFileInfo('error', `[socketService] error when add user ${userID} back to original room`, err);
+            logWithFileInfo('error', `Error when add user ${userID} back to original room`, err);
         }
 
         // 回傳處理結果通知
         this.systemMessage(socket, 'connect', 'success', 'success');
-        logWithFileInfo('info', `[socketService] user ${userID} connect to /socket websocket server`);
+        logWithFileInfo('info', `User ${userID} connect to /socket websocket server`);
     };
 
     _checkUserInRoom = (socket, userID, roomToken) => {
@@ -101,7 +102,7 @@ class SocketService {
 
     joinChatroom = (socket, roomToken) => {
         const userID = socket.handshake.auth.user.id;
-        logWithFileInfo('info', `[socketService] user ${userID} ask to join chatroom ${roomToken}`);
+        logWithFileInfo('info', `User ${userID} ask to join chatroom ${roomToken}`);
 
         const roomExist = true; // TODO: 之後再看怎麼接 roomService 來判斷
 
@@ -115,14 +116,14 @@ class SocketService {
 
             // 回傳處理結果通知
             this.systemMessage(socket, 'join chatroom', 'success', 'success');
-            logWithFileInfo('info', `[socketService] user ${userID} join chatroom ${roomToken}`);
+            logWithFileInfo('info', `User ${userID} join chatroom ${roomToken}`);
         } else {
             // 回傳處理結果通知
             this.systemMessage(socket, 'join chatroom', 'fail');
             logWithFileInfo(
                 'error',
-                `[socketService] user ${userID} can not join non-existed room ${roomToken}`,
-                new Error('test')
+                `User ${userID} can not join non-existed room ${roomToken}`,
+                new Error('User can not join non-existed room')
             );
         }
     };
@@ -142,14 +143,14 @@ class SocketService {
         const senderInRoom = this._checkUserInRoom(socket, senderID, roomToken);
         if (!senderInRoom) {
             this.systemMessage(socket, 'request transfer', 'fail', `sender not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] sender ${userID} is not in room ${roomToken}`, new Error('test'));
+            logWithFileInfo('error', `Sender ${userID} is not in room ${roomToken}`, new Error('Sender not in room'));
             return;
         }
 
         let receiverInfo;
         if (receiverID) {
             // 傳輸對象: user
-            logWithFileInfo('info', `[socketService] user ${userID} ask to transfer file to user ${receiverID}`);
+            logWithFileInfo('info', `User ${userID} ask to transfer file to user ${receiverID}`);
 
             // 檢查 receiver 是否在該 chatroom 內
             const receiverInRoom = this._checkUserInRoom(socket, receiverID, roomToken);
@@ -157,8 +158,8 @@ class SocketService {
                 this.systemMessage(socket, 'request transfer', 'fail', `receiver not in room ${roomToken}`);
                 logWithFileInfo(
                     'error',
-                    `[socketService] receiver ${userID} is not in room ${roomToken}`,
-                    new Error('test')
+                    `Receiver ${userID} is not in room ${roomToken}`,
+                    new Error('Receiver not in room')
                 );
                 return;
             }
@@ -168,18 +169,15 @@ class SocketService {
                 this.systemMessage(socket, 'request transfer', 'fail', `sender and receiver are the same`);
                 logWithFileInfo(
                     'error',
-                    `[socketService] user ${userID} ask to transfer to himself`,
-                    new Error('test')
+                    `User ${userID} ask to transfer to himself`,
+                    new Error('Cannot transfer to himself')
                 );
                 return;
             }
 
             // 通知 receiver，sender 要傳檔案給他
             socketNameSpace.to(receiverID).emit('transfer notify', res);
-            logWithFileInfo(
-                'info',
-                `[socketService] send transfer notification requested from user ${senderID} to user ${receiverID}`
-            );
+            logWithFileInfo('info', `Send transfer notification requested from user ${senderID} to user ${receiverID}`);
 
             // 建立 receiverInfo
             receiverInfo = {
@@ -188,14 +186,11 @@ class SocketService {
             };
         } else {
             // 傳輸對象: room
-            logWithFileInfo('info', `[socketService] user ${userID} ask to transfer file to room ${roomToken}`);
+            logWithFileInfo('info', `User ${userID} ask to transfer file to room ${roomToken}`);
 
             // 通知 chatroom 中的所有 user，sender 要傳檔案給他
             socket.to(roomToken).emit('transfer notify', res);
-            logWithFileInfo(
-                'info',
-                `[socketService] send transfer notification requested from user ${senderID} to room ${roomToken}`
-            );
+            logWithFileInfo('info', `Send transfer notification requested from user ${senderID} to room ${roomToken}`);
 
             // 建立 receiverInfo
             receiverInfo = {
@@ -226,13 +221,13 @@ class SocketService {
 
     chatMessage = (socket, roomToken, message) => {
         const userID = socket.handshake.auth.user.id;
-        logWithFileInfo('info', `[socketService] user ${userID} ask to send message to chatroom ${roomToken}`);
+        logWithFileInfo('info', `User ${userID} ask to send message to chatroom ${roomToken}`);
 
         // 檢查該 user 是否在該 chatroom 內
         const inRoom = this._checkUserInRoom(socket, userID, roomToken);
         if (!inRoom) {
             this.systemMessage(socket, 'chat message', 'fail', `sender not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] user ${userID} is not in room ${roomToken}`, new Error('test'));
+            logWithFileInfo('error', `User ${userID} is not in room ${roomToken}`, new Error('User not in room'));
             return;
         }
 
@@ -250,18 +245,18 @@ class SocketService {
 
         // 回傳處理結果通知
         this.systemMessage(socket, 'chat message', 'success', 'success');
-        logWithFileInfo('info', `[socketService] user ${userID} send message ${message} to chatroom ${roomToken}`);
+        logWithFileInfo('info', `User ${userID} send message ${message} to chatroom ${roomToken}`);
     };
 
     leaveChatroom = (socket, roomToken) => {
         const userID = socket.handshake.auth.user.id;
-        logWithFileInfo('info', `[socketService] user ${userID} ask to leave chatroom ${roomToken}`);
+        logWithFileInfo('info', `User ${userID} ask to leave chatroom ${roomToken}`);
 
         // 檢查該 user 是否在該 chatroom 內
         const inRoom = this._checkUserInRoom(socket, userID, roomToken);
         if (!inRoom) {
             this.systemMessage(socket, 'leave chatroom', 'fail', `user not in room ${roomToken}`);
-            logWithFileInfo('error', `[socketService] user ${userID} is not in room ${roomToken}`, new Error('test'));
+            logWithFileInfo('error', `User ${userID} is not in room ${roomToken}`, new Error('User not in room'));
             return;
         }
 
@@ -273,16 +268,13 @@ class SocketService {
 
         // 回傳處理結果通知
         this.systemMessage(socket, 'leave chatroom', 'success', 'success');
-        logWithFileInfo('info', `[socketService] user ${userID} leave chatroom ${roomToken}`);
+        logWithFileInfo('info', `User ${userID} leave chatroom ${roomToken}`);
     };
 
     disconnect = (socket, reason) => {
         const userID = socket.handshake.auth?.user?.id || null;
         if (userID) {
-            logWithFileInfo(
-                'info',
-                `[chatService] user ${userID} disconnect with /chat websocket server because of ${reason}`
-            );
+            logWithFileInfo('info', `User ${userID} disconnect with /chat websocket server because of ${reason}`);
 
             if (socket.roomToken !== undefined) {
                 // 通知 room 內其他人
@@ -293,7 +285,7 @@ class SocketService {
         } else {
             logWithFileInfo(
                 'info',
-                `[socketService] user with missing userID disconnect with /socket websocket server because of ${reason}`
+                `User with missing userID disconnect with /socket websocket server because of ${reason}`
             );
         }
     };
