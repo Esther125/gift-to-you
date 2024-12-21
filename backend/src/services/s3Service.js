@@ -138,7 +138,7 @@ class S3Service {
                     };
 
                     if (type === 'room') {
-                        const presignedUrl = await this.generatePresignedUrl(fileData.filename, 'room', id);
+                        const presignedUrl = await this.generatePresignedUrl(fileData.originalName, 'room', id);
                         fileData.presignedUrl = presignedUrl;
                     }
 
