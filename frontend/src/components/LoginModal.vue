@@ -27,9 +27,8 @@ const loginHandler = async () => {
         );
         loginStatus.value = 'success';
 
-        // clear out old roomToken
-        sessionStorage.removeItem('roomToken');
-        store.roomToken = '';
+        // leave room before login
+        await leaveRoom();
 
         // make modal disappear after 3 seconds and go to next page
         if (toPath.value !== '/logout') {
@@ -52,6 +51,26 @@ const loginHandler = async () => {
 
 const registerHandler = () => {
     router.push({ path: '/register' });
+};
+
+const leaveRoom = async () => {
+    if (store.roomToken) {
+        const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/leave`, { user: store.user });
+        if (data.message === 'success') {
+            store.clientSocket.emit('leave chatroom', { roomToken: store.roomToken });
+        }
+    }
+
+    clearData();
+};
+
+const clearData = () => {
+    store.roomToken = null;
+    store.qrCodeSrc = null;
+    store.members = [];
+    sessionStorage.removeItem('roomToken');
+    sessionStorage.removeItem('qrCodeSrc');
+    sessionStorage.removeItem('messages');
 };
 
 const initModal = () => {

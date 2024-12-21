@@ -85,6 +85,15 @@ const handleBackspace = async (index) => {
 };
 
 const joinRoom = async () => {
+    // leave old room
+    if (store.roomToken) {
+        const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/leave`, { user: store.user });
+        if (data.message === 'success') {
+            store.clientSocket.emit('leave chatroom', { roomToken: store.roomToken });
+        }
+    }
+
+    // join new room
     let inputRoomToken = characters.join('').toUpperCase();
     if (inputRoomToken.length === 5) {
         store.roomToken = inputRoomToken;

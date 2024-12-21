@@ -3,10 +3,13 @@ import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useGlobalStore } from '../stores/globals.js';
 import * as bootstrap from 'bootstrap';
+import axios from 'axios';
 import api from '@/api/api';
 
 const router = useRouter();
 const store = useGlobalStore();
+
+const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
 
 let modalInstance;
 
@@ -23,14 +26,35 @@ const showModal = () => {
 
 const logoutHandler = async () => {
     try {
-        // clear out old roomToken
-        sessionStorage.removeItem('roomToken');
-        store.roomToken = '';
+        // leave room before logout
+        await leaveRoom();
 
         await api.post('/logout');
     } catch (error) {
         console.error('Error logout: ', error);
     }
+};
+
+const leaveRoom = async () => {
+    if (store.roomToken) {
+        const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/leave`, { user: store.user });
+        if (data.message === 'success') {
+            store.clientSocket.emit('leave chatroom', { roomToken: store.roomToken });
+        }
+    }
+
+    clearData();
+};
+
+const clearData = () => {
+    store.roomToken = null;
+    store.qrCodeSrc = null;
+    store.members = [];
+    store.user.id = null;
+    sessionStorage.removeItem('roomToken');
+    sessionStorage.removeItem('qrCodeSrc');
+    sessionStorage.removeItem('messages');
+    sessionStorage.removeItem('userId');
 };
 
 onMounted(() => {
