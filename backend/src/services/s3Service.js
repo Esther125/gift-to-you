@@ -51,7 +51,7 @@ class S3Service {
         }
     };
 
-    _generatePresignedUrl = async (filename, type, id) => {
+    generatePresignedUrl = async (filename, type, id) => {
         console.log(`[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`);
 
         // S3 file key
@@ -93,6 +93,7 @@ class S3Service {
 
     getFileList = async (type, id, lastKey = null) => {
         logWithFileInfo('info', '----S3server.getFileList');
+        logWithFileInfo('info', )
 
         if (!id) {
             const Iderror = new Error("ID is required to fetch the file list");
@@ -101,7 +102,7 @@ class S3Service {
         }
 
         const prefix = `${type}/${id}/`; 
-        logWithFileInfo('info', `Fetching file list for type: ${type}, id: ${id}, prefix: ${prefix}`);
+        logWithFileInfo('info', `Fetching file list for ${type}:  ${id}, prefix: ${prefix}`); 
 
         const params = {
             Bucket: this._bucket,
