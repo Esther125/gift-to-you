@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
-import crypto from 'crypto';
+import crypto, { randomUUID } from 'crypto';
 import S3Service from './s3Service.js';
 import { logWithFileInfo } from '../../logger.js';
 import pkg from 'bloom-filters';
@@ -38,11 +38,9 @@ class InternetFileService {
         return filter;
     };
 
-    _generateUniqueFilename = (filename, file) => {
+    _generateUniqueFilename = (filename, fileHash) => {
         const extension = path.extname(filename);
-        const originalName = path.basename(filename, extension);
-        const fileId = this._calculateFileHash(file); // 把 fileHash 當成 fileId
-        return `${fileId}_${originalName}${extension}`; // 檔案格式：{fileId}_{原檔名}.{附檔名}
+        return `${fileHash}${extension}`; // 檔名格式：{fileHash}.{附檔名}
     };
 
     _calculateFileHash = (file) => {
@@ -51,36 +49,46 @@ class InternetFileService {
         return hash.digest('hex');
     };
 
+    _saveFileInfo = (fileId, fileHash, originalFilename) => {
+        // 在 Redis 存 fileId 對應的 fileHash 和 originalFilename
+        redisClient.set(`file:${fileId}:hash`, fileHash);
+        redisClient.setExpire(`file:${fileId}:hash`, 3600 * 24 * 30); // 30 days expire
+        redisClient.set(`file:${fileId}:filename`, originalFilename);
+        redisClient.setExpire(`file:${fileId}:filename`, 3600 * 24 * 30); // 30 days expire
+        logWithFileInfo('info', `File info saved to Redis.`);
+    };
+
     uploadFile = async (req, res, next) => {
         try {
             if (!req.file) {
                 throw new Error('No file was uploaded.');
             }
-
             const fileBuffer = req.file.buffer; // 暫存在 memory 中的檔案
+            const fileId = randomUUID();
             const originalFilename = req.file.originalname;
+            const fileHash = this._calculateFileHash(fileBuffer);
+            this._saveFileInfo(fileId, fileHash, originalFilename);
+
             const exist = this.bloomFilter.has(fileBuffer);
-            let fullFilename;
+            const fullFilename = this._generateUniqueFilename(originalFilename, fileHash);
 
             if (exist) {
-                fullFilename = this._generateUniqueFilename(originalFilename, fileBuffer);
                 logWithFileInfo('info', `File: ${fullFilename} already exists in the server.`);
             } else {
-                fullFilename = this._generateUniqueFilename(originalFilename, fileBuffer);
                 // 將檔案存入 uploads 資料夾
                 const filePath = path.join(this.uploadPath, fullFilename);
                 await fs.promises.writeFile(filePath, fileBuffer);
 
                 // 將 file 加到 bloomFilter
                 this.bloomFilter.add(fileBuffer);
-                logWithFileInfo('info', `File saved as ${fullFilename}`);
+                logWithFileInfo('info', `File ID: ${fileId} successfully saved as ${fullFilename}`);
 
                 // 更新 bloomFilter 到 Redis
                 await redisClient.connect();
                 await redisClient.saveBloomFilter(this.bloomFilter);
                 logWithFileInfo('info', `Bloom filter saved to Redis`);
             }
-            return fullFilename;
+            return { fileId: fileId, fileName: originalFilename };
         } catch (err) {
             throw new Error(err);
         }
