@@ -1,4 +1,5 @@
 import S3Service from '../services/s3Service.js';
+import S3Service from '../services/s3Service.js';
 import { logWithFileInfo } from '../../logger.js';
 
 class ProfileController {
@@ -10,6 +11,7 @@ class ProfileController {
     getStagingFile = async (req, res) => {
         logWithFileInfo('info', '----ProfileController.getStagingFile');
 
+        const { type, id, lastKey } = req.query;
         const { type, id, lastKey } = req.query;
 
         if (!type || !id) {
@@ -24,18 +26,23 @@ class ProfileController {
             }
 
             return res.status(200).json({
+            return res.status(200).json({
                 file: files,
                 lastKey: nextLastKey,
+            });
             });
         } catch (error) {
             logWithFileInfo('error', 'Error fetching staging file:', error);
             return res.status(500).json({ message: 'Failed to fetch staging files.', error: error.message });
         }
     };
+    };
 
     getPresignedUrl = async (req, res) => {
         logWithFileInfo('info', '----ProfileController.generatePresignedUrl');
 
+        const { userId, filename } = req.query;
+        const type = 'user';
         const { userId, filename } = req.query;
         const type = 'user';
 
@@ -62,6 +69,7 @@ class ProfileController {
                 error: error.message,
             });
         }
+    };
     };
 }
 

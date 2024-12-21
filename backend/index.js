@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import pkg from 'body-parser';
+import cookieParser from 'cookie-parser';
 import homeRouter from './src/routes/homeRouter.js';
 import authRouters from './src/routes/authRoutes.js';
 import internetFileRouter from './src/routes/internetFileRoutes.js';
@@ -15,7 +16,12 @@ import redisClient from './src/clients/redisClient.js';
 
 // express
 const app = express();
-app.use(cors());
+app.use(
+    cors({
+        origin: process.env.FRONTEND_BASE_URL,
+        credentials: true,
+    })
+);
 
 // Middleware: parse request body to json format
 const { json } = pkg;
@@ -26,6 +32,9 @@ app.use((req, res, next) => {
     logWithFileInfo('info', `${req.method} ${req.url}`);
     next();
 });
+
+// Middleware: cookie parser
+app.use(cookieParser());
 
 // use routes
 app.use('/api/v1', homeRouter);
