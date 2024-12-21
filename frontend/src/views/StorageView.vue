@@ -19,7 +19,7 @@ onMounted(async () => {
     await getNextTempFiles(null);
     await nextTick();
 
-    if (_checkNotEnoughFiles() && prevLastKey.value !== null) {
+    if (_checkNotEnoughFiles() && prevLastKey.value !== "undefined") {
       await getNextTempFiles(prevLastKey.value);
     }
 
@@ -59,7 +59,6 @@ const getNextTempFiles = async (lastKey) => {
         }
     } catch(error) {
         console.error('Error getting new TempFiles:', error);
-        prevLastKey.value = null;
     }
 };
 
