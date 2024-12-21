@@ -30,7 +30,7 @@ const registerHandler = async () => {
         if (registerStatus.value === 'User already registered') {
             setTimeout(() => {
                 registerStatus.value = 'default';
-            }, 3000);
+            }, 2000);
         }
     } catch (error) {
         console.error('Error register: ', error);

@@ -40,13 +40,13 @@ const loginHandler = async () => {
 
         setTimeout(() => {
             modalInstance.hide();
-        }, 3000);
+        }, 1500);
     } catch (error) {
         console.error('Error login: ', error);
         loginStatus.value = 'fail';
         setTimeout(() => {
             loginStatus.value = 'default';
-        }, 3000);
+        }, 2000);
     }
 };
 
