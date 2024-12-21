@@ -6,7 +6,6 @@ export const useAlertStore = defineStore('alert', () => {
 
     // 添加一個新的 alert
     const addAlert = (message, level = 'info') => {
-        console.log('Add Alert');
         const id = Date.now(); // 用唯一 ID 標識
         alerts.value.push({ id, message, level });
 

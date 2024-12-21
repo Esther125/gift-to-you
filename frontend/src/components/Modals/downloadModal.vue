@@ -152,7 +152,7 @@ onMounted(() => {
                     <!-- 下載按鈕 -->
                     <button class="btn btn-success" type="button" @click="download">下載</button>
                     <!-- 傳送到 s3 的按鈕 -->
-                    <button class="btn btn-success" type="button" @click="sendToS3">儲存至暫存區</button>
+                    <button v-if="store.loginStatus" class="btn btn-success" type="button" @click="sendToS3">儲存至暫存區</button>
                 </div>
             </div>
         </div>

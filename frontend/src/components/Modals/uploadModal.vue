@@ -129,7 +129,7 @@ const uploadFile = (rec) => {
             }
         })
         .catch(error => {
-            console.log('Error:', error);
+            alertStore.addAlert(error.message, 'error');
         });
     } else {
         alertStore.addAlert('請先選擇檔案', 'error');
