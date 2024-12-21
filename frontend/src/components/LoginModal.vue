@@ -27,12 +27,14 @@ const loginHandler = async () => {
         );
         loginStatus.value = 'success';
 
+        // clear out old roomToken
+        sessionStorage.removeItem('roomToken');
+        store.roomToken = '';
+
         // make modal disappear after 3 seconds and go to next page
         if (toPath.value !== '/logout') {
             router.push({ path: toPath.value });
         } else {
-            sessionStorage.removeItem('roomToken');
-            store.roomToken = '';
             router.push({ path: '/' });
         }
 

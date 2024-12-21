@@ -6,6 +6,7 @@ import * as bootstrap from 'bootstrap';
 import api from '@/api/api';
 
 const router = useRouter();
+const store = useGlobalStore();
 
 let modalInstance;
 
@@ -22,8 +23,11 @@ const showModal = () => {
 
 const logoutHandler = async () => {
     try {
+        // clear out old roomToken
+        sessionStorage.removeItem('roomToken');
+        store.roomToken = '';
+
         await api.post('/logout');
-        router.push({ path: '/' });
     } catch (error) {
         console.error('Error logout: ', error);
     }
@@ -36,7 +40,7 @@ onMounted(() => {
     if (modalElement) {
         modalElement.addEventListener('hidden.bs.modal', () => {
             if (window.location.pathname === '/logout') {
-                router.push({ path: '/' });
+                router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: false } });
             }
         });
     }
