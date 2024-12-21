@@ -51,7 +51,6 @@ const loginHandler = async () => {
 };
 
 const registerHandler = () => {
-    modalInstance.hide();
     router.push({ path: '/register' });
 };
 
@@ -110,7 +109,7 @@ onMounted(() => {
                         </div>
                     </form>
                     <div class="m-3 d-flex justify-content-around">
-                        <a class="text-secondary" @click="registerHandler">立即註冊</a>
+                        <a class="text-secondary" data-bs-dismiss="modal" @click="registerHandler">立即註冊</a>
                     </div>
                 </div>
             </div>

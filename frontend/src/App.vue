@@ -86,12 +86,11 @@ const handleBackspace = async (index) => {
 
 const joinRoom = async () => {
     let inputRoomToken = characters.join('').toUpperCase();
-    console.log(characters);
     if (inputRoomToken.length === 5) {
         store.roomToken = inputRoomToken;
         sessionStorage.setItem('roomToken', inputRoomToken);
-        router.push({ path: '/', query: { roomToken: inputRoomToken } });
-        characters.splice(0, characters.length, ...new Array(5).fill(''));
+        roomModalInstance.hide();
+        await router.push({ path: '/', query: { roomToken: inputRoomToken } });
     } else {
         alert('邀請碼不存在');
     }
@@ -116,6 +115,10 @@ const clearData = () => {
     sessionStorage.removeItem('roomToken');
     sessionStorage.removeItem('qrCodeSrc');
     sessionStorage.removeItem('messages');
+};
+
+const onModalHide = () => {
+    characters.splice(0, characters.length, ...new Array(5).fill(''));
 };
 
 const AUTH_OPTIONS = (userID) => ({
@@ -336,7 +339,14 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- Room Modal -->
-    <div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="roomModalLabel" aria-hidden="true">
+    <div
+        class="modal fade"
+        id="roomModal"
+        tabindex="-1"
+        aria-labelledby="roomModalLabel"
+        aria-hidden="true"
+        v-on="{ 'hide.bs.modal': onModalHide }"
+    >
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header pt-3 pb-2 border-0">
@@ -370,9 +380,7 @@ onBeforeUnmount(() => {
                     <button class="btn btn-secondary" type="submit" data-bs-dismiss="modal" @click="leaveRoom">
                         離開
                     </button>
-                    <button class="btn btn-success" type="submit" data-bs-dismiss="modal" @click="joinRoom">
-                        加入
-                    </button>
+                    <button class="btn btn-success" type="submit" @click="joinRoom">加入</button>
                 </div>
             </div>
         </div>
