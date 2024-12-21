@@ -21,17 +21,17 @@ class S3Service {
         } else if (type === 'room') {
             return `room/${id}/${filename}`;
         } else {
-            throw new Error(`[S3Service] Invalid type: ${type}`);
+            throw new Error(`Invalid type: ${type}`);
         }
     };
 
     uploadFile = async (file, filename, type, id) => {
-        logWithFileInfo('info', `[S3Service] uploadFile() called with type: ${type}, id: ${id}, filename: ${filename}`);
+        logWithFileInfo('info', `uploadFile() called with type: ${type}, id: ${id}, filename: ${filename}`);
 
         const key = this._generateS3Key(type, id, filename); // S3 file key
         // 驗證檔案是否存在
         if (!fs.existsSync(file.tempFilePath)) {
-            throw new Error(`[S3Service] File not found: ${file.tempFilePath}`);
+            throw new Error(`File not found: ${file.tempFilePath}`);
         }
 
         // create readable stream
@@ -49,22 +49,19 @@ class S3Service {
 
         try {
             const data = await this._s3.send(new PutObjectCommand(uploadParams));
-            logWithFileInfo('info', `[S3Service] Upload Success: ${data}`);
+            logWithFileInfo('info', `Upload Success: ${data}`);
             return {
                 filename,
                 location: `https://${this._bucket}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`,
             };
         } catch (err) {
-            logWithFileInfo('error', '[S3Service] Upload Failed:', err);
+            logWithFileInfo('error', 'Upload Failed:', err);
             throw err;
         }
     };
 
     generatePresignedUrl = async (filename, type, id) => {
-        logWithFileInfo(
-            'info',
-            `[S3Service] Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`
-        );
+        logWithFileInfo('info', `Generating presigned URL for type: ${type}, id: ${id}, filename: ${filename}`);
 
         // S3 file key
         const key = this._generateS3Key(type, id, filename);
@@ -81,10 +78,10 @@ class S3Service {
         try {
             const url = await getSignedUrl(this._s3, command, { expiresIn: signedUrlExpireSeconds });
 
-            logWithFileInfo('info', `[S3Service] Presigned URL generated Successfully`);
+            logWithFileInfo('info', `Presigned URL generated Successfully`);
             return url;
         } catch (err) {
-            logWithFileInfo('error', '[S3Service] Failed to generate presigned URL:', err);
+            logWithFileInfo('error', 'Failed to generate presigned URL:', err);
             throw err;
         }
     };

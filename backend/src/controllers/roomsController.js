@@ -7,7 +7,7 @@ class RoomsController {
     }
 
     createRoom = async (req, res) => {
-        logWithFileInfo('info', '[RoomsController] -----createRoom-----');
+        logWithFileInfo('info', '-----createRoom-----');
 
         let user;
         try {
@@ -15,7 +15,7 @@ class RoomsController {
             if (!user) {
                 logWithFileInfo(
                     'error',
-                    '[RoomsController] Error when creating room - User object is required',
+                    'Error when creating room - User object is required',
                     new Error('Argument is needed but missing')
                 );
                 return res.status(400).json({ message: 'User object is required' });
@@ -24,7 +24,7 @@ class RoomsController {
             if (!user.id || user.id.length === 0) {
                 logWithFileInfo(
                     'error',
-                    '[RoomsController] Error when creating room - User id is required',
+                    'Error when creating room - User id is required',
                     new Error('Argument is needed but missing')
                 );
                 return res.status(400).json({ message: 'User id is required' });
@@ -35,13 +35,13 @@ class RoomsController {
             const qrCodeDataUrl = await this.roomService.createQRCode(joinRoomUrl);
             res.status(201).json({ token: roomObj.token, members: roomObj.members, qrCodeDataUrl });
         } catch (err) {
-            logWithFileInfo('error', `[RoomsController] Error when creating room for ${user.id}`, err);
+            logWithFileInfo('error', `Error when creating room for ${user.id}`, err);
             res.status(500).json({ message: `Error when creating room for ${user.id}` });
         }
     };
 
     joinRoom = async (req, res) => {
-        logWithFileInfo('info', '[RoomsController] -----joinRoom-----');
+        logWithFileInfo('info', '-----joinRoom-----');
 
         let user;
         let token;
@@ -52,7 +52,7 @@ class RoomsController {
             if (!user) {
                 logWithFileInfo(
                     'error',
-                    '[RoomsController] Error when joining room - User object is required',
+                    'Error when joining room - User object is required',
                     new Error('Argument is needed but missing')
                 );
                 return res.status(400).json({ message: 'User object is required' });
@@ -61,7 +61,7 @@ class RoomsController {
             if (!user.id || user.id.length === 0) {
                 logWithFileInfo(
                     'error',
-                    '[RoomsController] Error when joining room - User id is required',
+                    'Error when joining room - User id is required',
                     new Error('Argument is needed but missing')
                 );
                 return res.status(400).json({ message: 'User id is required' });
@@ -78,13 +78,13 @@ class RoomsController {
 
             return res.status(200).json({ message: joinRoomObj.message, members: joinRoomObj.members });
         } catch (err) {
-            logWithFileInfo('error', `[RoomsController] Error when joining room ${token} for user ${user.id}`, err);
+            logWithFileInfo('error', `Error when joining room ${token} for user ${user.id}`, err);
             res.status(500).json({ message: `Error when when joining room ${token} for user ${user.id}` });
         }
     };
 
     getMembers = async (req, res) => {
-        logWithFileInfo('info', '[RoomsController] -----getMembers-----');
+        logWithFileInfo('info', '-----getMembers-----');
 
         let token;
         try {
@@ -95,13 +95,13 @@ class RoomsController {
             }
             return res.status(400).json({ message: 'RoomToken is required' });
         } catch (err) {
-            logWithFileInfo('error', `[RoomsController] Error when getting members of room ${token}`, err);
+            logWithFileInfo('error', `Error when getting members of room ${token}`, err);
             res.status(500).json({ message: `Error when getting members of room ${token}` });
         }
     };
 
     leaveTargetRoom = async (req, res) => {
-        logWithFileInfo('info', '[RoomsController] -----leaveTargetRoom-----');
+        logWithFileInfo('info', '-----leaveTargetRoom-----');
 
         let user;
         let token;
@@ -112,7 +112,7 @@ class RoomsController {
             if (!user) {
                 logWithFileInfo(
                     'error',
-                    '[RoomsController] Error when leaving room - User object is required',
+                    'Error when leaving room - User object is required',
                     new Error('Argument is needed but missing')
                 );
                 return res.status(400).json({ message: 'User object is required' });
@@ -121,7 +121,7 @@ class RoomsController {
             if (!user.id || user.id.length === 0) {
                 logWithFileInfo(
                     'error',
-                    '[RoomsController] Error when leaving room - User id is required',
+                    'Error when leaving room - User id is required',
                     new Error('Argument is needed but missing')
                 );
                 return res.status(400).json({ message: 'User id is required' });
@@ -131,7 +131,7 @@ class RoomsController {
 
             return res.status(200).json({ message: 'success' });
         } catch (err) {
-            logWithFileInfo('error', `[RoomsController] Error when leaving room ${token} for user ${user.id}`, err);
+            logWithFileInfo('error', `Error when leaving room ${token} for user ${user.id}`, err);
             res.status(500).json({ message: `Error when when leaving room ${token} for user ${user.id}` });
         }
     };
