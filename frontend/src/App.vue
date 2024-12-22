@@ -14,10 +14,6 @@ import Logout from './components/LogoutModal.vue';
 const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
 const CHAT_SERVER_URL = import.meta.env.VITE_CHAT_SERVER_URL;
 const isDarkTheme = ref(false);
-const particlesPath = reactive({
-    dark: '/src/assets/particles-dark.json',
-    light: '/src/assets/particles-light.json',
-});
 const icon = ref();
 
 const characters = reactive(['', '', '', '', '']);
@@ -255,10 +251,6 @@ const initHandler = async (event) => {
    -------------------------------- */
 watch(isDarkTheme, iconChange);
 
-const particlesUrl = computed(() => {
-    return isDarkTheme.value ? particlesPath.dark : particlesPath.light;
-});
-
 /* ------------------------------
    Lifecycle Hooks
 -------------------------------- */
@@ -293,7 +285,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <vue-particles id="tsparticles" :url="particlesUrl" :key="particlesUrl" />
     <nav class="navbar navbar-expand-md fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" @click="homeHandler">
@@ -502,15 +493,5 @@ li {
 
 a:hover {
     cursor: pointer;
-}
-
-#tsparticles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
 }
 </style>
