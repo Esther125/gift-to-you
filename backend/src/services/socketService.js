@@ -296,7 +296,7 @@ class SocketService {
                     logWithFileInfo('error', 'Error in removing userId in redis', err);
                 }
             }
-        }, 5000);
+        }, 3000);
     };
 }
 
