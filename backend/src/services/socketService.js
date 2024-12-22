@@ -3,7 +3,6 @@ import { logWithFileInfo } from '../../logger.js';
 import RoomService from './roomsService.js';
 class SocketService {
     constructor() {
-        this.db = new DynamodbService();
         this._roomService = new RoomService();
         this._disconnectWaitUsers = {}; // userID: roomToken
     }
