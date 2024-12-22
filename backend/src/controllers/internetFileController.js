@@ -33,7 +33,6 @@ class InternetFileController {
             } else {
                 res.json(downloadDetails);
             }
-            logWithFileInfo('info', 'File downloaded successfully.');
         } catch (error) {
             logWithFileInfo('error', 'Error downloading file.', error);
             res.status(500).json({ message: 'Failed to download the file.', error: error.message });
