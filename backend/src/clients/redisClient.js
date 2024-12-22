@@ -153,37 +153,44 @@ class RedisClient {
         } while (cursor !== 0);
     };
 
-    // deleteHashByFileId = async (specifiedFileId) => {
-    //     let cursor = 0;
-    //     let countDeleted = 0;
+    deleteFileInfoByFileId = async (fileId) => {
+        try {
+            await redisClient.del(`file:${fileId}:hash`);
+            await redisClient.del(`file:${fileId}:filename`);
+            logWithFileInfo('info', `Deleted file info with fileId: ${fileId} from Redis.`);
+        } catch (err) {
+            logWithFileInfo('error', `Error deleting file info with fileId: ${fileId}`, err);
+            throw err;
+        }
+    };
 
-    //     do {
-    //         try {
-    //             const reply = await this.client.scan(cursor, 'MATCH', '*', 'COUNT', '100');
-    //             cursor = reply['cursor'];
-    //             const keys = reply['keys'];
+    deleteFileInfoWithSameHash = async (targetFileHash) => {
+        let cursor = 0;
+        do {
+            try {
+                const reply = await this.client.scan(cursor, {
+                    MATCH: 'file:*:hash',
+                    COUNT: 100,
+                });
 
-    //             for (const key of keys) {
-    //                 const value = await this.client.get(key);
-    //                 if (value && value.includes('_')) {
-    //                     const endIndex = value.indexOf('_');
-    //                     const fileId = value.substring(0, endIndex);
+                cursor = reply['cursor'];
+                const hashKeys = reply['keys'];
 
-    //                     if (fileId === specifiedFileId) {
-    //                         await this.client.del(key);
-    //                         countDeleted++;
-    //                         logWithFileInfo('info', `Deleted key: ${key} with fileId: ${fileId}`);
-    //                     }
-    //                 }
-    //             }
-    //         } catch (err) {
-    //             logWithFileInfo('error', `Error while scanning or deleting keys`, err);
-    //             throw err;
-    //         }
-    //     } while (cursor !== 0);
-
-    //     return countDeleted;
-    // };
+                for (const hashKey of hashKeys) {
+                    const currentHash = await redisClient.get(hashKey);
+                    if (currentHash === targetFileHash) {
+                        // 找到匹配的fileHash，提取fileId並刪除相關資訊
+                        const fileId = hashKey.split(':')[1];
+                        this.deleteFileInfoByFileId(fileId);
+                    }
+                }
+            } catch (err) {
+                logWithFileInfo('error', `Error deleting related file info with fileHash: ${targetFileHash}`, err);
+                throw err;
+            }
+        } while (cursor !== 0);
+        logWithFileInfo('info', `Deleted related file info with fileHash: ${targetFileHash} from Redis.`);
+    };
 
     saveBloomFilter = async (bloomFilter) => {
         try {

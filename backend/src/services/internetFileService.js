@@ -153,7 +153,7 @@ class InternetFileService {
 
         await redisClient.connect();
         const fileHash = await redisClient.get(`file:${fileId}:hash`);
-        const matchedFile = files.find((file) => file.startsWith(fileHash));
+        const matchedFile = files.find((file) => file.includes(fileHash));
 
         if (!matchedFile) {
             throw new Error('File not found');
@@ -169,14 +169,14 @@ class InternetFileService {
         logWithFileInfo('info', `File ID: ${fileId} deleted successfully.`);
 
         // 更新 bloomFilter 到 Redis
-        await redisClient.connect();
         await redisClient.saveBloomFilter(this.bloomFilter);
         logWithFileInfo('info', `Bloom filter saved to Redis`);
 
         // 刪除 Redis 中的 fileId 對應的 fileHash 和 originalFilename
-        await redisClient.del(`file:${fileId}:hash`);
-        await redisClient.del(`file:${fileId}:filename`);
+        await redisClient.deleteFileInfoByFileId(fileId);
         logWithFileInfo('info', `File info deleted from Redis.`);
+        // 一併刪除同樣 fileHash 的檔案相關資料
+        await redisClient.deleteFileInfoWithSameHash(fileHash);
 
         const response = { message: 'File deleted successfully' };
         return response;
