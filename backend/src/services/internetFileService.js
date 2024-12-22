@@ -150,28 +150,33 @@ class InternetFileService {
     deleteFile = async (req, res) => {
         const fileId = req.params.fileId;
         const files = await fs.promises.readdir(this.uploadPath);
-        const matchedFile = files.find((file) => {
-            const filename = path.basename(file);
-            const extractedFileId = filename.split('_')[0];
-            return extractedFileId === fileId;
-        });
+
+        await redisClient.connect();
+        const fileHash = await redisClient.get(`file:${fileId}:hash`);
+        const matchedFile = files.find((file) => file.startsWith(fileHash));
 
         if (!matchedFile) {
             throw new Error('File not found');
         }
 
-        const filePath = path.join(this.uploadPath, matchedFile);
         // 刪除檔案的 bloomFilter 紀錄
+        const filePath = path.join(this.uploadPath, matchedFile);
         const fileBuffer = await fs.promises.readFile(filePath);
         this.bloomFilter.remove(fileBuffer);
 
         // 刪除 /upload 中的檔案
         await fs.promises.unlink(filePath);
+        logWithFileInfo('info', `File ID: ${fileId} deleted successfully.`);
 
         // 更新 bloomFilter 到 Redis
         await redisClient.connect();
         await redisClient.saveBloomFilter(this.bloomFilter);
         logWithFileInfo('info', `Bloom filter saved to Redis`);
+
+        // 刪除 Redis 中的 fileId 對應的 fileHash 和 originalFilename
+        await redisClient.del(`file:${fileId}:hash`);
+        await redisClient.del(`file:${fileId}:filename`);
+        logWithFileInfo('info', `File info deleted from Redis.`);
 
         const response = { message: 'File deleted successfully' };
         return response;
@@ -192,6 +197,11 @@ class InternetFileService {
         await redisClient.connect();
         await redisClient.saveBloomFilter(this.bloomFilter);
         logWithFileInfo('info', `Bloom filter saved to Redis`);
+
+        // 刪除 Redis 中所有 fileId 對應的 fileHash 和 originalFilename
+        await redisClient.deleteByPattern('file:*:hash');
+        await redisClient.deleteByPattern('file:*:filename');
+        logWithFileInfo('info', `All file info deleted from Redis.`);
 
         const response = { message: 'All files deleted successfully' };
         return response;

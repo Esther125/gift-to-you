@@ -135,7 +135,10 @@ class RedisClient {
         let cursor = 0;
         do {
             try {
-                const reply = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', '100');
+                const reply = await this.client.scan(cursor, {
+                    MATCH: pattern,
+                    COUNT: 100,
+                });
                 cursor = reply['cursor'];
                 const keys = reply['keys'];
 
@@ -150,37 +153,37 @@ class RedisClient {
         } while (cursor !== 0);
     };
 
-    deleteHashByFileId = async (specifiedFileId) => {
-        let cursor = 0;
-        let countDeleted = 0;
+    // deleteHashByFileId = async (specifiedFileId) => {
+    //     let cursor = 0;
+    //     let countDeleted = 0;
 
-        do {
-            try {
-                const reply = await this.client.scan(cursor, 'MATCH', '*', 'COUNT', '100');
-                cursor = reply['cursor'];
-                const keys = reply['keys'];
+    //     do {
+    //         try {
+    //             const reply = await this.client.scan(cursor, 'MATCH', '*', 'COUNT', '100');
+    //             cursor = reply['cursor'];
+    //             const keys = reply['keys'];
 
-                for (const key of keys) {
-                    const value = await this.client.get(key);
-                    if (value && value.includes('_')) {
-                        const endIndex = value.indexOf('_');
-                        const fileId = value.substring(0, endIndex);
+    //             for (const key of keys) {
+    //                 const value = await this.client.get(key);
+    //                 if (value && value.includes('_')) {
+    //                     const endIndex = value.indexOf('_');
+    //                     const fileId = value.substring(0, endIndex);
 
-                        if (fileId === specifiedFileId) {
-                            await this.client.del(key);
-                            countDeleted++;
-                            logWithFileInfo('info', `Deleted key: ${key} with fileId: ${fileId}`);
-                        }
-                    }
-                }
-            } catch (err) {
-                logWithFileInfo('error', `Error while scanning or deleting keys`, err);
-                throw err;
-            }
-        } while (cursor !== 0);
+    //                     if (fileId === specifiedFileId) {
+    //                         await this.client.del(key);
+    //                         countDeleted++;
+    //                         logWithFileInfo('info', `Deleted key: ${key} with fileId: ${fileId}`);
+    //                     }
+    //                 }
+    //             }
+    //         } catch (err) {
+    //             logWithFileInfo('error', `Error while scanning or deleting keys`, err);
+    //             throw err;
+    //         }
+    //     } while (cursor !== 0);
 
-        return countDeleted;
-    };
+    //     return countDeleted;
+    // };
 
     saveBloomFilter = async (bloomFilter) => {
         try {
