@@ -9,14 +9,11 @@ class InternetFileController {
     upload = async (req, res) => {
         logWithFileInfo('info', '----InternetFileController.upload');
         try {
-            const fullFilename = await this.internetFileService.uploadFile(req, res);
-            const splitIndex = fullFilename.indexOf('_');
-            const fileId = fullFilename.substring(0, splitIndex);
-            const fileName = fullFilename.substring(splitIndex + 1);
+            const uploadResult = await this.internetFileService.uploadFile(req, res);
             res.status(200).json({
                 message: 'File uploaded successfully.',
-                fileId: fileId,
-                fileName: fileName,
+                fileId: uploadResult.fileId,
+                fileName: uploadResult.fileName, // 使用者上傳的原始檔名
             });
         } catch (error) {
             logWithFileInfo('error', 'Error uploading file.', error);
