@@ -1,5 +1,4 @@
 import redisClient from '../clients/redisClient.js';
-import DynamodbService from './dynamodbService.js';
 import { logWithFileInfo } from '../../logger.js';
 import RoomService from './roomsService.js';
 class SocketService {
