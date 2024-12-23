@@ -120,7 +120,7 @@ const downloadFile = async (originalName) => {
             },
         });
         if (data.url) {
-            window.open(data.url, '_blank');
+            window.open(data.url, '_parent');
         }
     } catch (error) {
         console.error('Error downloading file:', originalName, error);
