@@ -47,9 +47,18 @@ const getNextTempFiles = async (lastKey) => {
         if (data && Array.isArray(data.file) && data.file.length > 0) {
             totalFilesCount.value += data.file.length;
 
+            const DEFAULT_VALIDITY_DAYS = 30;
+
             data.file.forEach((item) => {
                 currentCount.value++;
-                tempFiles.push({ index: currentCount.value, ...item });
+
+                // 計算剩下天數
+                const modifiedDate = new Date(item.lastModified);
+                const expiryDate = new Date(modifiedDate.getTime() + DEFAULT_VALIDITY_DAYS * 24 * 60 * 60 * 1000); // 設置有效期
+                const today = new Date();
+                const daysLeft = Math.max(0, Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24))); 
+
+                tempFiles.push({ index: currentCount.value, daysLeft, ...item });
             });
 
             prevLastKey.value = data.lastKey || null;
@@ -149,8 +158,29 @@ const downloadFile = async (originalName) => {
             <i class="bi bi-file-earmark-text mx-2" style="font-size: 3rem"></i>
             <div class="vr my-2"></div>
             <div class="w-100 mx-3" style="overflow: hidden">
+                <!-- 檔名 -->
                 <div style="font-weight: bold; font-size: 1.3rem">
                     {{ file.filename }}
+                </div>
+                <!-- 剩餘天數 -->
+                <div class="mt-1 mb-2 d-flex align-items-center gap-2">
+                    <!-- 檔案大小 -->
+                    <span 
+                        class="text-secondary" 
+                        style="flex-shrink: 0; width: 6rem; text-align: left; white-space: nowrap;"
+                    >
+                        {{ file.size }}
+                    </span>
+                    
+                    <div class="d-flex align-items-center gap-2 ms-auto" style="margin-right: 10px;">
+                    <span
+                        class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"
+                    >
+                         還剩
+                    </span>
+                    <i class="bi bi-hourglass-split" style="font-size: 1rem"></i>
+                    <span>{{ file.daysLeft }} 天</span>
+                    </div>
                 </div>
             </div>
             <div class="vr my-2"></div>
