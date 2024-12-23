@@ -6,8 +6,8 @@ import axios from 'axios';
 const store = useGlobalStore();
 const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
 
-// const userID = store.user.id;
-const userID = '12346';
+const userID = store.user.id;
+// const userID = '12346';
 const totalFilesCount = ref(0);
 const tempFiles = reactive([]);
 const prevLastKey = ref(null);
