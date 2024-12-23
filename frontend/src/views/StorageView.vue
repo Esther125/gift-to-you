@@ -141,10 +141,10 @@ const downloadFile = async (originalName) => {
 
 <template>
     <div class="container-fluid d-flex flex-column m-0 py-0 px-5 h-100 w-100" style="max-width: 100vw">
-        <h2 class="m-0 pt-3 pb-0">檔案暫存區</h2>
+        <h2 class="m-0 pt-3 pb-0 mb-2">檔案暫存區</h2>
         <div 
             class="flex-fill px-2" 
-            style="overflow-y: scroll; max-height: calc(100vh - 180px)" 
+            style="overflow-y: scroll; max-height: calc(100vh - 185px)" 
             ref="tempFilesContainer"
         >
         <!-- 檔案清單 -->
