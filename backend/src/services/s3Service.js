@@ -122,6 +122,7 @@ class S3Service {
         try {
             const listCommand = new ListObjectsV2Command(params);
             const listData = await this._s3.send(listCommand);
+            const totalFilesCount = listData.KeyCount || 0; // 取總檔案數量
 
             if (!listData.Contents || listData.Contents.length === 0) {
                 logWithFileInfo('info', `[File List Success] No files found for ${type}: ${id}`);
@@ -156,6 +157,7 @@ class S3Service {
             return {
                 files: fileList,
                 lastKey: encodeURIComponent(listData.NextContinuationToken) || null,
+                totalFilesCount,
             };
         } catch (err) {
             logWithFileInfo('error', `Failed to fetch file list for ${type}: ${id}`, err);

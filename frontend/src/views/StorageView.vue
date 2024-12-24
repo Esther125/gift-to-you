@@ -8,7 +8,7 @@ const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
 
 const userID = store.user.id;
 // const userID = '12346';
-const totalFilesCount = ref(0);
+const totalFilesCount = ref(-1);
 const tempFiles = reactive([]);
 const prevLastKey = ref(null);
 
@@ -19,12 +19,14 @@ onMounted(async () => {
     await getNextTempFiles(null);
     await nextTick();
 
-    if (_checkNotEnoughFiles() && prevLastKey.value !== "undefined") {
+    if (totalFilesCount.value > 0 && _checkNotEnoughFiles() && prevLastKey.value !== "undefined") {
       await getNextTempFiles(prevLastKey.value);
     }
 
     const container = tempFilesContainer.value;
-    container.addEventListener('scroll', handleScroll);
+    if (totalFilesCount.value > 0) {
+        container.addEventListener('scroll', handleScroll);
+    }
 });
 
 onUnmounted(() => {
@@ -45,7 +47,7 @@ const getNextTempFiles = async (lastKey) => {
         });
 
         if (data && Array.isArray(data.file) && data.file.length > 0) {
-            totalFilesCount.value += data.file.length;
+            totalFilesCount.value = data.totalFilesCount;
 
             const DEFAULT_VALIDITY_DAYS = 30;
 
@@ -62,8 +64,15 @@ const getNextTempFiles = async (lastKey) => {
             });
 
             prevLastKey.value = data.lastKey || null;
+            if (!prevLastKey.value) {
+                console.log('No more pages to load');
+                unhandleScroll();
+            }
+        } else if (data.totalFilesCount === 0) {
+            // 沒有檔案
+            handleNoFiles();
         } else {
-            console.log('No more files or unexpected API response:', data);
+            console.log('unexpected API response:', data);
             prevLastKey.value = null;
         }
     } catch(error) {
@@ -107,9 +116,16 @@ const unhandleScroll = () => {
     }
 };
 
+const handleNoFiles = () => {
+    totalFilesCount.value = 0;
+    prevLastKey.value = null;
+    tempFiles.length = 0;
+    console.log('No files found.');
+};
+
 const _checkNotEnoughFiles = () => {
     const container = tempFilesContainer.value;
-    if (!container) return false;
+    if (!container || totalFilesCount.value <= 0) return false;
 
     return container.scrollTop + container.clientHeight >= container.scrollHeight - 2;
 };
