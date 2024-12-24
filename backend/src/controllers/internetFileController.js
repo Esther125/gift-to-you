@@ -9,15 +9,14 @@ class InternetFileController {
     upload = async (req, res) => {
         logWithFileInfo('info', '----InternetFileController.upload');
         try {
-            const fullFilename = await this.internetFileService.uploadFile(req, res);
-            const [fileId, fileName] = fullFilename.split('_');
+            const uploadResult = await this.internetFileService.uploadFile(req, res);
             res.status(200).json({
                 message: 'File uploaded successfully.',
-                fileId: fileId,
-                fileName: fileName,
+                fileId: uploadResult.fileId,
+                fileName: uploadResult.fileName, // 使用者上傳的原始檔名
             });
         } catch (error) {
-            logWithFileInfo('info', '----InternetFileController.upload');
+            logWithFileInfo('error', 'Error uploading file.', error);
             res.status(500).json({ message: 'Failed to upload the file.', error: error.message });
         }
     };
@@ -34,7 +33,6 @@ class InternetFileController {
             } else {
                 res.json(downloadDetails);
             }
-            logWithFileInfo('info', 'File downloaded successfully.');
         } catch (error) {
             logWithFileInfo('error', 'Error downloading file.', error);
             res.status(500).json({ message: 'Failed to download the file.', error: error.message });

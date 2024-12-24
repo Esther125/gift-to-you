@@ -135,7 +135,10 @@ class RedisClient {
         let cursor = 0;
         do {
             try {
-                const reply = await this.client.scan(cursor, 'MATCH', pattern, 'COUNT', '100');
+                const reply = await this.client.scan(cursor, {
+                    MATCH: pattern,
+                    COUNT: 100,
+                });
                 cursor = reply['cursor'];
                 const keys = reply['keys'];
 
@@ -150,36 +153,68 @@ class RedisClient {
         } while (cursor !== 0);
     };
 
-    deleteHashByFileId = async (specifiedFileId) => {
-        let cursor = 0;
-        let countDeleted = 0;
+    deleteFileInfoByFileId = async (fileId) => {
+        try {
+            await redisClient.del(`file:${fileId}:hash`);
+            await redisClient.del(`file:${fileId}:filename`);
+            logWithFileInfo('info', `Deleted file info with fileId: ${fileId} from Redis.`);
+        } catch (err) {
+            logWithFileInfo('error', `Error deleting file info with fileId: ${fileId}`, err);
+            throw err;
+        }
+    };
 
+    deleteFileInfoWithSameHash = async (targetFileHash) => {
+        let cursor = 0;
         do {
             try {
-                const reply = await this.client.scan(cursor, 'MATCH', '*', 'COUNT', '100');
+                const reply = await this.client.scan(cursor, {
+                    MATCH: 'file:*:hash',
+                    COUNT: 100,
+                });
+
                 cursor = reply['cursor'];
-                const keys = reply['keys'];
+                const hashKeys = reply['keys'];
 
-                for (const key of keys) {
-                    const value = await this.client.get(key);
-                    if (value && value.includes('_')) {
-                        const endIndex = value.indexOf('_');
-                        const fileId = value.substring(0, endIndex);
-
-                        if (fileId === specifiedFileId) {
-                            await this.client.del(key);
-                            countDeleted++;
-                            logWithFileInfo('info', `Deleted key: ${key} with fileId: ${fileId}`);
-                        }
+                for (const hashKey of hashKeys) {
+                    const currentHash = await redisClient.get(hashKey);
+                    if (currentHash === targetFileHash) {
+                        // 找到匹配的fileHash，提取fileId並刪除相關資訊
+                        const fileId = hashKey.split(':')[1];
+                        this.deleteFileInfoByFileId(fileId);
                     }
                 }
             } catch (err) {
-                logWithFileInfo('error', `Error while scanning or deleting keys`, err);
+                logWithFileInfo('error', `Error deleting related file info with fileHash: ${targetFileHash}`, err);
                 throw err;
             }
         } while (cursor !== 0);
+        logWithFileInfo('info', `Deleted related file info with fileHash: ${targetFileHash} from Redis.`);
+    };
 
-        return countDeleted;
+    saveBloomFilter = async (bloomFilter) => {
+        try {
+            const data = JSON.stringify(bloomFilter.saveAsJSON());
+            await this.client.set('bloomFilter', data);
+        } catch (err) {
+            logWithFileInfo('error', '[RedisClient] Error saving bloom filter to Redis', err);
+            throw err;
+        }
+    };
+
+    loadBloomFilter = async () => {
+        try {
+            const data = await this.client.get('bloomFilter');
+            if (data) {
+                const parsedData = JSON.parse(data);
+                return parsedData;
+            } else {
+                return null;
+            }
+        } catch (err) {
+            logWithFileInfo('error', '[RedisClient] Error loading bloom filter from Redis', err);
+            throw err;
+        }
     };
 }
 

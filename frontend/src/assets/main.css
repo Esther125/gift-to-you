@@ -5,6 +5,13 @@
     min-height: 100vh;
     margin: 0 0;
     font-weight: normal;
+    display: grid;
+    grid-template-columns: 1fr;
+}
+
+body {
+    display: flex;
+    place-items: center;
 }
 
 a,

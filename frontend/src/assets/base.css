@@ -23,6 +23,20 @@
     --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
     --vt-c-text-dark-1: var(--vt-c-white);
     --vt-c-text-dark-2: rgba(239, 239, 239, 0.73);
+
+    --bs-primary-border-subtle-light: #9ec5fe;
+    --bs-primary-bg-subtle-light: #cfe2ff;
+    --bs-primary-text-emphasis-light: #052c65;
+    --bs-primary-bg-subtle-dark: #031633;
+    --bs-primary-text-emphasis-dark: #6ea8fe;
+    --bs-primary-border-subtle-dark: #084298;
+
+    --bs-danger-border-subtle-light: #f1aeb5;
+    --bs-danger-bg-subtle-light: #f8d7da;
+    --bs-danger-text-emphasis-light: #58151c;
+    --bs-danger-bg-subtle-dark: #2c0b0e;
+    --bs-danger-text-emphasis-dark: #ea868f;
+    --bs-danger-border-subtle-dark: #842029;
 }
 
 /* semantic color variables for this project */
@@ -42,6 +56,13 @@
 
     --color-card-background: var(--vt-c-white-soft);
     --color-modal-text-background: var(--vt-c-white-1);
+
+    --bs-primary-border-subtle: var(--bs-primary-border-subtle-light);
+    --bs-primary-bg-subtle: var(--bs-primary-bg-subtle-light);
+    --bs-primary-text-emphasis: var(--bs-primary-text-emphasis-light);
+    --bs-danger-border-subtle: var(--bs-danger-border-subtle-light);
+    --bs-danger-bg-subtle: var(--bs-danger-bg-subtle-light);
+    --bs-danger-text-emphasis: var(--bs-danger-text-emphasis-light);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -59,6 +80,13 @@
 
         --color-card-background: var(--vt-c-white-soft);
         --color-modal-text-background: var(--vt-c-black-1);
+
+        --bs-primary-border-subtle: var(--bs-primary-border-subtle-dark);
+        --bs-primary-bg-subtle: var(--bs-primary-bg-subtle-dark);
+        --bs-primary-text-emphasis: var(--bs-primary-text-emphasis-dark);
+        --bs-danger-border-subtle: var(--bs-danger-border-subtle-dark);
+        --bs-danger-bg-subtle: var(--bs-danger-bg-subtle-dark);
+        --bs-danger-text-emphasis: var(--bs-danger-text-emphasis-dark);
     }
 }
 
