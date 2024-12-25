@@ -76,7 +76,7 @@ class S3Service {
             });
 
             const metadata = await this._s3.send(metadataCommand);
-            originalName = metadata.Metadata['originalname'];
+            originalName = decodeURIComponent(metadata.Metadata['originalname']);
         } catch (error) {
             logWithFileInfo('error', 'Failed to fetch metadata:', error);
         }
