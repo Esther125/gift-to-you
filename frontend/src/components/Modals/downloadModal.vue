@@ -13,8 +13,6 @@ const props = defineProps({
     fileId: String
 })
 
-// const testFileId = ref("9fb9259a-3e76-4fae-8a6f-b35cebf308c7")
-
 let modalInstance = null;
 
 const filePreviewUrl = ref(null);
@@ -32,7 +30,9 @@ const closeModal = () => {
 
 const processPreview = async () => {
     try {
-        const response = await axios.get(`${BE_API_BASE_URL}/${store.user.id}/download/local/${props.fileId}`, {
+        resetPreviewState();
+        
+        const response = await axios.get(`${BE_API_BASE_URL}/download/local/${props.fileId}`, {
             responseType: 'blob'
         });
 
@@ -47,7 +47,7 @@ const processPreview = async () => {
             }
 
             // 處理檔名（將 id 去掉）
-            filename.value = tempFilename.split('_').pop()
+            filename.value = tempFilename
 
             // 創建 Blob URL
             filePreviewUrl.value = URL.createObjectURL(response.data);
@@ -64,6 +64,12 @@ const processPreview = async () => {
         console.error('Error processing the file:', error);
     }
 }
+
+const resetPreviewState = () => {
+  filePreviewUrl.value = null;
+  isImage.value = false;
+  isPDF.value = false;
+};
 
 const download = () => {
     try {
@@ -88,7 +94,7 @@ const download = () => {
 
 const sendToS3 = async () => {
     try {
-        const requestPath = `${BE_API_BASE_URL}/${store.user.id}/download/staging-area/${props.fileId}?type=user&id=${store.user.id}`
+        const requestPath = `${BE_API_BASE_URL}/download/staging-area/${props.fileId}?type=user&id=${store.user.id}`
         const response = await axios.get(requestPath);
 
         if (response.status === 200) {
@@ -130,7 +136,7 @@ onMounted(() => {
                     <h5 class="modal-title" id="downloadModalLabel">檔案接收</h5>
                 </div>
                 <div class="modal-body d-flex flex-column">
-                    <h6>{{ filename }}</h6>
+                    <h6 class="text-break">{{ filename }}</h6>
                     <!-- 預覽檔案名稱與影像 -->
                     <div class="file-preview">
                         <!-- image -->
@@ -138,9 +144,9 @@ onMounted(() => {
                             <img :src="filePreviewUrl" alt="檔案預覽" class="img-fluid" />
                         </div>
                         <!-- PDF 檔案 -->
-                        <div v-else-if="isPDF">
+                        <!-- <div v-else-if="isPDF">
                             <iframe :src="filePreviewUrl"></iframe>
-                        </div>
+                        </div> -->
                         <div v-else>
                             <p>該檔案目前無法預覽，會持續開發的！</p>
                         </div>

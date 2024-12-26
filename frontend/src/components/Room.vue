@@ -142,8 +142,10 @@ const handleEnter = (event) => {
 };
 
 const handleSwitch = async () => {
-    await getRoomStagingFile();
     showChat.value = !showChat.value;
+    if (showChat.value === false) {
+        await getRoomStagingFile();
+    }
 }
 
 const openUploadModal = (recID) => {
@@ -294,7 +296,7 @@ onMounted(async () => {
                     <button class="btn" @click="sendMessage">Send</button>
                 </div>
                 <div v-else class="input-group p-2 justify-content-center mb-2">
-                    <button class="btn" @click="getRoomStagingFile">更新檔案清單</button>
+                    <button class="btn" @click="getRoomStagingFile" >更新檔案清單</button>
                 </div>
             </div>
         </div>

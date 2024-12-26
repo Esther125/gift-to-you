@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useGlobalStore } from '@/stores/globals.js';
 import { useAlertStore } from '@/stores/alertStore';
+import axios from 'axios';
 
 
 const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
@@ -77,7 +78,7 @@ const resetPreviewState = () => {
 };
 
 // 上傳檔案
-const uploadFile = (rec) => {
+const uploadFile = async (rec) => {
     if (selectedFile.value) {
         const formData = new FormData();
         // 解決中文檔案名稱亂碼問題
@@ -89,48 +90,42 @@ const uploadFile = (rec) => {
 
         formData.append('uploadFile', renamedFile);
 
-        fetch(`${BE_API_BASE_URL}/upload`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.status === 400) {
-                throw new Error("檔案大小超過 5 MB");
-            } else if (!response.ok) {
-                throw new Error("檔案上傳失敗");
-            }
-            return response.json();
-        })
-        .then(data => {
+        try {
+            const response = await axios.post(`${BE_API_BASE_URL}/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            console.log(response)
+
             if (rec === 'single') {
                 store.clientSocket.emit('request transfer', {
                     roomToken: store.roomToken,
-                    fileId: data.fileId,
+                    fileId: response.data.fileId,
                     receiverID: props.receiverID,
                 });
                 alertStore.addAlert('檔案傳送成功～', 'info');
             } else if (rec === 'room') {
-                fetch(`${BE_API_BASE_URL}/${store.user.id}/download/staging-area/${data.fileId}?type=room&id=${store.roomToken}`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error("Fail calling api to save to s3");
-                    }
-                    return response.json();
-                }).catch(error => {
-                    alertStore.addAlert(error.message, 'error');
-                });
+                const saveResponse = await axios.get(`${BE_API_BASE_URL}/download/staging-area/${response.data.fileId}?type=room&id=${store.roomToken}`);
+
+                if (!saveResponse.status === 200) {
+                    throw new Error("Fail calling api to save to s3");
+                }
 
                 store.clientSocket.emit('request transfer', {
                     roomToken: store.roomToken,
-                    fileId: data.fileId,
+                    fileId: response.data.fileId,
                 });
 
                 alertStore.addAlert('檔案傳送成功～', 'info');
             }
-        })
-        .catch(error => {
-            alertStore.addAlert(error.message, 'error');
-        });
+        } catch (error) {
+            if (error.status === 400) {
+                alertStore.addAlert("檔案大小超過 5 MB", 'error');
+            } else {
+                alertStore.addAlert("檔案傳送失敗，請再嘗試一次", 'error');
+            }
+        }
     } else {
         alertStore.addAlert('請先選擇檔案', 'error');
     }
@@ -165,6 +160,7 @@ onMounted(() => {
                     <h5 class="modal-title" id="uploadModalLabel">請選擇要傳送的檔案</h5>
                 </div>
                 <div class="modal-body d-flex flex-column">
+                    <small class="mb-2">⭐️ 小提示：目前只允許傳送小於 5MB 的檔案 ⭐️</small>
                     <!-- 檔案選擇器 -->
                     <input 
                         type="file" 
