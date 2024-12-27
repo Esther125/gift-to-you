@@ -76,17 +76,18 @@ class S3Service {
             });
 
             const metadata = await this._s3.send(metadataCommand);
-            originalName = metadata.Metadata['originalname'];
+            originalName = decodeURIComponent(metadata.Metadata['originalname']);
         } catch (error) {
             logWithFileInfo('error', 'Failed to fetch metadata:', error);
         }
 
         try {
             // s3 下載參數
+            const encodedOriginalName = encodeURIComponent(originalName).replace(/'/g, '%27');
             const command = new GetObjectCommand({
                 Bucket: this._bucket,
                 Key: key,
-                ResponseContentDisposition: `attachment; filename*=UTF-8''${originalName}`,
+                ResponseContentDisposition: `attachment; filename*=UTF-8''${encodedOriginalName}`,
             });
 
             // set 1 days expired
