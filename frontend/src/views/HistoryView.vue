@@ -150,7 +150,11 @@ const stopWatchHeight = watch(filterRecords, async () => {
             </button>
         </div>
 
-        <div class="flex-fill px-2" style="overflow-y: scroll" ref="recordsContainer">
+        <div 
+            class="flex-fill px-2" 
+            style="overflow-y: scroll; max-height: calc(100vh - 245px)" 
+            ref="recordsContainer"
+        >
             <!-- records -->
             <div
                 v-if="totalTransferCount > 0"
