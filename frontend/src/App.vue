@@ -4,9 +4,11 @@ import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick, computed } 
 import axios from 'axios';
 import api from '@/api/api';
 import { useGlobalStore } from './stores/globals.js';
+import { useAlertStore } from '@/stores/alertStore';
 import { io as ioc } from 'socket.io-client';
 import Login from './components/LoginModal.vue';
 import Logout from './components/LogoutModal.vue';
+import ToastDisplay from './components/Notice/ToastDisplay.vue';
 
 /* ------------------------------
    Variables
@@ -14,16 +16,13 @@ import Logout from './components/LogoutModal.vue';
 const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
 const CHAT_SERVER_URL = import.meta.env.VITE_CHAT_SERVER_URL;
 const isDarkTheme = ref(false);
-const particlesPath = reactive({
-    dark: '/src/assets/particles-dark.json',
-    light: '/src/assets/particles-light.json',
-});
 const icon = ref();
 
 const characters = reactive(['', '', '', '', '']);
 const inputRefs = ref([]);
 
 const store = useGlobalStore();
+const alertStore = useAlertStore();
 const router = useRouter();
 
 const buttonNavbarKey = computed(() => {
@@ -102,7 +101,7 @@ const joinRoom = async () => {
         roomModalInstance.hide();
         await router.push({ path: '/', query: { roomToken: inputRoomToken } });
     } else {
-        alert('邀請碼不存在');
+        alertStore.addAlert('邀請碼不存在', 'error');
     }
 };
 
@@ -114,11 +113,11 @@ const leaveRoom = async () => {
         }
     }
 
-    clearData();
+    clearRoomData();
     router.push({ path: '/' });
 };
 
-const clearData = () => {
+const clearRoomData = () => {
     store.roomToken = null;
     store.qrCodeSrc = null;
     store.members = [];
@@ -152,21 +151,27 @@ const showRoomModal = () => {
 };
 
 const homeHandler = () => {
-    router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
+    if (store.roomToken) {
+        router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
+    } else {
+        router.push({ path: '/' });
+    }
 };
 
 const loginStatusChangeHandler = async (event) => {
-    // set userId
-    const isLogin = event.detail.login;
-    let userId = '';
+    // change login status
+    const oldLoginStatus = store.loginStatus;
+    store.loginStatus = event.detail.login;
 
     // change userId
-    if (isLogin === true) {
+    let userId = '';
+    if (event.detail.login === true) {
+        console.log('login');
         const response = await api.get('/auth-check');
         userId = response.data.userID;
     } else {
         console.log('logout');
-        if (store.loginStatus === '' && sessionStorage.getItem('userId')) {
+        if (oldLoginStatus === '' && sessionStorage.getItem('userId')) {
             // refresh page
             userId = sessionStorage.getItem('userId');
         } else {
@@ -174,10 +179,14 @@ const loginStatusChangeHandler = async (event) => {
             userId = response.data.userId;
         }
     }
-
-    store.loginStatus = isLogin;
     store.user.id = userId;
     sessionStorage.setItem('userId', userId);
+
+    // clean old room
+    store.roomToken = null;
+    store.qrCodeSrc = null;
+    sessionStorage.removeItem('roomToken');
+    sessionStorage.removeItem('qrCodeSrc');
 
     // rebuild WebSocket connection
     if (store.clientSocket) {
@@ -185,68 +194,51 @@ const loginStatusChangeHandler = async (event) => {
         store.clientSocket.disconnect();
     }
     store.clientSocket = ioc(CHAT_SERVER_URL, AUTH_OPTIONS(store.user.id));
+    console.log('WebSocket - connect');
 
     // get old roomToken if exists
     await new Promise((resolve, reject) => {
         store.clientSocket.once('system message', async (res) => {
-            console.log('WebSocket - system message');
-            console.log(res);
             store.roomToken = res.roomToken;
             resolve();
         });
     });
 
     // setup websocket listener
-    store.clientSocket.on('system message', async (res) => {
-        console.log('WebSocket - system message');
+    store.clientSocket.on('system message', (res) => {
         console.log(res);
+        if (res.message.stage === 'request transfer') {
+            if (res.message.status === 'success') {
+                alertStore.addAlert('傳送成功', 'info');
+            } else {
+                alertStore.addAlert('傳送發生了一些問題，請再試一次', 'warn');
+            }
+        }
     });
 
     store.clientSocket.on('room notify', async (res) => {
-        console.log(res);
         if ((res.roomToken === store.roomToken) & (res.type === 'join')) {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members;
-            router.push({ path: '/', query: { roomToken: store.roomToken, needJoinRoom: 'false' } });
         } else if ((res.roomToken === store.roomToken) & (res.type === 'leave')) {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members;
         }
     });
 
-    // reset session storage
-    if (store.roomToken !== null) {
-        sessionStorage.setItem('roomToken', store.roomToken);
-    } else {
-        sessionStorage.removeItem('roomToken');
-        sessionStorage.removeItem('qrCodeSrc');
-        store.roomToken = null;
-        store.qrCodeSrc = null;
-    }
-};
+    store.clientSocket.on('disconnect', (reason) => {
+        console.log('WebSocket - disconnect');
+        console.log(reason);
+    });
 
-const initHandler = async (event) => {
-    // Check if roomToken exists in SessionStorage
-    const storedUserId = sessionStorage.getItem('userId');
-    const storedRoomToken = sessionStorage.getItem('roomToken');
-    const storedQrCodeSrc = sessionStorage.getItem('qrCodeSrc');
-
-    // check if userId exists in SessionStorage
-    if (storedUserId) {
-        store.user.id = storedUserId; // Use the stored userId
-    } else {
-        // Fetch new userId and save to SessionStorage
-        const response = await axios.get(`${BE_API_BASE_URL}/`);
-        store.user.id = response.data.userId;
-        sessionStorage.setItem('userId', response.data.userId); // Save to SessionStorage
-    }
-
-    if (storedRoomToken) {
-        // Use the stored roomToken, qrCodeSrc
-        store.roomToken = storedRoomToken;
-        store.qrCodeSrc = storedQrCodeSrc;
+    // go to room page
+    if (store.roomToken) {
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
         store.members = data.members;
+        sessionStorage.setItem('roomToken', store.roomToken);
+
+        const { path, query } = router.currentRoute.value;
+        router.push({ path, query: { roomToken: store.roomToken, needJoinRoom: false, ...query } });
     }
 };
 
@@ -254,10 +246,6 @@ const initHandler = async (event) => {
    Watchers, Computed
    -------------------------------- */
 watch(isDarkTheme, iconChange);
-
-const particlesUrl = computed(() => {
-    return isDarkTheme.value ? particlesPath.dark : particlesPath.light;
-});
 
 /* ------------------------------
    Lifecycle Hooks
@@ -275,15 +263,14 @@ onMounted(async () => {
         if (event.detail.login !== store.loginStatus) {
             await loginStatusChangeHandler(event);
         }
-        window.dispatchEvent(new CustomEvent('login-check-result-done'));
     });
 
-    window.addEventListener('login-check-result-done', async () => {
-        await initHandler();
-    });
-
-    initHandler();
+    // init room modal
     initRoomModal();
+
+    // for setup
+    store.isLogin = '';
+    await api.get('/auth-check');
 });
 
 onBeforeUnmount(() => {
@@ -293,7 +280,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <vue-particles id="tsparticles" :url="particlesUrl" :key="particlesUrl" />
     <nav class="navbar navbar-expand-md fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" @click="homeHandler">
@@ -343,6 +329,8 @@ onBeforeUnmount(() => {
             </div>
         </div>
     </nav>
+
+    <ToastDisplay />
 
     <div class="d-flex align-items-center router-view-container" id="particles-container">
         <RouterView />
@@ -502,15 +490,5 @@ li {
 
 a:hover {
     cursor: pointer;
-}
-
-#tsparticles {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 0;
-    pointer-events: none;
 }
 </style>
