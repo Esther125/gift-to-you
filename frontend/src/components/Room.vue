@@ -238,7 +238,7 @@ onMounted(async () => {
                         @keyup="handleEnter"
                         @input="resizeTextarea"
                     />
-                    <button class="btn" @click="sendMessage">Send</button>
+                    <button class="btn hide-as-phone" @click="sendMessage">Send</button>
                 </div>
                 <div v-else class="input-group p-2 justify-content-center">
                     <button class="btn" @click="">Send To Room</button>
@@ -299,6 +299,11 @@ onMounted(async () => {
     align-items: center;
     gap: 0.5rem;
     height: 55px;
+}
+
+.input-group input {
+    padding: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .fade-enter-active,

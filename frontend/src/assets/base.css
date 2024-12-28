@@ -124,3 +124,13 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 }
+
+@media (max-width: 768px) {
+    body {
+        font-size: 14px; /* 手機視窗下縮小字體大小 */
+    }
+
+    .hide-as-phone {
+        display: none; /* 隱藏按鈕 */
+    }
+}
