@@ -71,9 +71,13 @@ class RoomsController {
             if (joinRoomObj.members.length !== 0) {
                 const joinRoomUrl = `${process.env.FRONTEND_BASE_URL}/?roomToken=${token}`;
                 const qrCodeDataUrl = await this.roomService.createQRCode(joinRoomUrl);
-                return res
-                    .status(200)
-                    .json({ message: joinRoomObj.message, members: joinRoomObj.members, qrCodeDataUrl });
+                console.log(joinRoomObj);
+                return res.status(200).json({
+                    message: joinRoomObj.message,
+                    members: joinRoomObj.members,
+                    namePairs: joinRoomObj.namePairs,
+                    qrCodeDataUrl,
+                });
             }
 
             return res.status(200).json({ message: joinRoomObj.message, members: joinRoomObj.members });
@@ -91,7 +95,8 @@ class RoomsController {
             token = req.params.roomToken;
             if (token) {
                 const members = await this.roomService.getMembers(token);
-                return res.status(200).json(members);
+                const namePairs = await this.roomService.getNamePairs(members);
+                return res.status(200).json({ members, namePairs });
             }
             return res.status(400).json({ message: 'RoomToken is required' });
         } catch (err) {
