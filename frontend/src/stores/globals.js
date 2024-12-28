@@ -4,6 +4,7 @@ import { ref } from 'vue';
 export const useGlobalStore = defineStore('global', () => {
     const user = ref({
         id: '',
+        name: '',
     });
 
     const roomToken = ref();
