@@ -44,6 +44,14 @@ watchEffect(async () => {
                 router.push({ path: '/' });
                 alert('邀請碼不存在');
             }
+            // set needJoinRoom to false
+            await router.replace({
+                ...route,
+                query: {
+                    ...route.query,
+                    needJoinRoom: 'false',
+                },
+            });
         }
     } catch (error) {
         console.error('Error joining the room:', error);
