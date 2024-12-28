@@ -343,6 +343,7 @@ onBeforeUnmount(() => {
         tabindex="-1"
         aria-labelledby="roomModalLabel"
         aria-hidden="true"
+        data-bs-backdrop="static"
         v-on="{ 'hide.bs.modal': onModalHide }"
     >
         <div class="modal-dialog">
