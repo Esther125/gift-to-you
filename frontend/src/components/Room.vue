@@ -76,7 +76,7 @@ watchEffect(() => {
                 console.log(res);
                 if (res.roomToken === store.roomToken) {
                     const newMessageReceive = {
-                        userId: res.message.senderID.slice(0, 8),
+                        userId: res.message.senderID,
                         content: res.message.content,
                         timestamp: new Date().toLocaleTimeString(),
                     };
@@ -97,7 +97,7 @@ watchEffect(() => {
 const sendMessage = async () => {
     if (messageInput.value.trim()) {
         const newMessage = {
-            userId: store.user.id.slice(0, 8),
+            userId: store.user.id,
             content: messageInput.value,
             timestamp: new Date().toLocaleTimeString(),
         };
@@ -201,17 +201,14 @@ onMounted(async () => {
                             v-for="(message, index) in messages"
                             :key="index"
                         >
-                            <div
-                                v-if="message.userId === store.user.id.slice(0, 8)"
-                                class="d-flex justify-content-end mb-3"
-                            >
+                            <div v-if="message.userId === store.user.id" class="d-flex justify-content-end mb-3">
                                 <div class="message-body p-2 rounded text-end float-end">
                                     {{ message.content }}
                                 </div>
                             </div>
                             <div v-else class="d-flex flex-column justify-content-start mb-3">
                                 <div class="message-header justify-content-between">
-                                    <strong>{{ message.userId }}</strong>
+                                    <strong>{{ userDeviceLabel(message.userId) }}</strong>
                                     <span></span>
                                 </div>
                                 <div class="message-body p-2 rounded">
