@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, reactive } from 'vue';
 
 export const useGlobalStore = defineStore('global', () => {
     const user = ref({
@@ -10,9 +10,10 @@ export const useGlobalStore = defineStore('global', () => {
     const roomToken = ref();
     const qrCodeSrc = ref();
     const members = ref([]);
+    const namePairs = reactive({});
     const clientSocket = ref(null);
 
     const loginStatus = ref('');
 
-    return { user, roomToken, qrCodeSrc, members, clientSocket, loginStatus };
+    return { user, roomToken, qrCodeSrc, members, namePairs, clientSocket, loginStatus };
 });

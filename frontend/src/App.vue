@@ -217,12 +217,17 @@ const loginStatusChangeHandler = async (event) => {
     });
 
     store.clientSocket.on('room notify', async (res) => {
-        if ((res.roomToken === store.roomToken) & (res.type === 'join')) {
+        if ((res.roomToken === store.roomToken) & (res.type === 'join' || res.type === 'leave')) {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members;
-        } else if ((res.roomToken === store.roomToken) & (res.type === 'leave')) {
-            const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
-            store.members = data.members;
+
+            if (data.namePairs !== undefined) {
+                Object.keys(data.namePairs).forEach((userId) => {
+                    if (store.namePairs[userId] === undefined) {
+                        store.namePairs[userId] = data.namePairs[userId];
+                    }
+                });
+            }
         }
     });
 
@@ -236,6 +241,14 @@ const loginStatusChangeHandler = async (event) => {
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
         store.members = data.members;
         sessionStorage.setItem('roomToken', store.roomToken);
+
+        if (data.namePairs !== undefined) {
+            Object.keys(data.namePairs).forEach((userId) => {
+                if (store.namePairs[userId] === undefined) {
+                    store.namePairs[userId] = data.namePairs[userId];
+                }
+            });
+        }
 
         const { path, query } = router.currentRoute.value;
         router.push({ path, query: { roomToken: store.roomToken, needJoinRoom: false, ...query } });

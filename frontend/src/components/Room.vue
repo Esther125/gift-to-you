@@ -21,6 +21,12 @@ const switchBtnText = computed(() => {
 });
 
 const files = reactive([]);
+const userDeviceLabel = (userId) => {
+    if (store.namePairs[userId] === undefined) {
+        return userId.slice(0, 8);
+    }
+    return store.namePairs[userId];
+};
 
 watchEffect(async () => {
     // 如果沒有 roomToken 或 user.id，直接退出
@@ -35,6 +41,15 @@ watchEffect(async () => {
             // 更新 store 的數據
             if (data.members.length !== 0) {
                 store.members = data.members;
+
+                if (data.namePairs !== undefined) {
+                    Object.keys(data.namePairs).forEach((userId) => {
+                        if (store.namePairs[userId] === undefined) {
+                            store.namePairs[userId] = data.namePairs[userId];
+                        }
+                    });
+                }
+
                 store.qrCodeSrc = data.qrCodeDataUrl;
                 sessionStorage.setItem('qrCodeSrc', store.qrCodeSrc);
                 store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
@@ -165,7 +180,7 @@ onMounted(async () => {
                         </div>
                         <!-- name -->
                         <div class="card-footer py-0 border-0 bg-transparent">
-                            {{ userId.slice(0, 8) }}
+                            {{ userDeviceLabel(userId) }}
                         </div>
                     </div>
                 </div>
