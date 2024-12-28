@@ -150,11 +150,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
             </button>
         </div>
 
-        <div 
-            class="flex-fill px-2" 
-            style="overflow-y: scroll; max-height: calc(100vh - 245px)" 
-            ref="recordsContainer"
-        >
+        <div class="flex-fill px-2" style="overflow-y: scroll; max-height: calc(100vh - 245px)" ref="recordsContainer">
             <!-- records -->
             <div
                 v-if="totalTransferCount > 0"
@@ -172,6 +168,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
                     <div v-if="record.receiver.identifier == userID" class="mt-1 mb-2 d-flex align-items-center gap-2">
                         <span
                             class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill"
+                            style="min-width: 4.5em"
                             >FROM</span
                         >
                         <i v-if="record.sender.type === 'USER'" class="bi bi-person-check-fill" style="font-size: 1rem">
@@ -184,6 +181,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
                     <div v-if="record.sender.identifier == userID" class="mt-1 mb-2 d-flex align-items-center gap-2">
                         <span
                             class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill"
+                            style="min-width: 4.5em"
                             >TO</span
                         >
                         <i

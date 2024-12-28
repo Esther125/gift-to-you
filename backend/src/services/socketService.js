@@ -142,7 +142,7 @@ class SocketService {
         const senderID = userID;
         const res = {
             event: 'transfer notify',
-            fileId: fileId,
+            fileId,
             roomToken,
             senderID,
             timestamp: new Date().toISOString(),
@@ -216,7 +216,10 @@ class SocketService {
             type: await this._getUserType(senderID),
             identifier: senderID,
         };
-        await this.db.createTransferRecords(senderInfo, receiverInfo, [fileId]);
+
+        await redisClient.connect();
+        const fileName = await redisClient.get(`file:${fileId}:filename`);
+        await this.db.createTransferRecords(senderInfo, receiverInfo, [fileName]);
     };
 
     _getUserType = async (userID) => {
