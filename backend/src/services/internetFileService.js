@@ -65,7 +65,7 @@ class InternetFileService {
             }
             const fileBuffer = req.file.buffer; // 暫存在 memory 中的檔案
             const fileId = randomUUID();
-            const originalFilename = req.file.originalname;
+            const originalFilename = decodeURIComponent(req.file.originalname);
             const fileHash = this._calculateFileHash(fileBuffer);
             this._saveFileInfo(fileId, fileHash, originalFilename);
 
