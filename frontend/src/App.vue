@@ -26,7 +26,7 @@ const alertStore = useAlertStore();
 const router = useRouter();
 
 const deviceName = computed(() => {
-    return store.user.name == '' || store.user.name == 'null' ? store.user.id.slice(0, 8) : store.user.name;
+    return store.user.name === '' || store.user.name === 'null' ? store.user.id.slice(0, 8) : store.user.name;
 });
 const buttonNavbarKey = computed(() => {
     return `${deviceName}_${store.roomToken}`;
@@ -104,7 +104,6 @@ const joinRoom = async () => {
             store.clientSocket.emit('leave chatroom', { roomToken: store.roomToken });
         }
     }
-
 
     if (inputRoomToken.length === 5) {
         store.roomToken = inputRoomToken;
@@ -405,9 +404,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center border-0">
-                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">
-                        關閉
-                    </button>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">關閉</button>
                     <button class="btn btn-secondary" type="button" data-bs-dismiss="modal" @click="leaveRoom">
                         離開
                     </button>
