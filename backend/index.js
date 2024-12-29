@@ -71,7 +71,7 @@ process.on('SIGINT', async () => {
 
 // run server
 const PORT = process.env.PORT;
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
     logWithFileInfo('info', `Server is running on port ${PORT}`);
     // Error example log:
     // const exampleError = new Error('This is an example error log');
