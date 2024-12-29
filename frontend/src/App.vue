@@ -26,11 +26,9 @@ const alertStore = useAlertStore();
 const router = useRouter();
 
 const deviceName = computed(() => {
-    console.log(store.user);
     return store.user.name == '' || store.user.name == 'null' ? store.user.id.slice(0, 8) : store.user.name;
 });
 const buttonNavbarKey = computed(() => {
-    console.log('change', `${deviceName}_${store.roomToken}`);
     return `${deviceName}_${store.roomToken}`;
 });
 
