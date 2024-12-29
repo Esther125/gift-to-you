@@ -104,7 +104,6 @@ const uploadFile = async (rec) => {
                     fileId: response.data.fileId,
                     receiverID: props.receiverID,
                 });
-                alertStore.addAlert('檔案傳送成功～', 'info');
             } else if (rec === 'room') {
                 const saveResponse = await axios.get(`${BE_API_BASE_URL}/download/staging-area/${response.data.fileId}?type=room&id=${store.roomToken}`);
 
@@ -116,8 +115,6 @@ const uploadFile = async (rec) => {
                     roomToken: store.roomToken,
                     fileId: response.data.fileId,
                 });
-
-                alertStore.addAlert('檔案傳送成功～', 'info');
             }
         } catch (error) {
             if (error.status === 400) {
@@ -210,5 +207,10 @@ onMounted(() => {
 
 .modal-body {
     padding: 5px;
+}
+
+.file-preview {
+    max-height: 500px;
+    overflow: auto;
 }
 </style>
