@@ -376,7 +376,10 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center border-0">
-                    <button class="btn btn-secondary" type="submit" data-bs-dismiss="modal" @click="leaveRoom">
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">
+                        關閉
+                    </button>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal" @click="leaveRoom">
                         離開
                     </button>
                     <button class="btn btn-success" type="submit" @click="joinRoom">加入</button>
