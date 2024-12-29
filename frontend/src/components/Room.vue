@@ -81,34 +81,33 @@ watchEffect(async () => {
 // Ensure that listener is binded after store.clientSocker is loaded
 watchEffect(() => {
     if (store.clientSocket) {
-        if (!store.clientSocket.hasSetup) {
-            store.clientSocket.hasSetup = true;
+        store.clientSocket.off('chat message');
+        store.clientSocket.off('transfer notify');
 
-            // bind chat message listener
-            store.clientSocket.on('chat message', async (res) => {
-                if (res.roomToken === store.roomToken) {
-                    const newMessageReceive = {
-                        userId: res.message.senderID,
-                        content: res.message.content,
-                        timestamp: new Date().toLocaleTimeString(),
-                    };
-                    try {
-                        messages.push(newMessageReceive);
-                        await nextTick(); // wait until new messages render
-                        scrollToBottom(); // than scroll to buttom
-                        sessionStorage.setItem('messages', JSON.stringify(messages));
-                    } catch (error) {
-                        console.error('Error processing incoming message:', error);
-                    }
+        // bind chat message listener
+        store.clientSocket.on('chat message', async (res) => {
+            if (res.roomToken === store.roomToken) {
+                const newMessageReceive = {
+                    userId: res.message.senderID,
+                    content: res.message.content,
+                    timestamp: new Date().toLocaleTimeString(),
+                };
+                try {
+                    messages.push(newMessageReceive);
+                    await nextTick(); // wait until new messages render
+                    scrollToBottom(); // than scroll to buttom
+                    sessionStorage.setItem('messages', JSON.stringify(messages));
+                } catch (error) {
+                    console.error('Error processing incoming message:', error);
                 }
-            });
+            }
+        });
 
-            store.clientSocket.on('transfer notify', async (res) => {
-                if (res.roomToken === store.roomToken && res.event === 'transfer notify' && res.fileId) {
-                    openDownloadModal(res.fileId);
-                }
-            });
-        }
+        store.clientSocket.on('transfer notify', async (res) => {
+            if (res.roomToken === store.roomToken && res.event === 'transfer notify' && res.fileId) {
+                openDownloadModal(res.fileId);
+            }
+        });
     }
 });
 
