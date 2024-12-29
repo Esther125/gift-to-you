@@ -66,16 +66,33 @@ class S3Service {
         // S3 file key
         const key = this._generateS3Key(type, id, filename);
 
-        // s3 下載參數
-        const command = new GetObjectCommand({
-            Bucket: this._bucket,
-            Key: key,
-        });
+        let originalName = null;
 
-        // set 1 days expired
-        const signedUrlExpireSeconds = 60 * 60 * 24 * 1;
+        // 取得 metadata
+        try {
+            const metadataCommand = new HeadObjectCommand({
+                Bucket: this._bucket,
+                Key: key,
+            });
+
+            const metadata = await this._s3.send(metadataCommand);
+            originalName = decodeURIComponent(metadata.Metadata['originalname']);
+        } catch (error) {
+            logWithFileInfo('error', 'Failed to fetch metadata:', error);
+        }
 
         try {
+            // s3 下載參數
+            const encodedOriginalName = encodeURIComponent(originalName);
+            const command = new GetObjectCommand({
+                Bucket: this._bucket,
+                Key: key,
+                ResponseContentDisposition: `attachment; filename*=UTF-8''${encodedOriginalName}`,
+            });
+
+            // set 1 days expired
+            const signedUrlExpireSeconds = 60 * 60 * 24 * 1;
+
             const url = await getSignedUrl(this._s3, command, { expiresIn: signedUrlExpireSeconds });
 
             logWithFileInfo('info', `Presigned URL generated Successfully`);
@@ -132,14 +149,25 @@ class S3Service {
             const fileList = await Promise.all(
                 listData.Contents.map(async (item) => {
                     const originalName = item.Key.split('/').pop();
-                    const splitIndex = originalName.indexOf('_');
-                    const fileName = originalName.substring(splitIndex + 1);
-                    const decodedFilename = decodeURIComponent(fileName); // decode Filename to original filename
+                    // metadata 取用戶上傳檔名
+                    const originalKey = item.Key;
+                    let decodedFilename = null;
+                    try {
+                        const metadataCommand = new HeadObjectCommand({
+                            Bucket: this._bucket,
+                            Key: originalKey,
+                        });
+                        const metadata = await this._s3.send(metadataCommand);
+                        decodedFilename = decodeURIComponent(metadata.Metadata['originalname']);
+                    } catch (error) {
+                        logWithFileInfo('error', `Failed to get file metadata for ${originalKey}`, error);
+                    }
+
                     const formattedSize = this._formatFileSize(item.Size);
 
                     const fileData = {
-                        originalName: originalName, // 原始檔案名稱
-                        filename: decodedFilename, // 上傳的檔案名稱
+                        originalName: originalName, // 上傳 S3 的檔案名稱
+                        filename: decodedFilename, // 用戶上傳的檔案名稱
                         size: formattedSize, // 檔案大小
                         lastModified: item.LastModified, // 最後修改時間
                     };
