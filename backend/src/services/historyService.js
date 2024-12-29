@@ -58,7 +58,7 @@ class HistoryService {
             } else if (type === 'ROOM') {
                 name = identifier;
             } else {
-                name = type;
+                name = 'Guest';
             }
 
             return { type, identifier, name };
