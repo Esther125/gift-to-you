@@ -218,7 +218,7 @@ const loginStatusChangeHandler = async (event) => {
         console.log(res);
         if (res.message.stage === 'request transfer') {
             if (res.message.status === 'success') {
-                alertStore.addAlert('傳送成功', 'info');
+                alertStore.addAlert('檔案傳送成功～', 'info');
             } else {
                 alertStore.addAlert('傳送發生了一些問題，請再試一次', 'warn');
             }
