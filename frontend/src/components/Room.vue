@@ -268,7 +268,7 @@ onMounted(async () => {
                         >
                             <div class="d-flex flex-column justify-content-start mb-3 w-100">
                                 <div class="file-body p-2 rounded d-flex align-items-center">
-                                    <i class="bi bi-file-earmark-text h2 me-3"></i>
+                                    <i :class="$getFileIcon(file.filename)" class="m-2 h1"></i>
                                     <div class="flex-grow-1">
                                         <a :href="file.presignedUrl" class="p-0 fw-bolder" target="_blank">
                                             {{ file.filename }}
