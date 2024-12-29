@@ -177,4 +177,8 @@ onMounted(() => {
 .modal-body {
     padding: 5px;
 }
+.file-preview {
+    max-height: 500px;
+    overflow: auto;
+}
 </style>
