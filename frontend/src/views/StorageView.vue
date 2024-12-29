@@ -170,8 +170,8 @@ const downloadFile = async (originalName) => {
             :key="`file-${file.index}`"
             class="file-card w-100 my-2 d-flex align-items-center py-1 rounded"
         >
-            <div class="mx-3">{{ file.index }}</div>
-            <i class="bi bi-file-earmark-text mx-2" style="font-size: 3rem"></i>
+            <div class="mx-3" style="width: 30px;">{{ file.index }}</div>
+            <i :class="$getFileIcon(file.filename)" class="mx-2" style="font-size: 3rem"></i>
             <div class="vr my-2"></div>
             <div class="w-100 mx-3" style="overflow: hidden">
                 <!-- 檔名 -->
