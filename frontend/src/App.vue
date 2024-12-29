@@ -101,7 +101,7 @@ const joinRoom = async () => {
         roomModalInstance.hide();
         await router.push({ path: '/', query: { roomToken: inputRoomToken } });
     } else {
-        alertStore.addAlert('邀請碼不存在', 'error');
+        alertStore.addAlert('請輸入五碼的邀請碼', 'error');
     }
 };
 
