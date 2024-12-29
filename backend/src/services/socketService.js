@@ -1,10 +1,12 @@
 import redisClient from '../clients/redisClient.js';
+import DynamodbService from './dynamodbService.js';
 import { logWithFileInfo } from '../../logger.js';
 import RoomService from './roomsService.js';
 class SocketService {
     constructor() {
         this._roomService = new RoomService();
         this._disconnectWaitUsers = {}; // userID: roomToken
+        this.db = new DynamodbService();
     }
 
     systemMessage = (socket, stage, status, content = null) => {
@@ -135,12 +137,12 @@ class SocketService {
         }
     };
 
-    requestTransfer = (socket, fileId, roomToken, receiverID, socketNameSpace) => {
+    requestTransfer = async (socket, fileId, roomToken, receiverID, socketNameSpace) => {
         const userID = socket.handshake.auth.user.id;
         const senderID = userID;
         const res = {
             event: 'transfer notify',
-            fileId: fileId,
+            fileId,
             roomToken,
             senderID,
             timestamp: new Date().toISOString(),
@@ -154,6 +156,7 @@ class SocketService {
             return;
         }
 
+        let receiverInfo;
         if (receiverID) {
             // 傳輸對象: user
             logWithFileInfo('info', `User ${userID} ask to transfer file to user ${receiverID}`);
@@ -184,6 +187,12 @@ class SocketService {
             // 通知 receiver，sender 要傳檔案給他
             socketNameSpace.to(receiverID).emit('transfer notify', res);
             logWithFileInfo('info', `Send transfer notification requested from user ${senderID} to user ${receiverID}`);
+
+            // 建立 receiverInfo
+            receiverInfo = {
+                type: await this._getUserType(receiverID),
+                identifier: receiverID,
+            };
         } else {
             // 傳輸對象: room
             logWithFileInfo('info', `User ${userID} ask to transfer file to room ${roomToken}`);
@@ -191,10 +200,35 @@ class SocketService {
             // 通知 chatroom 中的所有 user，sender 要傳檔案給他
             socket.to(roomToken).emit('transfer notify', res);
             logWithFileInfo('info', `Send transfer notification requested from user ${senderID} to room ${roomToken}`);
+
+            // 建立 receiverInfo
+            receiverInfo = {
+                type: 'ROOM',
+                identifier: roomToken,
+            };
         }
 
         // 回傳處理結果通知
         this.systemMessage(socket, 'request transfer', 'success', 'success');
+
+        // 建立傳輸紀錄
+        const senderInfo = {
+            type: await this._getUserType(senderID),
+            identifier: senderID,
+        };
+
+        await redisClient.connect();
+        const fileName = await redisClient.get(`file:${fileId}:filename`);
+        await this.db.createTransferRecords(senderInfo, receiverInfo, [fileName]);
+    };
+
+    _getUserType = async (userID) => {
+        const userName = await this.db.getUserNameFromID(userID);
+        if (userName !== null) {
+            return 'USER';
+        } else {
+            return 'TEMP';
+        }
     };
 
     chatMessage = (socket, roomToken, message) => {

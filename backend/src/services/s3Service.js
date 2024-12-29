@@ -70,9 +70,9 @@ class S3Service {
 
         // 取得 metadata
         try {
-            const metadataCommand = new HeadObjectCommand({ 
-                Bucket: this._bucket, 
-                Key: key, 
+            const metadataCommand = new HeadObjectCommand({
+                Bucket: this._bucket,
+                Key: key,
             });
 
             const metadata = await this._s3.send(metadataCommand);
@@ -126,8 +126,8 @@ class S3Service {
             throw Iderror;
         }
 
-        const prefix = `${type}/${id}/`; 
-        logWithFileInfo('info', `Fetching file list for ${type}:  ${id}, prefix: ${prefix}`); 
+        const prefix = `${type}/${id}/`;
+        logWithFileInfo('info', `Fetching file list for ${type}:  ${id}, prefix: ${prefix}`);
 
         const params = {
             Bucket: this._bucket,

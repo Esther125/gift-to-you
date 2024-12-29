@@ -17,14 +17,18 @@ class ProfileController {
         }
 
         try {
-            const { files, lastKey: nextLastKey, totalFilesCount} = await this.s3Service.getFileList(type, id, lastKey);
+            const {
+                files,
+                lastKey: nextLastKey,
+                totalFilesCount,
+            } = await this.s3Service.getFileList(type, id, lastKey);
 
             if (files.length === 0) {
-                return res.status(200).json({ 
+                return res.status(200).json({
                     file: [],
                     lastKey: null,
                     totalFilesCount: 0,
-                    message: 'No files found' 
+                    message: 'No files found',
                 });
             }
 
