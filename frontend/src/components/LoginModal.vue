@@ -98,7 +98,14 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div 
+        class="modal fade"
+        id="loginModal"
+        tabindex="-1"
+        aria-labelledby="loginModalLabel"
+        aria-hidden="true"
+        data-bs-backdrop="static"
+    >
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header pt-3 pb-2 border-0">
@@ -114,7 +121,21 @@ onMounted(() => {
                             <label for="password">密碼</label>
                             <input id="password" class="w-75" type="password" v-model="password" required />
                         </div>
-                        <button type="submit" class="btn btn-primary" v-if="loginStatus === 'default'">登入</button>
+                        <button
+                            v-if="loginStatus === 'default'"
+                            type="button"
+                            class="btn btn-secondary mx-1"
+                            data-bs-dismiss="modal"
+                        >
+                            取消
+                        </button>
+                        <button
+                            v-if="loginStatus === 'default'"
+                            type="submit"
+                            class="btn btn-primary mx-1"  
+                        >
+                            登入
+                        </button>
                         <div
                             class="text-success d-flex gap-2 justify-content-center"
                             v-else-if="loginStatus === 'success'"

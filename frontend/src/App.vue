@@ -85,6 +85,16 @@ const handleBackspace = async (index) => {
 };
 
 const joinRoom = async () => {
+    // join new room
+    let inputRoomToken = characters.join('').toUpperCase();
+
+    // check whether the user is alreadly in the room
+    if (store.roomToken === inputRoomToken) {
+        alertStore.addAlert('已在該房間中！', 'warn');
+        roomModalInstance.hide();
+        return;
+    }
+
     // leave old room
     if (store.roomToken) {
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/leave`, { user: store.user });
@@ -93,15 +103,14 @@ const joinRoom = async () => {
         }
     }
 
-    // join new room
-    let inputRoomToken = characters.join('').toUpperCase();
+
     if (inputRoomToken.length === 5) {
         store.roomToken = inputRoomToken;
         sessionStorage.setItem('roomToken', inputRoomToken);
         roomModalInstance.hide();
         await router.push({ path: '/', query: { roomToken: inputRoomToken } });
     } else {
-        alertStore.addAlert('邀請碼不存在', 'error');
+        alertStore.addAlert('請輸入五碼的邀請碼', 'error');
     }
 };
 
@@ -343,6 +352,7 @@ onBeforeUnmount(() => {
         tabindex="-1"
         aria-labelledby="roomModalLabel"
         aria-hidden="true"
+        data-bs-backdrop="static"
         v-on="{ 'hide.bs.modal': onModalHide }"
     >
         <div class="modal-dialog">
@@ -375,7 +385,10 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center border-0">
-                    <button class="btn btn-secondary" type="submit" data-bs-dismiss="modal" @click="leaveRoom">
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">
+                        關閉
+                    </button>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal" @click="leaveRoom">
                         離開
                     </button>
                     <button class="btn btn-success" type="submit" @click="joinRoom">加入</button>
