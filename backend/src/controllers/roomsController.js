@@ -71,7 +71,6 @@ class RoomsController {
             if (joinRoomObj.members.length !== 0) {
                 const joinRoomUrl = `${process.env.FRONTEND_BASE_URL}/?roomToken=${token}`;
                 const qrCodeDataUrl = await this.roomService.createQRCode(joinRoomUrl);
-                console.log(joinRoomObj);
                 return res.status(200).json({
                     message: joinRoomObj.message,
                     members: joinRoomObj.members,
