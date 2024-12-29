@@ -131,6 +131,25 @@ class RedisClient {
         }
     };
 
+    hSet = async (key, values) => {
+        try {
+            await this.client.hSet(key, values);
+        } catch (err) {
+            logWithFileInfo('error', `Error setting values of key ${key}`, err);
+            throw err;
+        }
+    };
+
+    hGetAll = async (key) => {
+        try {
+            const values = await this.client.hGetAll(key);
+            return values;
+        } catch (err) {
+            logWithFileInfo('error', `Error getting all from key ${key}`, err);
+            throw err;
+        }
+    };
+
     deleteByPattern = async (pattern) => {
         let cursor = 0;
         do {

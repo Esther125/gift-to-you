@@ -25,9 +25,11 @@ const store = useGlobalStore();
 const alertStore = useAlertStore();
 const router = useRouter();
 
+const deviceName = computed(() => {
+    return store.user.name === '' || store.user.name === 'null' ? store.user.id.slice(0, 8) : store.user.name;
+});
 const buttonNavbarKey = computed(() => {
-    console.log('change', `${store.user.id}_${store.roomToken}`);
-    return `${store.user.id}_${store.roomToken}`;
+    return `${deviceName}_${store.roomToken}`;
 });
 
 /* ------------------------------
@@ -103,7 +105,6 @@ const joinRoom = async () => {
         }
     }
 
-
     if (inputRoomToken.length === 5) {
         store.roomToken = inputRoomToken;
         sessionStorage.setItem('roomToken', inputRoomToken);
@@ -174,15 +175,18 @@ const loginStatusChangeHandler = async (event) => {
 
     // change userId
     let userId = '';
+    let userName = '';
     if (event.detail.login === true) {
         console.log('login');
         const response = await api.get('/auth-check');
         userId = response.data.userID;
+        userName = response.data.userName;
     } else {
         console.log('logout');
         if (oldLoginStatus === '' && sessionStorage.getItem('userId')) {
             // refresh page
             userId = sessionStorage.getItem('userId');
+            userName = sessionStorage.getItem('userName');
         } else {
             const response = await axios.get(`${BE_API_BASE_URL}/`);
             userId = response.data.userId;
@@ -190,6 +194,8 @@ const loginStatusChangeHandler = async (event) => {
     }
     store.user.id = userId;
     sessionStorage.setItem('userId', userId);
+    store.user.name = userName;
+    sessionStorage.setItem('userName', userName);
 
     // clean old room
     store.roomToken = null;
@@ -226,12 +232,17 @@ const loginStatusChangeHandler = async (event) => {
     });
 
     store.clientSocket.on('room notify', async (res) => {
-        if ((res.roomToken === store.roomToken) & (res.type === 'join')) {
+        if ((res.roomToken === store.roomToken) & (res.type === 'join' || res.type === 'leave')) {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members;
-        } else if ((res.roomToken === store.roomToken) & (res.type === 'leave')) {
-            const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
-            store.members = data.members;
+
+            if (data.namePairs !== undefined) {
+                Object.keys(data.namePairs).forEach((userId) => {
+                    if (store.namePairs[userId] === undefined) {
+                        store.namePairs[userId] = data.namePairs[userId];
+                    }
+                });
+            }
         }
     });
 
@@ -245,6 +256,14 @@ const loginStatusChangeHandler = async (event) => {
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
         store.members = data.members;
         sessionStorage.setItem('roomToken', store.roomToken);
+
+        if (data.namePairs !== undefined) {
+            Object.keys(data.namePairs).forEach((userId) => {
+                if (store.namePairs[userId] === undefined) {
+                    store.namePairs[userId] = data.namePairs[userId];
+                }
+            });
+        }
 
         const { path, query } = router.currentRoute.value;
         router.push({ path, query: { roomToken: store.roomToken, needJoinRoom: false, ...query } });
@@ -385,9 +404,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center border-0">
-                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">
-                        關閉
-                    </button>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">關閉</button>
                     <button class="btn btn-secondary" type="button" data-bs-dismiss="modal" @click="leaveRoom">
                         離開
                     </button>
@@ -402,7 +419,7 @@ onBeforeUnmount(() => {
 
     <nav class="navbar navbar-expand-md fixed-bottom justify-content-center navbar-bottom" :key="buttonNavbarKey">
         <div class="d-flex justify-content-center align-items-center mb-2">
-            <p class="mx-1 mb-0 p-1">裝置名稱：{{ store.user.id.slice(0, 8) }}</p>
+            <p class="mx-1 mb-0 p-1">裝置名稱：{{ deviceName }}</p>
             <p class="mb-0 p-1" v-if="store.roomToken || ''">|</p>
             <p class="mx-1 mb-0 p-1" v-if="store.roomToken">可見於 {{ store.roomToken }} 房間中</p>
         </div>
