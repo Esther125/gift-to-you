@@ -85,6 +85,16 @@ const handleBackspace = async (index) => {
 };
 
 const joinRoom = async () => {
+    // join new room
+    let inputRoomToken = characters.join('').toUpperCase();
+
+    // check whether the user is alreadly in the room
+    if (store.roomToken === inputRoomToken) {
+        alertStore.addAlert('已在該房間中！', 'warn');
+        roomModalInstance.hide();
+        return;
+    }
+
     // leave old room
     if (store.roomToken) {
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/leave`, { user: store.user });
@@ -93,8 +103,7 @@ const joinRoom = async () => {
         }
     }
 
-    // join new room
-    let inputRoomToken = characters.join('').toUpperCase();
+
     if (inputRoomToken.length === 5) {
         store.roomToken = inputRoomToken;
         sessionStorage.setItem('roomToken', inputRoomToken);
