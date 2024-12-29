@@ -83,7 +83,7 @@ class S3Service {
 
         try {
             // s3 下載參數
-            const encodedOriginalName = encodeURIComponent(originalName).replace(/'/g, '%27');
+            const encodedOriginalName = encodeURIComponent(originalName);
             const command = new GetObjectCommand({
                 Bucket: this._bucket,
                 Key: key,
@@ -158,7 +158,6 @@ class S3Service {
                             Key: originalKey,
                         });
                         const metadata = await this._s3.send(metadataCommand);
-                        console.log(metadata);
                         decodedFilename = decodeURIComponent(metadata.Metadata['originalname']);
                     } catch (error) {
                         logWithFileInfo('error', `Failed to get file metadata for ${originalKey}`, error);
