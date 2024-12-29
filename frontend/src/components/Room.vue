@@ -23,7 +23,7 @@ const switchBtnText = computed(() => {
     return showChat.value ? 'See Files' : 'See Chat';
 });
 
-const files = ref([])
+const files = ref([]);
 
 const showUploadModal = ref(false);
 const receiverID = ref();
@@ -33,7 +33,7 @@ const fileId = ref();
 const openDownloadModal = (recFileId) => {
     showDownloadModal.value = true;
     fileId.value = recFileId;
-}
+};
 
 watchEffect(async () => {
     // 如果沒有 roomToken 或 user.id，直接退出
@@ -66,34 +66,33 @@ watchEffect(async () => {
 // Ensure that listener is binded after store.clientSocker is loaded
 watchEffect(() => {
     if (store.clientSocket) {
-        if (!store.clientSocket.hasSetup) {
-            store.clientSocket.hasSetup = true;
+        store.clientSocket.off('chat message');
+        store.clientSocket.off('transfer notify');
 
-            // bind chat message listener
-            store.clientSocket.on('chat message', async (res) => {
-                if (res.roomToken === store.roomToken) {
-                    const newMessageReceive = {
-                        userId: res.message.senderID.slice(0, 8),
-                        content: res.message.content,
-                        timestamp: new Date().toLocaleTimeString(),
-                    };
-                    try {
-                        messages.push(newMessageReceive);
-                        await nextTick(); // wait until new messages render
-                        scrollToBottom(); // than scroll to buttom
-                        sessionStorage.setItem('messages', JSON.stringify(messages));
-                    } catch (error) {
-                        console.error('Error processing incoming message:', error);
-                    }
+        // bind chat message listener
+        store.clientSocket.on('chat message', async (res) => {
+            if (res.roomToken === store.roomToken) {
+                const newMessageReceive = {
+                    userId: res.message.senderID.slice(0, 8),
+                    content: res.message.content,
+                    timestamp: new Date().toLocaleTimeString(),
+                };
+                try {
+                    messages.push(newMessageReceive);
+                    await nextTick(); // wait until new messages render
+                    scrollToBottom(); // than scroll to buttom
+                    sessionStorage.setItem('messages', JSON.stringify(messages));
+                } catch (error) {
+                    console.error('Error processing incoming message:', error);
                 }
-            });
+            }
+        });
 
-            store.clientSocket.on("transfer notify", async (res) => {
-                if (res.roomToken === store.roomToken && res.event === "transfer notify" && res.fileId) {
-                    openDownloadModal(res.fileId);
-                }
-            });
-        }
+        store.clientSocket.on('transfer notify', async (res) => {
+            if (res.roomToken === store.roomToken && res.event === 'transfer notify' && res.fileId) {
+                openDownloadModal(res.fileId);
+            }
+        });
     }
 });
 
@@ -146,12 +145,12 @@ const handleSwitch = async () => {
     if (showChat.value === false) {
         await getRoomStagingFile();
     }
-}
+};
 
 const openUploadModal = (recID) => {
     showUploadModal.value = true;
-    receiverID.value = recID
-}
+    receiverID.value = recID;
+};
 
 const getRoomStagingFile = async () => {
     try {
@@ -165,8 +164,7 @@ const getRoomStagingFile = async () => {
     } catch (err) {
         files.value = [];
     }
-
-}
+};
 
 onMounted(async () => {
     const storedMessages = sessionStorage.getItem('messages'); // get stored messages when page is refresh
@@ -216,12 +214,12 @@ onMounted(async () => {
             <uploadModal
                 :showUploadModal="showUploadModal"
                 :receiverID="receiverID"
-                @update:showUploadModal="val => showUploadModal = val"
+                @update:showUploadModal="(val) => (showUploadModal = val)"
             />
             <downloadModal
                 :showDownloadModal="showDownloadModal"
                 :fileId="fileId"
-                @update:showDownloadModal="val => showDownloadModal = val"
+                @update:showDownloadModal="(val) => (showDownloadModal = val)"
             />
         </div>
         <!-- Right Content - ChatRoom -->
@@ -260,21 +258,22 @@ onMounted(async () => {
                         >
                             No file now
                         </div>
-                        <div 
-                            v-else
-                            class="d-flex"
-                            v-for="(file, fileIndex) in files"
-                            :key="fileIndex"
-                        >
+                        <div v-else class="d-flex" v-for="(file, fileIndex) in files" :key="fileIndex">
                             <div class="d-flex flex-column justify-content-start mb-3 w-100">
                                 <div class="file-body p-2 rounded d-flex align-items-center">
                                     <i class="bi bi-file-earmark-text h2 me-3"></i>
                                     <div class="flex-grow-1">
                                         <a :href="file.presignedUrl" class="p-0 fw-bolder" target="_blank">
-                                            {{ file.filename }}
-                                        </a><br>
+                                            {{ file.filename }} </a
+                                        ><br />
                                         <small class="fw-light">
-                                            Sent At: {{ new Date(file.lastModified).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }}
+                                            Sent At:
+                                            {{
+                                                new Date(file.lastModified).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })
+                                            }}
                                         </small>
                                     </div>
                                 </div>
@@ -296,7 +295,7 @@ onMounted(async () => {
                     <button class="btn" @click="sendMessage">Send</button>
                 </div>
                 <div v-else class="input-group p-2 justify-content-center mb-2">
-                    <button class="btn" @click="getRoomStagingFile" >更新檔案清單</button>
+                    <button class="btn" @click="getRoomStagingFile">更新檔案清單</button>
                 </div>
             </div>
         </div>
