@@ -1,8 +1,44 @@
 <script setup>
-import { reactive, ref } from 'vue';
+import { ref, onMounted, watch } from 'vue';
+import { useGlobalStore } from '@/stores/globals.js';
+import { useAlertStore } from '@/stores/alertStore';
+import axios from 'axios';
 
 
 const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
+
+const store = useGlobalStore();
+const alertStore = useAlertStore();
+let modalInstance = null;
+
+const props = defineProps({
+    showUploadModal: Boolean,
+    receiverID: String
+})
+
+// 定義 emits
+const emit = defineEmits(['update:showUploadModal']);
+
+// 關閉 modal 的函式
+const closeModal = () => {
+    const fileInput = document.querySelector('#uploadModal input[type="file"]');
+    if (fileInput) {
+        fileInput.value = ''; // 清空檔案選擇器
+    }
+    resetPreviewState();
+    emit('update:showUploadModal', false);
+};
+
+watch(() => props.showUploadModal, (newVal) => {
+    if (modalInstance) {
+        if (newVal) {
+            // processPreview();
+            modalInstance.show();
+        } else {
+            modalInstance.hide();
+        }
+    }
+});
 
 // 用來儲存選取的檔案
 const selectedFile = ref(null);
@@ -42,46 +78,77 @@ const resetPreviewState = () => {
 };
 
 // 上傳檔案
-const uploadFile = () => {
+const uploadFile = async (rec) => {
     if (selectedFile.value) {
         const formData = new FormData();
-        formData.append('uploadFile', selectedFile.value);
+        // 解決中文檔案名稱亂碼問題
+        const renamedFile = new File(
+            [selectedFile.value],
+            encodeURIComponent(selectedFile.value.name),
+            { type: selectedFile.value.type }
+        );
 
-        fetch(`${BE_API_BASE_URL}/upload`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
-            if (response.status === 400) {
-                throw new Error("檔案大小超過 5 MB");
-            } else if (!response.ok) {
-                throw new Error("檔案上傳失敗");
+        formData.append('uploadFile', renamedFile);
+
+        try {
+            const response = await axios.post(`${BE_API_BASE_URL}/upload`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            console.log(response)
+
+            if (rec === 'single') {
+                store.clientSocket.emit('request transfer', {
+                    roomToken: store.roomToken,
+                    fileId: response.data.fileId,
+                    receiverID: props.receiverID,
+                });
+                alertStore.addAlert('檔案傳送成功～', 'info');
+            } else if (rec === 'room') {
+                const saveResponse = await axios.get(`${BE_API_BASE_URL}/download/staging-area/${response.data.fileId}?type=room&id=${store.roomToken}`);
+
+                if (!saveResponse.status === 200) {
+                    throw new Error("Fail calling api to save to s3");
+                }
+
+                store.clientSocket.emit('request transfer', {
+                    roomToken: store.roomToken,
+                    fileId: response.data.fileId,
+                });
+
+                alertStore.addAlert('檔案傳送成功～', 'info');
             }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Success:', data);
-            alert('檔案上傳成功！');
-        })
-        .catch(error => {
-            console.log('Error:', error);
-            alert(error.message);
-        });
+        } catch (error) {
+            if (error.status === 400) {
+                alertStore.addAlert("檔案大小超過 5 MB", 'error');
+            } else {
+                alertStore.addAlert("檔案傳送失敗，請再嘗試一次", 'error');
+            }
+        }
     } else {
-        alert('請先選擇檔案！');
+        alertStore.addAlert('請先選擇檔案', 'error');
     }
 };
 
 // 傳送檔案
 const sendFile = () => {
-    uploadFile()
-    // to be done
+    uploadFile('single')
+    closeModal();
 };
 
 // 傳送檔案到 room
 const sendFileToRoom = () => {
-    // to be done
+    uploadFile('room')
+    closeModal();
 };
+
+onMounted(() => {
+    const modalElement = document.getElementById('uploadModal');
+    if (modalElement) {
+        modalInstance = new bootstrap.Modal(modalElement, { backdrop: 'static', keyboard: false });
+    }
+});
 
 </script>
 
@@ -93,6 +160,7 @@ const sendFileToRoom = () => {
                     <h5 class="modal-title" id="uploadModalLabel">請選擇要傳送的檔案</h5>
                 </div>
                 <div class="modal-body d-flex flex-column">
+                    <small class="mb-2">⭐️ 小提示：目前只允許傳送小於 5MB 的檔案 ⭐️</small>
                     <!-- 檔案選擇器 -->
                     <input 
                         type="file" 
@@ -118,6 +186,7 @@ const sendFileToRoom = () => {
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center border-0">
+                    <button class="btn btn-secondary" type="button" @click="closeModal">取消</button>
                     <!-- 傳送按鈕 -->
                     <button class="btn btn-success" type="button" @click="sendFile">傳送</button>
                     <!-- 傳送到 room 的按鈕 -->
