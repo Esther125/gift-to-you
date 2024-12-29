@@ -158,8 +158,8 @@ const stopWatchHeight = watch(filterRecords, async () => {
                 :key="`${filter}-${record.index}`"
                 class="record-card w-100 my-2 d-flex align-items-center py-1 rounded"
             >
-                <div class="mx-3">{{ record.index }}</div>
-                <i class="bi bi-file-earmark-text mx-2" style="font-size: 3rem"></i>
+                <div class="mx-3" style="width: 30px;">{{ record.index }}</div>
+                <i :class="$getFileIcon(Array(...record.fileNames)[0])" class="mx-2" style="font-size: 3rem"></i>
                 <div class="vr my-2"></div>
                 <div class="w-100 mx-3" style="overflow: hidden">
                     <div style="font-weight: bold; font-size: 1.3rem">

@@ -7,14 +7,6 @@
         >
             {{ alerts[0].message }}
         </div>
-
-        <!-- <div
-        v-for="alert in alerts"
-        :key="alert.id"
-        :class="['toast', alert.level]"
-      >
-        {{ alert.message }}
-      </div> -->
     </div>
 </template>
 
