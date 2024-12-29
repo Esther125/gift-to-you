@@ -70,6 +70,7 @@ class AuthController {
         res.status(200).json({
             message: 'pass authentication check',
             userID: req.user.userID,
+            userName: req.user.userName,
             toPath: req.query.toPath,
             routerQuery: req.query.routerQuery,
         });

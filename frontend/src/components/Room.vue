@@ -34,6 +34,12 @@ const openDownloadModal = (recFileId) => {
     showDownloadModal.value = true;
     fileId.value = recFileId;
 };
+const userDeviceLabel = (userId) => {
+    if (store.namePairs[userId] === undefined) {
+        return userId.slice(0, 8);
+    }
+    return store.namePairs[userId];
+};
 
 watchEffect(async () => {
     // 如果沒有 roomToken 或 user.id，直接退出
@@ -48,6 +54,15 @@ watchEffect(async () => {
             // 更新 store 的數據
             if (data.members.length !== 0) {
                 store.members = data.members;
+
+                if (data.namePairs !== undefined) {
+                    Object.keys(data.namePairs).forEach((userId) => {
+                        if (store.namePairs[userId] === undefined) {
+                            store.namePairs[userId] = data.namePairs[userId];
+                        }
+                    });
+                }
+
                 store.qrCodeSrc = data.qrCodeDataUrl;
                 sessionStorage.setItem('qrCodeSrc', store.qrCodeSrc);
                 store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
@@ -73,7 +88,7 @@ watchEffect(() => {
         store.clientSocket.on('chat message', async (res) => {
             if (res.roomToken === store.roomToken) {
                 const newMessageReceive = {
-                    userId: res.message.senderID.slice(0, 8),
+                    userId: res.message.senderID,
                     content: res.message.content,
                     timestamp: new Date().toLocaleTimeString(),
                 };
@@ -99,7 +114,7 @@ watchEffect(() => {
 const sendMessage = async () => {
     if (messageInput.value.trim()) {
         const newMessage = {
-            userId: store.user.id.slice(0, 8),
+            userId: store.user.id,
             content: messageInput.value,
             timestamp: new Date().toLocaleTimeString(),
         };
@@ -203,7 +218,7 @@ onMounted(async () => {
                         </div>
                         <!-- name -->
                         <div class="card-footer py-0 border-0 bg-transparent">
-                            {{ userId.slice(0, 8) }}
+                            {{ userDeviceLabel(userId) }}
                         </div>
                     </div>
                 </div>
@@ -234,17 +249,14 @@ onMounted(async () => {
                             v-for="(message, index) in messages"
                             :key="index"
                         >
-                            <div
-                                v-if="message.userId === store.user.id.slice(0, 8)"
-                                class="d-flex justify-content-end mb-3"
-                            >
+                            <div v-if="message.userId === store.user.id" class="d-flex justify-content-end mb-3">
                                 <div class="message-body p-2 rounded text-end float-end">
                                     {{ message.content }}
                                 </div>
                             </div>
                             <div v-else class="d-flex flex-column justify-content-start mb-3">
                                 <div class="message-header justify-content-between">
-                                    <strong>{{ message.userId }}</strong>
+                                    <strong>{{ userDeviceLabel(message.userId) }}</strong>
                                     <span></span>
                                 </div>
                                 <div class="message-body p-2 rounded">

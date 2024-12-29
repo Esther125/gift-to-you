@@ -2,8 +2,13 @@ import crypto from 'crypto';
 import redisClient from '../clients/redisClient.js';
 import QRCode from 'qrcode';
 import { logWithFileInfo } from '../../logger.js';
+import DynamodbService from './dynamodbService.js';
 
 class RoomService {
+    constructor() {
+        this._dynamodbService = new DynamodbService();
+    }
+
     _createToken = () => {
         let token = '';
 
@@ -48,6 +53,7 @@ class RoomService {
         await redisClient.set(`userId:${userId}`, token);
         await redisClient.setExpire(token, 8 * 3600);
         await redisClient.setExpire(`userId:${userId}`, 8 * 3600);
+        await this._saveUsername(userId);
 
         logWithFileInfo('info', `Room created successfully with token: ${token}`);
         return { token, members };
@@ -61,6 +67,7 @@ class RoomService {
         const inTargetRoom = await this._leaveRoom(userId, token);
         let message;
         let members;
+        let memberNamePairs;
 
         if (inTargetRoom) {
             message = `already in target room ${token}`;
@@ -76,16 +83,24 @@ class RoomService {
             return { message, members: [] };
         }
 
+        // add userId to room in redis
         await redisClient.sAdd(token, userId);
+
+        // add userId and roomToken info in redis
         await redisClient.set(`userId:${userId}`, token);
         await redisClient.setExpire(`userId:${userId}`, 8 * 3600);
+
+        // add userId and username info in redis
+        await this._saveUsername(userId);
+
         message = `join target room ${token} successfully`;
 
         members = await redisClient.sGet(token);
+        memberNamePairs = await this.getNamePairs(members);
 
         logWithFileInfo('info', `User ${userId} have join the room ${token}`);
 
-        return { message, members };
+        return { message, members, namePairs: memberNamePairs };
     };
 
     _leaveRoom = async (userId, token) => {
@@ -120,6 +135,23 @@ class RoomService {
         return false;
     };
 
+    _saveUsername = async (userId) => {
+        let { username } = await redisClient.hGetAll(`userId:${userId}:username`);
+        if (username === undefined) {
+            username = await this._dynamodbService.getUserNameFromID(userId);
+            if (username === null) {
+                logWithFileInfo('info', `save no username for user ${userId} in redis`);
+                await redisClient.hSet(`userId:${userId}:username`, { hasData: 'false' });
+            } else {
+                logWithFileInfo('info', `save username ${username} for user ${userId} in redis`);
+                await redisClient.hSet(`userId:${userId}:username`, { hasData: 'true', username });
+            }
+        } else {
+            logWithFileInfo('info', `username ${username} for user ${userId} already saved in redis`);
+        }
+        await redisClient.setExpire(`userId:${userId}:username`, 8 * 3600);
+    };
+
     createQRCode = async (url) => {
         try {
             const qrCodeDataUrl = await QRCode.toDataURL(url);
@@ -135,7 +167,21 @@ class RoomService {
         try {
             await redisClient.connect();
             let members = await redisClient.sGet(token);
-            return { members };
+            return members;
+        } catch (err) {}
+    };
+
+    getNamePairs = async (members) => {
+        try {
+            await redisClient.connect();
+            let memberNamePairs = {};
+            for (const memberId of members) {
+                const { hasData, username } = await redisClient.hGetAll(`userId:${memberId}:username`);
+                if (hasData === 'true') {
+                    memberNamePairs[memberId] = username;
+                }
+            }
+            return memberNamePairs;
         } catch (err) {}
     };
 

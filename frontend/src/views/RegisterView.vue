@@ -44,7 +44,15 @@ const registerHandler = async () => {
         <form @submit.prevent="registerHandler" class="w-75" style="max-width: 30rem">
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="userName" style="text-align: right">用戶名稱</label>
-                <input id="userName" class="flex-fill" type="text" v-model="userName" required />
+                <input
+                    id="userName"
+                    class="flex-fill"
+                    type="text"
+                    minlength="3"
+                    maxlength="8"
+                    v-model="userName"
+                    required
+                />
             </div>
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="email" style="text-align: right">電子郵件</label>
