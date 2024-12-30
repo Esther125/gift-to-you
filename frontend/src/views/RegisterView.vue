@@ -22,9 +22,9 @@ const registerHandler = async () => {
             `${BE_API_BASE_URL}/register`,
             {
                 userID: tempUserId,
-                email: email.value,
-                password: password.value,
-                userName: userName.value,
+                email: email.value.toLowerCase(),
+                password: password.value.toLowerCase(),
+                userName: userName.value.toLowerCase(),
             },
             { withCredentials: true }
         );
@@ -55,15 +55,32 @@ const registerHandler = async () => {
                     pattern="^\S+$"
                     v-model="userName"
                     required
+                    style="text-transform: lowercase"
                 />
             </div>
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="email" style="text-align: right">電子郵件</label>
-                <input id="email" class="flex-fill" type="email" pattern="^\S+$" v-model="email" required />
+                <input
+                    id="email"
+                    class="flex-fill"
+                    type="email"
+                    pattern="^\S+$"
+                    style="text-transform: lowercase"
+                    v-model="email"
+                    required
+                />
             </div>
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="password" style="text-align: right">密　　碼</label>
-                <input id="password" class="flex-fill" type="password" pattern="^\S+$" v-model="password" required />
+                <input
+                    id="password"
+                    class="flex-fill"
+                    type="password"
+                    pattern="^\S+$"
+                    style="text-transform: lowercase"
+                    v-model="password"
+                    required
+                />
             </div>
             <div class="d-flex justify-content-center my-4">
                 <button type="submit" class="btn btn-primary" v-if="registerStatus === 'default'">註冊</button>
