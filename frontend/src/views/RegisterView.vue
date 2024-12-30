@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { useGlobalStore } from '../stores/globals.js';
 import axios from 'axios';
 
@@ -23,8 +23,8 @@ const registerHandler = async () => {
             {
                 userID: tempUserId,
                 email: email.value.toLowerCase(),
-                password: password.value.toLowerCase(),
-                userName: userName.value.toLowerCase(),
+                password: password.value,
+                userName: userName.value,
             },
             { withCredentials: true }
         );
@@ -38,6 +38,14 @@ const registerHandler = async () => {
         console.error('Error register: ', error);
     }
 };
+
+watchEffect(() => {
+    if (registerStatus.value === 'Register success') {
+        setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('show-login-modal', { detail: { toPath: '/' } }));
+        }, 1000);
+    }
+});
 </script>
 
 <template>
@@ -55,7 +63,6 @@ const registerHandler = async () => {
                     pattern="^\S+$"
                     v-model="userName"
                     required
-                    style="text-transform: lowercase"
                 />
             </div>
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
@@ -72,15 +79,7 @@ const registerHandler = async () => {
             </div>
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="password" style="text-align: right">密　　碼</label>
-                <input
-                    id="password"
-                    class="flex-fill"
-                    type="password"
-                    pattern="^\S+$"
-                    style="text-transform: lowercase"
-                    v-model="password"
-                    required
-                />
+                <input id="password" class="flex-fill" type="password" pattern="^\S+$" v-model="password" required />
             </div>
             <div class="d-flex justify-content-center my-4">
                 <button type="submit" class="btn btn-primary" v-if="registerStatus === 'default'">註冊</button>

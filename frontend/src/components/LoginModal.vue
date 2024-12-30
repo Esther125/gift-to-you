@@ -22,7 +22,7 @@ const loginHandler = async () => {
     try {
         const response = await axios.post(
             `${BE_API_BASE_URL}/login`,
-            { email: email.value.toLowerCase(), password: password.value.toLowerCase() },
+            { email: email.value.toLowerCase(), password: password.value },
             { withCredentials: true }
         );
         loginStatus.value = 'success';
@@ -112,9 +112,9 @@ onMounted(() => {
                     <h5 class="modal-title b" id="loginModalLabel">用戶登入</h5>
                 </div>
                 <div class="modal-body">
-                    <form @submit.prevent="loginHandler">
+                    <form @submit.prevent="loginHandler" style="min-width: 20rem">
                         <div class="m-3 d-flex justify-content-around">
-                            <label for="email">帳號</label>
+                            <label for="email">電子郵件</label>
                             <input
                                 id="email"
                                 class="w-75"
@@ -126,13 +126,12 @@ onMounted(() => {
                             />
                         </div>
                         <div class="m-3 d-flex justify-content-around">
-                            <label for="password">密碼</label>
+                            <label for="password">密　　碼</label>
                             <input
                                 id="password"
                                 class="w-75"
                                 type="password"
                                 pattern="^\S+$"
-                                style="text-transform: lowercase"
                                 v-model="password"
                                 required
                             />
