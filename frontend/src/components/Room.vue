@@ -217,7 +217,7 @@ onMounted(async () => {
                             <i class="bi bi-laptop display-1 p-0 icon"></i>
                         </div>
                         <!-- name -->
-                        <div class="card-footer py-0 border-0 bg-transparent">
+                        <div class="card-footer p-0 border-0 bg-transparent">
                             {{ userDeviceLabel(userId) }}
                         </div>
                     </div>
