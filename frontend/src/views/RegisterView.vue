@@ -12,14 +12,16 @@ const password = ref();
 
 const registerStatus = ref('default');
 
-const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
+const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
 
 const registerHandler = async () => {
     try {
+        const { data } = await axios.get(`${BE_API_BASE_URL}/`);
+        const tempUserId = data.userId;
         const response = await axios.post(
-            apiUrl + '/register',
+            `${BE_API_BASE_URL}/register`,
             {
-                userID: userID,
+                userID: tempUserId,
                 email: email.value,
                 password: password.value,
                 userName: userName.value,
