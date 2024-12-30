@@ -41,7 +41,7 @@ const registerHandler = async () => {
 <template>
     <div class="register my-5 d-flex flex-column w-100">
         <h3 class="text-center w-100">用戶註冊</h3>
-        <form @submit.prevent="registerHandler" class="w-75" style="max-width: 30rem">
+        <form @submit.prevent="registerHandler" class="w-75" style="max-width: 30rem; min-width: 20rem">
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="userName" style="text-align: right">用戶名稱</label>
                 <input
