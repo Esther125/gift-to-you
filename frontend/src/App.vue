@@ -4,9 +4,11 @@ import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick, computed } 
 import axios from 'axios';
 import api from '@/api/api';
 import { useGlobalStore } from './stores/globals.js';
+import { useAlertStore } from '@/stores/alertStore';
 import { io as ioc } from 'socket.io-client';
 import Login from './components/LoginModal.vue';
 import Logout from './components/LogoutModal.vue';
+import ToastDisplay from './components/Notice/ToastDisplay.vue';
 
 /* ------------------------------
    Variables
@@ -20,12 +22,15 @@ const characters = reactive(['', '', '', '', '']);
 const inputRefs = ref([]);
 
 const store = useGlobalStore();
+const alertStore = useAlertStore();
 const router = useRouter();
 const route = useRoute();
 
+const deviceName = computed(() => {
+    return store.user.name === '' || store.user.name === 'null' ? store.user.id.slice(0, 8) : store.user.name;
+});
 const buttonNavbarKey = computed(() => {
-    console.log('change', `${store.user.id}_${store.roomToken}`);
-    return `${store.user.id}_${store.roomToken}`;
+    return `${deviceName}_${store.roomToken}`;
 });
 
 /* ------------------------------
@@ -83,6 +88,16 @@ const handleBackspace = async (index) => {
 };
 
 const joinRoom = async () => {
+    // join new room
+    let inputRoomToken = characters.join('').toUpperCase();
+
+    // check whether the user is alreadly in the room
+    if (store.roomToken === inputRoomToken) {
+        alertStore.addAlert('已在該房間中！', 'warn');
+        roomModalInstance.hide();
+        return;
+    }
+
     // leave old room
     if (store.roomToken) {
         const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/leave`, { user: store.user });
@@ -91,15 +106,13 @@ const joinRoom = async () => {
         }
     }
 
-    // join new room
-    let inputRoomToken = characters.join('').toUpperCase();
     if (inputRoomToken.length === 5) {
         store.roomToken = inputRoomToken;
         sessionStorage.setItem('roomToken', inputRoomToken);
         roomModalInstance.hide();
         await router.push({ path: '/', query: { roomToken: inputRoomToken } });
     } else {
-        alert('邀請碼不存在');
+        alertStore.addAlert('請輸入五碼的邀請碼', 'error');
     }
 };
 
@@ -170,15 +183,18 @@ const loginStatusChangeHandler = async (event) => {
 
     // change userId
     let userId = '';
+    let userName = '';
     if (event.detail.login === true) {
         console.log('login');
         const response = await api.get('/auth-check');
         userId = response.data.userID;
+        userName = response.data.userName;
     } else {
         console.log('logout');
         if (oldLoginStatus === '' && sessionStorage.getItem('userId')) {
             // refresh page
             userId = sessionStorage.getItem('userId');
+            userName = sessionStorage.getItem('userName');
         } else {
             const response = await axios.get(`${BE_API_BASE_URL}/`);
             userId = response.data.userId;
@@ -186,6 +202,8 @@ const loginStatusChangeHandler = async (event) => {
     }
     store.user.id = userId;
     sessionStorage.setItem('userId', userId);
+    store.user.name = userName;
+    sessionStorage.setItem('userName', userName);
 
     // clean old room
     store.roomToken = null;
@@ -211,17 +229,28 @@ const loginStatusChangeHandler = async (event) => {
 
     // setup websocket listener
     store.clientSocket.on('system message', (res) => {
-        console.log('WebSocket - system message');
         console.log(res);
+        if (res.message.stage === 'request transfer') {
+            if (res.message.status === 'success') {
+                alertStore.addAlert('檔案傳送成功～', 'info');
+            } else {
+                alertStore.addAlert('傳送發生了一些問題，請再試一次', 'warn');
+            }
+        }
     });
 
     store.clientSocket.on('room notify', async (res) => {
-        if ((res.roomToken === store.roomToken) & (res.type === 'join')) {
+        if ((res.roomToken === store.roomToken) & (res.type === 'join' || res.type === 'leave')) {
             const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
             store.members = data.members;
-        } else if ((res.roomToken === store.roomToken) & (res.type === 'leave')) {
-            const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
-            store.members = data.members;
+
+            if (data.namePairs !== undefined) {
+                Object.keys(data.namePairs).forEach((userId) => {
+                    if (store.namePairs[userId] === undefined) {
+                        store.namePairs[userId] = data.namePairs[userId];
+                    }
+                });
+            }
         }
     });
 
@@ -248,6 +277,14 @@ const loginStatusChangeHandler = async (event) => {
     // go to room page
     if (store.roomToken) {
         sessionStorage.setItem('roomToken', store.roomToken);
+
+        if (data.namePairs !== undefined) {
+            Object.keys(data.namePairs).forEach((userId) => {
+                if (store.namePairs[userId] === undefined) {
+                    store.namePairs[userId] = data.namePairs[userId];
+                }
+            });
+        }
 
         const { path, query } = router.currentRoute.value;
         router.push({ path, query: { roomToken: store.roomToken, needJoinRoom: true, ...query } });
@@ -342,6 +379,8 @@ onBeforeUnmount(() => {
         </div>
     </nav>
 
+    <ToastDisplay />
+
     <div class="d-flex align-items-center router-view-container" id="particles-container">
         <RouterView />
     </div>
@@ -353,6 +392,7 @@ onBeforeUnmount(() => {
         tabindex="-1"
         aria-labelledby="roomModalLabel"
         aria-hidden="true"
+        data-bs-backdrop="static"
         v-on="{ 'hide.bs.modal': onModalHide }"
     >
         <div class="modal-dialog">
@@ -385,7 +425,8 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
                 <div class="modal-footer justify-content-center border-0">
-                    <button class="btn btn-secondary" type="submit" data-bs-dismiss="modal" @click="leaveRoom">
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal">關閉</button>
+                    <button class="btn btn-secondary" type="button" data-bs-dismiss="modal" @click="leaveRoom">
                         離開
                     </button>
                     <button class="btn btn-success" type="submit" @click="joinRoom">加入</button>
@@ -399,7 +440,7 @@ onBeforeUnmount(() => {
 
     <nav class="navbar navbar-expand-md fixed-bottom justify-content-center navbar-bottom" :key="buttonNavbarKey">
         <div class="d-flex justify-content-center align-items-center mb-2">
-            <p class="mx-1 mb-0 p-1">裝置名稱：{{ store.user.id.slice(0, 8) }}</p>
+            <p class="mx-1 mb-0 p-1">裝置名稱：{{ deviceName }}</p>
             <p class="mb-0 p-1" v-if="store.roomToken || ''">|</p>
             <p class="mx-1 mb-0 p-1" v-if="store.roomToken">可見於 {{ store.roomToken }} 房間中</p>
         </div>

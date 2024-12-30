@@ -45,7 +45,6 @@ router.beforeEach(async (to, from, next) => {
     const query = to.query;
     const toPath = to.fullPath;
     if (!requireAuth) {
-        console.log('here');
         next();
         return;
     }

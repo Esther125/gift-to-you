@@ -66,7 +66,6 @@ const _jwtVerify = async (token, secret) => {
 const _extractUserDataFromJwt = (userFromJwt) => {
     return {
         userID: userFromJwt.userID,
-        email: userFromJwt.email,
         userName: userFromJwt.userName,
     };
 };
