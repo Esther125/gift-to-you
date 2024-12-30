@@ -1,5 +1,5 @@
 <script setup>
-import { RouterLink, RouterView, useRouter } from 'vue-router';
+import { RouterLink, RouterView, useRouter, useRoute } from 'vue-router';
 import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick, computed } from 'vue';
 import axios from 'axios';
 import api from '@/api/api';
@@ -24,6 +24,7 @@ const inputRefs = ref([]);
 const store = useGlobalStore();
 const alertStore = useAlertStore();
 const router = useRouter();
+const route = useRoute();
 
 const deviceName = computed(() => {
     return store.user.name === '' || store.user.name === 'null' ? store.user.id.slice(0, 8) : store.user.name;
@@ -138,6 +139,13 @@ const clearRoomData = () => {
 
 const onModalHide = () => {
     characters.splice(0, characters.length, ...new Array(5).fill(''));
+
+    // 遍歷所有輸入框並移除焦點
+    inputRefs.value.forEach((input) => {
+        if (input) {
+            input.blur();
+        }
+    });
 };
 
 const AUTH_OPTIONS = (userID) => ({
@@ -250,11 +258,24 @@ const loginStatusChangeHandler = async (event) => {
         console.log('WebSocket - disconnect');
         console.log(reason);
     });
+    
+    // handla qrcode
+    const scan = route.query.scan;
+    if (scan === 'true') {
+        store.roomToken = route.query.roomToken;
+
+        // set scan to false
+        await router.replace({
+            ...route,
+            query: {
+                ...route.query,
+                scan: 'false',
+            },
+        });
+    }
 
     // go to room page
     if (store.roomToken) {
-        const { data } = await axios.post(`${BE_API_BASE_URL}/rooms/${store.roomToken}/members`);
-        store.members = data.members;
         sessionStorage.setItem('roomToken', store.roomToken);
 
         if (data.namePairs !== undefined) {
@@ -266,7 +287,7 @@ const loginStatusChangeHandler = async (event) => {
         }
 
         const { path, query } = router.currentRoute.value;
-        router.push({ path, query: { roomToken: store.roomToken, needJoinRoom: false, ...query } });
+        router.push({ path, query: { roomToken: store.roomToken, needJoinRoom: true, ...query } });
     }
 };
 

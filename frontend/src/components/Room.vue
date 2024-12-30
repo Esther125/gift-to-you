@@ -72,6 +72,14 @@ watchEffect(async () => {
                 router.push({ path: '/' });
                 alertStore.addAlert('邀請碼不存在', 'error');
             }
+            // set needJoinRoom to false
+            await router.replace({
+                ...route,
+                query: {
+                    ...route.query,
+                    needJoinRoom: 'false',
+                },
+            });
         }
     } catch (error) {
         console.error('Error joining the room:', error);
@@ -304,7 +312,7 @@ onMounted(async () => {
                         @keyup="handleEnter"
                         @input="resizeTextarea"
                     />
-                    <button class="btn" @click="sendMessage">Send</button>
+                    <button class="btn hide-as-phone" @click="sendMessage">Send</button>
                 </div>
                 <div v-else class="input-group p-2 justify-content-center mb-2">
                     <button class="btn" @click="getRoomStagingFile">更新檔案清單</button>
@@ -369,6 +377,11 @@ onMounted(async () => {
     align-items: center;
     gap: 0.5rem;
     height: 55px;
+}
+
+.input-group input {
+    padding: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .fade-enter-active,
