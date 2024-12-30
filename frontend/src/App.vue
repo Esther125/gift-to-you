@@ -415,6 +415,7 @@ onBeforeUnmount(() => {
                                 type="text"
                                 maxlength="1"
                                 class="form-control text-center input-box"
+                                style="text-transform: uppercase"
                                 v-model="characters[index]"
                                 @input="moveToNext(index)"
                                 @keydown.backspace="handleBackspace(index)"
