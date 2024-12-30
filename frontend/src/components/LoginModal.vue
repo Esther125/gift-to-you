@@ -98,7 +98,7 @@ onMounted(() => {
 </script>
 
 <template>
-    <div 
+    <div
         class="modal fade"
         id="loginModal"
         tabindex="-1"
@@ -115,11 +115,18 @@ onMounted(() => {
                     <form @submit.prevent="loginHandler">
                         <div class="m-3 d-flex justify-content-around">
                             <label for="email">帳號</label>
-                            <input id="email" class="w-75" type="email" v-model="email" required />
+                            <input id="email" class="w-75" type="email" pattern="^\S+$" v-model="email" required />
                         </div>
                         <div class="m-3 d-flex justify-content-around">
                             <label for="password">密碼</label>
-                            <input id="password" class="w-75" type="password" v-model="password" required />
+                            <input
+                                id="password"
+                                class="w-75"
+                                type="password"
+                                pattern="^\S+$"
+                                v-model="password"
+                                required
+                            />
                         </div>
                         <button
                             v-if="loginStatus === 'default'"
@@ -129,11 +136,7 @@ onMounted(() => {
                         >
                             取消
                         </button>
-                        <button
-                            v-if="loginStatus === 'default'"
-                            type="submit"
-                            class="btn btn-primary mx-1"  
-                        >
+                        <button v-if="loginStatus === 'default'" type="submit" class="btn btn-primary mx-1">
                             登入
                         </button>
                         <div

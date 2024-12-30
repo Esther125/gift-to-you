@@ -50,17 +50,18 @@ const registerHandler = async () => {
                     type="text"
                     minlength="3"
                     maxlength="8"
+                    pattern="^\S+$"
                     v-model="userName"
                     required
                 />
             </div>
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="email" style="text-align: right">電子郵件</label>
-                <input id="email" class="flex-fill" type="email" v-model="email" required />
+                <input id="email" class="flex-fill" type="email" pattern="^\S+$" v-model="email" required />
             </div>
             <div class="my-3 d-flex justify-content-center gap-3 w-100">
                 <label for="password" style="text-align: right">密　　碼</label>
-                <input id="password" class="flex-fill" type="password" v-model="password" required />
+                <input id="password" class="flex-fill" type="password" pattern="^\S+$" v-model="password" required />
             </div>
             <div class="d-flex justify-content-center my-4">
                 <button type="submit" class="btn btn-primary" v-if="registerStatus === 'default'">註冊</button>
