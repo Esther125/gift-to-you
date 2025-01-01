@@ -281,7 +281,7 @@ onMounted(async () => {
                         <div v-else class="d-flex" v-for="(file, fileIndex) in files" :key="fileIndex">
                             <div class="d-flex flex-column justify-content-start mb-3 w-100">
                                 <div class="file-body p-2 rounded d-flex align-items-center">
-                                    <i :class="$getFileIcon(file.filename)" class="m-2 h1"></i>
+                                    <i :class="$getFileIcon(file.filename)" class="m-2 h1 hide-as-phone"></i>
                                     <div class="flex-grow-1">
                                         <a :href="file.presignedUrl" class="p-0 fw-bolder" target="_blank">
                                             {{ file.filename }} </a
@@ -315,7 +315,7 @@ onMounted(async () => {
                     <button class="btn hide-as-phone" @click="sendMessage">Send</button>
                 </div>
                 <div v-else class="input-group p-2 justify-content-center mb-2">
-                    <button class="btn" @click="getRoomStagingFile">更新檔案清單</button>
+                    <button class="btn" @click="getRoomStagingFile">更新<span class="hide-as-phone">檔案清單</span></button>
                 </div>
             </div>
         </div>
