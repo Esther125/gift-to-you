@@ -156,7 +156,7 @@ const downloadFile = async (originalName) => {
 </script>
 
 <template>
-    <div class="container-fluid d-flex flex-column m-0 py-0 px-5 h-100 w-100" style="max-width: 100vw">
+    <div class="container-fluid d-flex flex-column m-0 py-0 px-1 px-sm-5 h-100 w-100" style="max-width: 100vw">
         <h2 class="m-0 pt-3 pb-0 mb-2">檔案暫存區</h2>
         <div 
             class="flex-fill px-2" 
@@ -171,11 +171,11 @@ const downloadFile = async (originalName) => {
             class="file-card w-100 my-2 d-flex align-items-center py-1 rounded"
         >
             <div class="mx-3" style="width: 30px;">{{ file.index }}</div>
-            <i :class="$getFileIcon(file.filename)" class="mx-2" style="font-size: 3rem"></i>
+            <i :class="$getFileIcon(file.filename)" class="mx-2 h1"></i>
             <div class="vr my-2"></div>
             <div class="w-100 mx-3" style="overflow: hidden">
                 <!-- 檔名 -->
-                <div style="font-weight: bold; font-size: 1.3rem">
+                <div class="fw-bold text-break">
                     {{ file.filename }}
                 </div>
                 <!-- 剩餘天數 -->
@@ -183,7 +183,7 @@ const downloadFile = async (originalName) => {
                     <!-- 檔案大小 -->
                     <span 
                         class="text-secondary" 
-                        style="flex-shrink: 0; width: 6rem; text-align: left; white-space: nowrap;"
+                        style="flex-shrink: 0; text-align: left; white-space: nowrap;"
                     >
                         {{ file.size }}
                     </span>
@@ -204,11 +204,10 @@ const downloadFile = async (originalName) => {
             <div class="mx-2 text-center">
                 <button 
                     :disable="isDownloading"
-                    class="btn btn-primary w-100" 
-                    style="min-width: 120px;" 
+                    class="btn btn-primary w-100 custom-min-width"
                     @click="downloadFile(file.originalName)"
                 >
-                    <i class="bi bi-download"></i> 下載
+                <i class="bi bi-download"></i> <span class="hide-as-phone">下載</span>
                 </button>
             </div>
         </div>
