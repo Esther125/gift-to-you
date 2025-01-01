@@ -1,10 +1,10 @@
 # Table Schema
 
-| 資料庫                | 儲存內容                               |
-| --------------------- | -------------------------------------- |
-| [DynamoDB](#dynamodb) | 1. 使用者資訊<br>2. 檔案傳輸紀錄       |
-| [Redis](#redis)       | 1. 房間邀請碼<br>2. 房間成員           |
-| [S3](#s3)             | 1. 個人暫存區檔案<br>2. 房間暫存區檔案 |
+| 資料庫                | 儲存內容                                          |
+| --------------------- | ------------------------------------------------- |
+| [DynamoDB](#dynamodb) | 1. 使用者資訊<br>2. 檔案傳輸紀錄                  |
+| [Redis](#redis)       | 1. 房間邀請碼<br>2. 房間成員<br>3. 使用者名稱資訊 |
+| [S3](#s3)             | 1. 個人暫存區檔案<br>2. 房間暫存區檔案            |
 
 ## DynamoDB
 
@@ -64,19 +64,37 @@
 
 ## Redis
 
+### 房間管理
+
 **儲存內容：**
 
-1. 房間邀請碼
-2. 房間成員
+1. 這個房間有哪些成員
+2. 這個使用者在哪一間房間
+3. 使用者的名稱資訊
 
 **儲存結構：**
 
 ```
-[key]: [value]
-RoomToken: list [userIDs]
+roomToken: (set) {userIds}
+userId:{userId}: (String) roomToken
+userId:{userId}:username: (hash) {hasData: true/false, username: ... }
 ```
 
-紀錄 room 的邀請碼，與相對應在該 room 中的所有 user 的userID。
+### 檔案管理
+
+**儲存內容：**
+
+1. 這個檔案的內容雜湊值
+2. 這個檔案的原始檔名
+3. Bloomfilter 的 array
+
+**儲存結構：**
+
+```
+file:{fileId}:hash: 檔案內容雜湊值
+file:{fileId}:filename: 檔案原始名稱
+bloomfilter: array
+```
 
 ## S3
 
@@ -87,10 +105,12 @@ RoomToken: list [userIDs]
 
 **儲存結構：**
 
-1. 個人暫存區檔案：`user/[userID]/[file_uuid]`
-2. 房間暫存區檔案：`room/[roomID]/[file_uuid]`
+-   個人暫存區檔案：`user/[userID]/[hashValue]`
+-   房間暫存區檔案：`room/[roomID]/[hashValue]`
 
 利用檔案名稱前綴，區別同一個 bucket 中不同檔案分別歸屬於哪個使用者或是房間。
+
+利用 MetaData 屬性 儲存用戶上傳時的檔名，確保檔案在檔案暫存區與下載時名稱不變。
 
 **儲存形式範例：**
 
@@ -98,16 +118,16 @@ RoomToken: list [userIDs]
 bucket/
 ├── user/
 │   ├── 123
-│       ├── file1.jpg
-│       └── file2.png
+│       ├── a1b2c3d4e5f6g7h8i9j0.jpg
+│       └── k1l2m3n4o5p6q7r8s9t0.png
 │   ├── 456
-│       ├── document.pdf
-│       └── photo.jpg
+│       ├── u1v2w3x4y5z6a7b8c9d0.pdf
+│       └── e1f2g3h4i5j6k7l8m9n0.jpg
 ├── room/
 │   ├── 001
-│       ├── file1.jpg
-│       └── file2.png
+│       ├── o1p2q3r4s5t6u7v8w9x0.jpg
+│       └── y1z2a3b4c5d6e7f8g9h0.png
 │   ├── 002
-│       ├── document.pdf
-│       └── photo.jpg
+│       ├── i1j2k3l4m5n6o7p8q9r0.pdf
+│       └── s1t2u3v4w5x6y7z8a9b0.jpg
 ```

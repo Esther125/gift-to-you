@@ -150,7 +150,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
             </button>
         </div>
 
-        <div class="flex-fill px-2" style="overflow-y: scroll" ref="recordsContainer">
+        <div class="flex-fill px-2" style="overflow-y: scroll; max-height: calc(100vh - 245px)" ref="recordsContainer">
             <!-- records -->
             <div
                 v-if="totalTransferCount > 0"
@@ -158,8 +158,8 @@ const stopWatchHeight = watch(filterRecords, async () => {
                 :key="`${filter}-${record.index}`"
                 class="record-card w-100 my-2 d-flex align-items-center py-1 rounded"
             >
-                <div class="mx-3">{{ record.index }}</div>
-                <i class="bi bi-file-earmark-text mx-2" style="font-size: 3rem"></i>
+                <div class="mx-3" style="width: 30px;">{{ record.index }}</div>
+                <i :class="$getFileIcon(Array(...record.fileNames)[0])" class="mx-2" style="font-size: 3rem"></i>
                 <div class="vr my-2"></div>
                 <div class="w-100 mx-3" style="overflow: hidden">
                     <div style="font-weight: bold; font-size: 1.3rem">
@@ -168,6 +168,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
                     <div v-if="record.receiver.identifier == userID" class="mt-1 mb-2 d-flex align-items-center gap-2">
                         <span
                             class="badge bg-primary-subtle border border-primary-subtle text-primary-emphasis rounded-pill"
+                            style="min-width: 4.5em"
                             >FROM</span
                         >
                         <i v-if="record.sender.type === 'USER'" class="bi bi-person-check-fill" style="font-size: 1rem">
@@ -175,11 +176,12 @@ const stopWatchHeight = watch(filterRecords, async () => {
                         <i v-else-if="record.sender.type === 'ROOM'" class="bi bi-people-fill" style="font-size: 1rem">
                         </i>
                         <i v-else class="bi bi-person-x" style="font-size: 1rem"> </i>
-                        <span>{{ record.sender.identifier }}</span>
+                        <span>{{ record.sender.name }}</span>
                     </div>
                     <div v-if="record.sender.identifier == userID" class="mt-1 mb-2 d-flex align-items-center gap-2">
                         <span
                             class="badge bg-danger-subtle border border-danger-subtle text-danger-emphasis rounded-pill"
+                            style="min-width: 4.5em"
                             >TO</span
                         >
                         <i
@@ -195,7 +197,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
                         >
                         </i>
                         <i v-else class="bi bi-person-x" style="font-size: 1rem"> </i>
-                        <span>{{ record.receiver.identifier }}</span>
+                        <span>{{ record.receiver.name }}</span>
                     </div>
                 </div>
                 <div class="vr my-2"></div>

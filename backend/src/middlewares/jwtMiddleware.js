@@ -32,7 +32,11 @@ const jwtMiddleware = async (req, res, next) => {
                 // regenerate accessToken
                 logWithFileInfo('info', 'accessToken expired, regenerate accessToken');
                 const newAccessToken = authService.generateAccessToken(userData);
-                res.cookie('accessToken', newAccessToken, { httpOnly: true, secure: true });
+                res.cookie('accessToken', newAccessToken, {
+                    httpOnly: true,
+                    sameSite: 'Lax',
+                    secure: process.env.COOKIE_SECURE,
+                });
             } catch (err) {
                 if (err.name === 'TokenExpiredError') {
                     logWithFileInfo('info', `invalid refreshToken when go to ${toPath}`);
@@ -66,7 +70,6 @@ const _jwtVerify = async (token, secret) => {
 const _extractUserDataFromJwt = (userFromJwt) => {
     return {
         userID: userFromJwt.userID,
-        email: userFromJwt.email,
         userName: userFromJwt.userName,
     };
 };

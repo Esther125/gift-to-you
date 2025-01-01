@@ -2,10 +2,13 @@
 import { ref, reactive, watchEffect, nextTick, onMounted, computed } from 'vue';
 import axios from 'axios';
 import { useGlobalStore } from '@/stores/globals.js';
+import { useAlertStore } from '@/stores/alertStore';
 import { useRoute, useRouter } from 'vue-router';
 import uploadModal from './Modals/uploadModal.vue';
+import downloadModal from './Modals/downloadModal.vue';
 
 const store = useGlobalStore();
+const alertStore = useAlertStore();
 const route = useRoute();
 const router = useRouter();
 const BE_API_BASE_URL = import.meta.env.VITE_BE_API_BASE_URL;
@@ -20,7 +23,23 @@ const switchBtnText = computed(() => {
     return showChat.value ? 'See Files' : 'See Chat';
 });
 
-const files = reactive([]);
+const files = ref([]);
+
+const showUploadModal = ref(false);
+const receiverID = ref();
+const showDownloadModal = ref(false);
+const fileId = ref();
+
+const openDownloadModal = (recFileId) => {
+    showDownloadModal.value = true;
+    fileId.value = recFileId;
+};
+const userDeviceLabel = (userId) => {
+    if (store.namePairs[userId] === undefined) {
+        return userId.slice(0, 8);
+    }
+    return store.namePairs[userId];
+};
 
 watchEffect(async () => {
     // 如果沒有 roomToken 或 user.id，直接退出
@@ -35,6 +54,15 @@ watchEffect(async () => {
             // 更新 store 的數據
             if (data.members.length !== 0) {
                 store.members = data.members;
+
+                if (data.namePairs !== undefined) {
+                    Object.keys(data.namePairs).forEach((userId) => {
+                        if (store.namePairs[userId] === undefined) {
+                            store.namePairs[userId] = data.namePairs[userId];
+                        }
+                    });
+                }
+
                 store.qrCodeSrc = data.qrCodeDataUrl;
                 sessionStorage.setItem('qrCodeSrc', store.qrCodeSrc);
                 store.clientSocket.emit('join chatroom', { roomToken: store.roomToken });
@@ -42,8 +70,16 @@ watchEffect(async () => {
                 store.roomToken = '';
                 sessionStorage.setItem('roomToken', '');
                 router.push({ path: '/' });
-                alert('邀請碼不存在');
+                alertStore.addAlert('邀請碼不存在', 'error');
             }
+            // set needJoinRoom to false
+            await router.replace({
+                ...route,
+                query: {
+                    ...route.query,
+                    needJoinRoom: 'false',
+                },
+            });
         }
     } catch (error) {
         console.error('Error joining the room:', error);
@@ -53,36 +89,40 @@ watchEffect(async () => {
 // Ensure that listener is binded after store.clientSocker is loaded
 watchEffect(() => {
     if (store.clientSocket) {
-        if (!store.clientSocket.hasSetup) {
-            store.clientSocket.hasSetup = true;
+        store.clientSocket.off('chat message');
+        store.clientSocket.off('transfer notify');
 
-            // bind chat message listener
-            store.clientSocket.on('chat message', async (res) => {
-                console.log(res);
-                if (res.roomToken === store.roomToken) {
-                    const newMessageReceive = {
-                        userId: res.message.senderID.slice(0, 8),
-                        content: res.message.content,
-                        timestamp: new Date().toLocaleTimeString(),
-                    };
-                    try {
-                        messages.push(newMessageReceive);
-                        await nextTick(); // wait until new messages render
-                        scrollToBottom(); // than scroll to buttom
-                        sessionStorage.setItem('messages', JSON.stringify(messages));
-                    } catch (error) {
-                        console.error('Error processing incoming message:', error);
-                    }
+        // bind chat message listener
+        store.clientSocket.on('chat message', async (res) => {
+            if (res.roomToken === store.roomToken) {
+                const newMessageReceive = {
+                    userId: res.message.senderID,
+                    content: res.message.content,
+                    timestamp: new Date().toLocaleTimeString(),
+                };
+                try {
+                    messages.push(newMessageReceive);
+                    await nextTick(); // wait until new messages render
+                    scrollToBottom(); // than scroll to buttom
+                    sessionStorage.setItem('messages', JSON.stringify(messages));
+                } catch (error) {
+                    console.error('Error processing incoming message:', error);
                 }
-            });
-        }
+            }
+        });
+
+        store.clientSocket.on('transfer notify', async (res) => {
+            if (res.roomToken === store.roomToken && res.event === 'transfer notify' && res.fileId) {
+                openDownloadModal(res.fileId);
+            }
+        });
     }
 });
 
 const sendMessage = async () => {
     if (messageInput.value.trim()) {
         const newMessage = {
-            userId: store.user.id.slice(0, 8),
+            userId: store.user.id,
             content: messageInput.value,
             timestamp: new Date().toLocaleTimeString(),
         };
@@ -123,8 +163,30 @@ const handleEnter = (event) => {
     }
 };
 
-const handleSwitch = () => {
+const handleSwitch = async () => {
     showChat.value = !showChat.value;
+    if (showChat.value === false) {
+        await getRoomStagingFile();
+    }
+};
+
+const openUploadModal = (recID) => {
+    showUploadModal.value = true;
+    receiverID.value = recID;
+};
+
+const getRoomStagingFile = async () => {
+    try {
+        const response = await axios.get(`${BE_API_BASE_URL}/staging-area?id=${store.roomToken}&type=room`);
+
+        if (response.status === 200) {
+            files.value = response.data.file;
+        } else {
+            files.value = [];
+        }
+    } catch (err) {
+        files.value = [];
+    }
 };
 
 onMounted(async () => {
@@ -155,17 +217,16 @@ onMounted(async () => {
                     <div
                         class="card bg-transparent border-0 text-center"
                         style="width: 120px"
-                        data-bs-toggle="modal"
                         v-if="userId !== store.user.id"
-                        data-bs-target="#uploadModal"
+                        @click="openUploadModal(userId)"
                     >
                         <!-- icon -->
                         <div class="card-body d-flex justify-content-center align-items-center p-0">
                             <i class="bi bi-laptop display-1 p-0 icon"></i>
                         </div>
                         <!-- name -->
-                        <div class="card-footer py-0 border-0 bg-transparent">
-                            {{ userId.slice(0, 8) }}
+                        <div class="card-footer p-0 border-0 bg-transparent">
+                            {{ userDeviceLabel(userId) }}
                         </div>
                     </div>
                 </div>
@@ -173,6 +234,16 @@ onMounted(async () => {
             <div class="row d-flex justify-content-center mt-3">
                 <button class="btn" @click="handleSwitch">{{ switchBtnText }}</button>
             </div>
+            <uploadModal
+                :showUploadModal="showUploadModal"
+                :receiverID="receiverID"
+                @update:showUploadModal="(val) => (showUploadModal = val)"
+            />
+            <downloadModal
+                :showDownloadModal="showDownloadModal"
+                :fileId="fileId"
+                @update:showDownloadModal="(val) => (showDownloadModal = val)"
+            />
         </div>
         <!-- Right Content - ChatRoom -->
         <div class="col-3 chat-room p-0 d-flex flex-column">
@@ -186,17 +257,14 @@ onMounted(async () => {
                             v-for="(message, index) in messages"
                             :key="index"
                         >
-                            <div
-                                v-if="message.userId === store.user.id.slice(0, 8)"
-                                class="d-flex justify-content-end mb-3"
-                            >
+                            <div v-if="message.userId === store.user.id" class="d-flex justify-content-end mb-3">
                                 <div class="message-body p-2 rounded text-end float-end">
                                     {{ message.content }}
                                 </div>
                             </div>
                             <div v-else class="d-flex flex-column justify-content-start mb-3">
                                 <div class="message-header justify-content-between">
-                                    <strong>{{ message.userId }}</strong>
+                                    <strong>{{ userDeviceLabel(message.userId) }}</strong>
                                     <span></span>
                                 </div>
                                 <div class="message-body p-2 rounded">
@@ -210,18 +278,24 @@ onMounted(async () => {
                         >
                             No file now
                         </div>
-                        <div
-                            v-else
-                            class="message d-flex flex-column"
-                            v-for="(file, fileIndex) in files"
-                            :key="fileIndex"
-                        >
-                            <div class="d-flex flex-column justify-content-start mb-3">
-                                <div class="message-header justify-content-between mb-1">
-                                    <strong>{{ file.sender }}</strong> send at {{ file.timestamp }}
-                                </div>
-                                <div class="message-body p-2 rounded">
-                                    {{ file.fileName }}
+                        <div v-else class="d-flex" v-for="(file, fileIndex) in files" :key="fileIndex">
+                            <div class="d-flex flex-column justify-content-start mb-3 w-100">
+                                <div class="file-body p-2 rounded d-flex align-items-center">
+                                    <i :class="$getFileIcon(file.filename)" class="m-2 h1"></i>
+                                    <div class="flex-grow-1">
+                                        <a :href="file.presignedUrl" class="p-0 fw-bolder" target="_blank">
+                                            {{ file.filename }} </a
+                                        ><br />
+                                        <small class="fw-light">
+                                            Sent At:
+                                            {{
+                                                new Date(file.lastModified).toLocaleTimeString([], {
+                                                    hour: '2-digit',
+                                                    minute: '2-digit',
+                                                })
+                                            }}
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -238,17 +312,14 @@ onMounted(async () => {
                         @keyup="handleEnter"
                         @input="resizeTextarea"
                     />
-                    <button class="btn" @click="sendMessage">Send</button>
+                    <button class="btn hide-as-phone" @click="sendMessage">Send</button>
                 </div>
-                <div v-else class="input-group p-2 justify-content-center">
-                    <button class="btn" @click="">Send To Room</button>
+                <div v-else class="input-group p-2 justify-content-center mb-2">
+                    <button class="btn" @click="getRoomStagingFile">更新檔案清單</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- uploadModal -->
-    <uploadModal />
 </template>
 
 <style scoped>
@@ -295,10 +366,22 @@ onMounted(async () => {
     background-color: var(--color-background-2);
 }
 
+.file-body {
+    color: var(--color-text);
+    word-break: break-word;
+    overflow: hidden;
+    background-color: var(--color-background-2);
+}
+
 .input-group {
     align-items: center;
     gap: 0.5rem;
     height: 55px;
+}
+
+.input-group input {
+    padding: 0.5rem;
+    font-size: 0.9rem;
 }
 
 .fade-enter-active,
