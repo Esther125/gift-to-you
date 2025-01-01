@@ -132,7 +132,7 @@ const stopWatchHeight = watch(filterRecords, async () => {
 
 <template>
     <div class="container-fluid d-flex flex-column m-0 py-0 px-1 px-sm-5 h-100 w-100" style="max-width: 100vw">
-        <h2 class="m-0 pt-3 pb-0">歷史紀錄</h2>
+        <h2 class="m-0 pt-3 pb-0 ps-2">歷史紀錄</h2>
         <div class="d-flex gap-3 justify-content-center my-2 p-2">
             <!-- filter button -->
             <button
