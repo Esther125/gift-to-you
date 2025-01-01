@@ -64,19 +64,35 @@
 
 ## Redis
 
+### 房間管理
+
 **儲存內容：**
 
-1. 房間邀請碼
-2. 房間成員
+1. 這個房間有哪些成員
+2. 這個使用者在哪一間房間
 
 **儲存結構：**
 
 ```
-[key]: [value]
-RoomToken: list [userIDs]
+roomToken: (set) {userIds}
+userId:{userId}: (String) roomToken
 ```
 
-紀錄 room 的邀請碼，與相對應在該 room 中的所有 user 的userID。
+### 檔案管理
+
+**儲存內容：**
+
+1. 這個檔案的內容雜湊值
+2. 這個檔案的原始檔名
+3. Bloomfilter 的 array
+
+**儲存結構：**
+
+```
+file:{fileId}:hash: 檔案內容雜湊值
+file:{fileId}:filename: 檔案原始名稱
+bloomfilter: array
+```
 
 ## S3
 
