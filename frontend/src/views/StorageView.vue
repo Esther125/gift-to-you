@@ -188,14 +188,14 @@ const downloadFile = async (originalName) => {
                         {{ file.size }}
                     </span>
                     
-                    <div class="d-flex align-items-center gap-2 ms-auto" style="margin-right: 10px;">
-                    <span
-                        class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"
-                    >
-                         還剩
-                    </span>
-                    <i class="bi bi-hourglass-split" style="font-size: 1rem"></i>
-                    <span>{{ file.daysLeft }} 天</span>
+                    <div class="d-flex align-items-center justify-content-end gap-2 ms-auto">
+                        <span
+                            class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"
+                        >
+                            還剩
+                        </span>
+                        <i class="bi bi-hourglass-split" style="font-size: 1rem"></i>
+                        <span>{{ file.daysLeft }} 天</span>
                     </div>
                 </div>
             </div>
