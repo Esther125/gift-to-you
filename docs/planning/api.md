@@ -8,9 +8,10 @@
 
 分成 Sender 和 Receiver
 
--   Sender：資料上傳（upload）與 資料傳送（send）
+-   Sender：資料上傳（upload）
+    -   使用 bloomfilter，避免儲存內容重複的檔案，以節省儲存空間
 -   Receiver：資料下載（download）與 資料儲存（save）
-    -   {way}：資料下載與儲存 的 方法（ 儲存到暫存區、System file 以及 雲端硬碟）
+    -   {way}：資料下載與儲存 的 方法（ 儲存到暫存區、System file）
 
 ### 房間管理
 
@@ -19,6 +20,7 @@
 -   Create：建立房間
 -   Join：利用 {roomId} 分辨房間，並加入該房間
 -   Lesve：利用 {roomId} 分辨房間，並離開該房間
+-   GetMember：利用 {roomId} 分辨房間，並取得房間成員資料
 
 ### 用戶管理
 
@@ -149,3 +151,5 @@
     ```js
     socket.disconnect();
     ```
+
+    若斷線超過 2 秒，將自動呼叫 leave room 將使用者移出該房間，以處理使用者在未離開房間的狀況下直接關閉頁面
