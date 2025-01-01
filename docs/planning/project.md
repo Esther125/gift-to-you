@@ -2,7 +2,7 @@
 
 ## 核心功能
 
-<img src="../assets/system_design/功能流程圖.jpg" width=50%>
+<img src="../assets/system_design/功能流程圖_v1.png" width=50%>
 
 ### 功能一：檔案傳輸
 
