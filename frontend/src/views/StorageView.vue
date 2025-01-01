@@ -190,7 +190,7 @@ const downloadFile = async (originalName) => {
                     
                     <div class="d-flex align-items-center justify-content-end gap-2 ms-auto">
                         <span
-                            class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill"
+                            class="badge bg-success-subtle border border-success-subtle text-success-emphasis rounded-pill hide-as-phone"
                         >
                             還剩
                         </span>
