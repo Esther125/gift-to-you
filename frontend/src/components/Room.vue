@@ -231,7 +231,7 @@ onMounted(async () => {
                     </div>
                 </div>
             </div>
-            <div class="row d-flex justify-content-center mt-3">
+            <div class="row d-flex justify-content-center mt-3 hide-as-phone">
                 <button class="btn" @click="handleSwitch">{{ switchBtnText }}</button>
             </div>
             <uploadModal
@@ -248,7 +248,7 @@ onMounted(async () => {
             <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightChat" aria-labelledby="offcanvasRightChatLabel" data-bs-backdrop="static">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="offcanvasRightChatLabel">聊天</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    <i class="bi bi-x h1 close" data-bs-dismiss="offcanvas" aria-label="Close"></i>
                 </div>
                 <div class="offcanvas-body">
                     <div class="chat-box h-100">
@@ -297,8 +297,8 @@ onMounted(async () => {
             <!-- FilesCanva -->
             <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasRightFiles" aria-labelledby="offcanvasRightFilesLabel" data-bs-backdrop="static">
                 <div class="offcanvas-header">
-                    <h5 class="offcanvas-title" id="offcanvasRightFilesLabel">聊天</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                    <h5 class="offcanvas-title" id="offcanvasRightFilesLabel">檔案清單</h5>
+                    <i class="bi bi-x h1 close" data-bs-dismiss="offcanvas" aria-label="Close"></i>
                 </div>
                 <div class="offcanvas-body p-0">
                     <div class="chat-box h-100">
@@ -517,5 +517,15 @@ onMounted(async () => {
 
 .offcanvas {
     background-color: var(--color-background-soft);
+    color: var(--color-text);
+}
+
+.btn-close {
+    color: var(--color-text) !important;
+}
+
+.close {
+    position: fixed;
+    right: 5px;
 }
 </style>
