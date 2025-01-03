@@ -135,7 +135,7 @@ body {
     }
 
     .hide-as-phone {
-        display: none; /* 隱藏按鈕 */
+        display: none !important;/* 隱藏按鈕 */
     }
 
     .custom-min-width {
