@@ -132,8 +132,8 @@ class S3Service {
         const params = {
             Bucket: this._bucket,
             Prefix: prefix,
-            MaxKeys: 10, // 最多顯示 10 筆
-            ContinuationToken: lastKey, // 根據 key 查後續筆數
+            // MaxKeys: 10, // 最多顯示 10 筆
+            // ContinuationToken: lastKey, // 根據 key 查後續筆數
         };
 
         try {
@@ -184,10 +184,18 @@ class S3Service {
             // 按照時間排序
             fileList.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
 
+            const pageSize = 10;
+            const startIdx = lastKey ? parseInt(lastKey) : 0;
+            const endIdx = startIdx + pageSize;
+
+            const nextLastKey = endIdx < fileList.length ? endIdx.toString() : "undefined";
+
+            const paginatedFiles = fileList.slice(startIdx, endIdx);
+
             logWithFileInfo('info', `[File List Success] Fetched ${fileList.length} files for ${type}: ${id}`);
             return {
-                files: fileList,
-                lastKey: encodeURIComponent(listData.NextContinuationToken) || null,
+                files: paginatedFiles,
+                lastKey: nextLastKey,
                 totalFilesCount,
             };
         } catch (err) {

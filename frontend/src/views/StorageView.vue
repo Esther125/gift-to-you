@@ -7,7 +7,7 @@ const store = useGlobalStore();
 const apiUrl = import.meta.env.VITE_BE_API_BASE_URL;
 
 const userID = store.user.id;
-// const userID = '12346';
+
 const totalFilesCount = ref(-1);
 const tempFiles = reactive([]);
 const prevLastKey = ref(null);
@@ -51,6 +51,8 @@ const getNextTempFiles = async (lastKey) => {
 
             const DEFAULT_VALIDITY_DAYS = 30;
 
+            const sortedFiles = data.file.sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified));
+
             data.file.forEach((item) => {
                 currentCount.value++;
 
@@ -68,6 +70,8 @@ const getNextTempFiles = async (lastKey) => {
                 console.log('No more pages to load');
                 unhandleScroll();
             }
+
+            loadMoreFiles();
         } else if (data.totalFilesCount === 0) {
             // 沒有檔案
             handleNoFiles();
